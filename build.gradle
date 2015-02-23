@@ -1,0 +1,75 @@
+buildscript {
+	ext {
+		springBootVersion = '1.0.0.BUILD-SNAPSHOT'
+		
+	}
+	repositories {
+		// NOTE: You should declare only repositories that you need here
+		mavenLocal()
+		mavenCentral()
+		maven { url "http://repo.spring.io/release" }
+		maven { url "http://repo.spring.io/milestone" }
+		maven { url "http://repo.spring.io/snapshot" }
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'spring-boot'
+apply plugin: 'war'
+
+ext {
+	springBootCfServiceBrokerVersion = '2.4.0'
+	baseName = 'spring-boot-sample-simple'
+	version =  '0.0.0'
+}
+
+war {
+    baseName = baseName
+    version =  version
+}
+
+repositories {
+	// NOTE: You should declare only repositories that you need here
+	mavenLocal()
+	mavenCentral()
+	maven { url "http://repo.spring.io/release" }
+	maven { url "http://repo.spring.io/milestone" }
+	maven { url "http://repo.spring.io/snapshot" }
+}
+
+configurations {
+	providedRuntime
+	//all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+}
+
+//configurations.all { 
+//	resolutionStrategy.force "ch.qos.logback:logback-classic:1.0.7"
+//}
+
+dependencies {
+
+	compile("org.springframework.boot:spring-boot-starter")
+	testCompile("org.springframework.boot:spring-boot-starter-test") 
+	compile("org.cloudfoundry:spring-boot-cf-service-broker:${springBootCfServiceBrokerVersion}"){
+		//exclude module: "jackson-core"
+	}
+	compile("org.springframework.boot:spring-boot-starter-data-mongodb:${springBootVersion}")
+	testCompile("org.cloudfoundry:spring-boot-cf-service-broker-tests:${springBootCfServiceBrokerVersion}")
+	testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+	compile("org.apache.brooklyn:brooklyn-rest-client:0.7.0-SNAPSHOT"){
+		exclude module: "slf4j-log4j12"
+		exclude module: "jetty-server"
+	}
+	providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
+	compile('commons-codec:commons-codec:1.10')
+	
+}
+
+task wrapper(type: Wrapper) {
+	gradleVersion = '2.2'
+}
