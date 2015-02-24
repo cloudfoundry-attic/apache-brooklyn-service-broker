@@ -48,7 +48,8 @@ public class BrooklynRestAdmin {
 	
 	public TaskSummary deleteApplication(String id) {
 		System.out.println("deleting id " + id);
-		Response response = restApi.getApplicationApi().delete(id);
+		Response response = restApi.getEntityApi().expunge(id, id, true);
+		//Response response = restApi.getApplicationApi().delete(id);
 		return BrooklynApi.getEntity(response, TaskSummary.class);	
 	}
 	
