@@ -67,7 +67,8 @@ dependencies {
 	}
 	providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
 	compile('commons-codec:commons-codec:1.10')
-	
+	compile('org.springframework.cloud:spring-cloud-spring-service-connector:1.1.1.RELEASE')
+	compile('org.springframework.cloud:spring-cloud-cloudfoundry-connector:1.1.1.RELEASE')
 }
 
 task wrapper(type: Wrapper) {
