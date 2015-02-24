@@ -1,3 +1,4 @@
+*.yml
 *.pydevproject
 .metadata
 .gradle
