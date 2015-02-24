@@ -79,3 +79,26 @@ Bind the service
 Unbind the service
 
     $ cf unbind-service my-app my-service
+    
+Deploying to Cloud Foundry
+--------------------------
+
+create an application manifest, e.g.,
+
+    applications:
+    - name: Brooklyn-Service-Broker
+      env:
+        BROOKLYN_URI: https://brooklyn-uri:8081
+        BROOKLYN_USERNAME: brooklyn-username
+        BROOKLYN_PASSWORD: brooklyn-password
+        SECURITY_USER_NAME: broker-username
+        SECURITY_USER_PASSWORD: broker-password
+      services:
+      - broker-mongodb
+
+(if you have a MongoDB instance running elsewhere that you would like to use, configure it using SPRING_DATA_MONGODB_HOST and SPRING_DATA_MONGODB_PORT)
+
+then 
+
+    $ gradle clean build
+    $ cf push -p build/libs/brooklyn-service-broker.war -b https://github.com/cloudfoundry/java-buildpack.git
