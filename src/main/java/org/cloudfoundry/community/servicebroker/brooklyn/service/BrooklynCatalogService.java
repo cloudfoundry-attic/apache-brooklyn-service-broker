@@ -51,7 +51,7 @@ public class BrooklynCatalogService implements CatalogService {
 			boolean planUpdatable = false;
 			List<Plan> plans = getPlans(id, app.getPlanYaml());
 			List<String> tags = getTags();
-			Map<String, Object> metadata = getServiceDefinitionMetadata();
+			Map<String, Object> metadata = getServiceDefinitionMetadata(app.getIconUrl());
 			List<String> requires = getTags();
 			DashboardClient dashboardClient = null;
 
@@ -106,7 +106,7 @@ public class BrooklynCatalogService implements CatalogService {
 		
 		for (LocationSummary l : locations) {
 			String id = serviceId + "." + l.getName();
-			String name = l.getSpec();
+			String name = l.getName();
 			String description = "The location on which to deploy this service";
 			Map<String, Object> metadata = new HashMap<String, Object>();
 			plans.add(new Plan(id, name, description, metadata));
@@ -114,8 +114,9 @@ public class BrooklynCatalogService implements CatalogService {
 		return plans;
 	}
 
-	private Map<String, Object> getServiceDefinitionMetadata() {
+	private Map<String, Object> getServiceDefinitionMetadata(String iconUrl) {
 		Map<String, Object> metadata = new HashMap<String, Object>();
+		metadata.put("imageUrl", iconUrl);
 		return metadata;
 	}
 
