@@ -93,6 +93,7 @@ create an application manifest, e.g.,
         BROOKLYN_PASSWORD: brooklyn-password
         SECURITY_USER_NAME: broker-username
         SECURITY_USER_PASSWORD: broker-password
+        SPRING_PROFILES_ACTIVE=cloud
       services:
       - broker-mongodb
 

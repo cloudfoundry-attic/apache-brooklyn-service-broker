@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 import brooklyn.rest.client.BrooklynApi;
 
-@ServiceScan
 @Configuration
 @ComponentScan(basePackages = "org.cloudfoundry.community.servicebroker")
 @EnableMongoRepositories(basePackages = "org.cloudfoundry.community.servicebroker.brooklyn.repository")
