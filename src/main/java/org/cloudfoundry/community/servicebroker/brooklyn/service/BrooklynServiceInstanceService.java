@@ -59,7 +59,10 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 //			.entities(ImmutableSet.of(new EntitySpec()))
 //			.locations(ImmutableSet.of(location)).build();
 		
-		TaskSummary taskSummary = admin.createApplication("{\"services\":[\"type\": \"" + service.getId() + "\"], \"locations\": [ \"" + location +"\"]}");
+		TaskSummary taskSummary = admin.createApplication(
+				"{\"services\":[\"type\": \"" + service.getId() + "\"], "
+				+ "\"locations\": [ \"" + location +"\"]"
+				+ "}");
 
 		//Entity response = admin.createApplication(applicationSpec);
 
