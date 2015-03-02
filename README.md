@@ -1,15 +1,25 @@
-Cloud Foundry Brooklyn Service Broker
--------------------------------------
+# Cloud Foundry Brooklyn Service Broker
 
 This project launches a CF broker which makes Brooklyn blueprints available as Cloud Foundry services.
 
-You will need [Gradle](http://www.gradle.org/installation) and [Brooklyn](http://brooklyn.io) installed.
+You will need [Gradle](http://www.gradle.org/installation), [Brooklyn](http://brooklyn.io) and MongoDB installed.
 You will also need Java 8 -- 
 if that is not your system default, and it is too rough to change your system
 a standalone `jdk8` download can usually be activated in a single shell 
 by setting `export JAVA_HOME=/path/to/jdk8/Home` (or similar).
 
-Make sure Brooklyn is running, then do a `gradle clean bootRun`.
+
+## Deploying locally
+
+Make sure Brooklyn and MongoDB is running, and put the brooklyn details into the `application.properties`
+
+    brooklyn.uri=<brooklyn-uri>
+    brooklyn.username=<brooklyn-username>
+    brooklyn.password=<brooklyn-password>
+    
+(If you are running both Brooklyn and the Service Broker on localhost, the username and password are not required.)
+
+Then do a `gradle clean bootRun`.
 The project will build and launch a REST API on port 8080.
 By default the project will create a user called `user` and generate a password.
 
@@ -27,6 +37,7 @@ You can override this by setting the username and password in the `application.p
     
 Make a note of these details. You'll need them to set up the broker with `cf` (below).
 
+### Testing
 You can also use this for making REST calls directly, bypassing CF, for testing.
 For instance to get the catalog,
 
@@ -48,42 +59,38 @@ Binding,
 And unbinding,
 
     $ curl "http://user:$PASSWORD@localhost:8080/v2/service_instances/1234/service_bindings/1234?service_id=brooklyn.demo.WebClusterDatabaseExample&plan_id=brooklyn.demo.WebClusterDatabaseExample.localhost" -X DELETE
+
+### Extensions to the Service Broker API
+
+There are a number of extentions that allow further communication with Brooklyn.  For example, these are used by the Brooklyn plugin for Cloud Foundry.  You can test these, too.
+
+create a catalog entry contained in `catalog.yaml`,
+
+    $ curl http://user:$PASSWORD@localhost:8080/create --data-binary @catalog.yaml
+
+delete from catalog,
+
+    $ curl -X DELETE http://user:$PASSWORD@localhost:8080/delete/brooklyn.demo.WebClusterDatabaseExample/1.0/
     
-Using with the CF tool
-----------------------
+get the list of sensors,
 
-First, register the service broker
-
-    $ cf create-service-broker <broker-name> <user> <password> <url>
+    $ curl http://user:$PASSWORD@localhost:8080/sensors/1234
     
-Check for new services that have no access
+check if a service is running,
 
-    $ cf service-access 
+    $ curl http://user:$PASSWORD@localhost:8080/is-running/1234
     
-Enable those services that you wish to appear in the marketplace
+get the list of effectors,
 
-    $ cf enable-service-access <service-name>
+    $ curl http://user:$PASSWORD@localhost:8080/effectors/1234
+
+invoke an effector,
+
+    $ curl http://user:$PASSWORD@localhost:8080/invoke/{entity}/{effector} -H "Content-Type: application/json" -d '{ "parameter name" : "parameter value" }' -X POST
     
-Create the service that you wish to use
+## Deploying to Cloud Foundry
 
-    $ cf create-service <service-name> <plan-name> <service-instance-id>
-    
-Delete the service that you no longer need    
-
-    $ cf delete-service <service-instance-id>
-
-Bind the service
-
-    $ cf bind-service my-app my-service
-    
-Unbind the service
-
-    $ cf unbind-service my-app my-service
-    
-Deploying to Cloud Foundry
---------------------------
-
-create an application manifest, e.g.,
+Create an application manifest, e.g.,
 
     applications:
     - name: Brooklyn-Service-Broker
@@ -103,3 +110,62 @@ then
 
     $ gradle clean build
     $ cf push -p build/libs/brooklyn-service-broker.war -b https://github.com/cloudfoundry/java-buildpack.git
+    
+## Deploying on Brooklyn
+
+You can also run the Brooklyn Service Broker from inside Brooklyn. First build the project:
+
+    $ gradle clean build
+    
+then with the resulting `build/libs/brooklyn-service-broker.war` file path and properties substituted into the following blueprint, paste it into the "Add Application" dialog in your Brooklyn server.
+ 
+    name: Brooklyn Service Broker
+    location: localhost
+    services:
+    - type: brooklyn.entity.webapp.tomcat.TomcatServer
+      name: Tomcat Server
+      war: /path/to/build/libs/brooklyn-service-broker.war
+      brooklyn.config:
+        java.sysprops:
+          brooklyn.uri: https://brooklyn-uri:8081
+          brooklyn.username: brooklyn-username
+          brooklyn.password: brooklyn-password
+          security.user.name: broker-user
+          security.user.password: broker-password
+          spring.data.mongodb.host: $brooklyn:component("mongodb").attributeWhenReady("host.address")
+          spring.data.mongodb.port: $brooklyn:component("mongodb").attributeWhenReady("mongodb.server.port")
+
+    - type: brooklyn.entity.nosql.mongodb.MongoDBServer
+      id: mongodb
+      name: Service Broker Mongo DB
+    
+## Using with the CF tool
+
+First, register the service broker
+
+    $ cf create-service-broker <broker-name> <user> <password> <url>
+    
+Check for new services that have no access
+
+    $ cf service-access 
+    
+Enable those services that you wish to appear in the marketplace
+
+    $ cf enable-service-access <service-name>
+    
+Create the service that you wish to use
+
+    $ cf create-service <service-name> <plan-name> <service-instance-id>
+    
+Delete the service that you no longer need
+
+    $ cf delete-service <service-instance-id>
+
+Bind the service
+
+    $ cf bind-service my-app my-service
+    
+Unbind the service
+
+    $ cf unbind-service my-app my-service
+      
