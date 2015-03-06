@@ -29,7 +29,11 @@ public class BrooklynRestAdmin {
 	private Set<String> sensorBlacklist = new HashSet<String>(Arrays.asList(
 			"download.url",
 			"expandedinstall.dir",
-			"install.dir"
+			"install.dir",
+			"download.url.debian",
+			"download.url.mac",
+			"download.url.rhelcentos",
+			"download.url.ubuntu"
 	));
 
 	
