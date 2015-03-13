@@ -10,7 +10,7 @@ To build project you need:
 - Gradle 2.2 or higher
 - Brooklyn SNAPSHOT
 
-You should use SNAPSHOT version of Brooklyn from GitHub repo:
+You should use SNAPSHOT version of Brooklyn from GitHub repo, not from the site:
 
 ```
 $ git clone https://github.com/apache/incubator-brooklyn.git && cd incubator-brooklyn
@@ -19,12 +19,14 @@ $ git clone https://github.com/apache/incubator-brooklyn.git && cd incubator-bro
 You should build it on the same machine you want to compile Service Broker. 
 
 ```
-mvn clean install -DskipTests
+$ mvn clean install -DskipTests
 ```
 
-This installs `org.apache.brooklyn:brooklyn-rest-client:0.7.0-SNAPSHOT` library to you local maven repository. SB compilation depends on this library.
+This installs `org.apache.brooklyn:brooklyn-rest-client:0.7.0-SNAPSHOT` library to your local maven repository. SB compilation depends on this library.
 
 To launch SB you need running Brooklyn and MongoDB.
+
+[Here](docs/prerequisites.md) you can find instructions for installing build and runtime prerequisites for Ubuntu 14.04.
 
 ## Deploying locally
 

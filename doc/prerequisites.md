@@ -1,6 +1,6 @@
 # Installing Prerequisites on Ubuntu 14.04
 
-This documents describes steps nessery for building and launching service broker on freshly installed Ubuntu 14.04.
+This documents describes steps necessary for building and launching service broker on freshly installed Ubuntu 14.04.
 
 ## Oracle Java 8
 
