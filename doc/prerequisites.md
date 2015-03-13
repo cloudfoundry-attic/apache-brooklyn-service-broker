@@ -1,6 +1,6 @@
 # Installing Prerequisites on Ubuntu 14.04
 
-This documents describes steps nessery for building and launching service broker on freshly installed Ubuntu 14.04.
+This documents describes steps necessary for building and launching service broker on freshly installed Ubuntu 14.04.
 
 ## Oracle Java 8
 
@@ -52,6 +52,6 @@ $ cd incubator-brooklyn/usage/dist/target/brooklyn-dist
 $ bin/brooklyn launch
 ```
 
-__Now you are should be able to run SB.__
+__Now you should be able to run SB.__
 
 NOTE: To build and run Brooklyn 0.7.0-M2-incubating you need the older version of Java, Java 6. You can install it from the already configured PPA by issuing the command `sudo apt-get install oracle-java6-installer`.
