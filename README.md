@@ -2,12 +2,29 @@
 
 This project launches a CF broker which makes Brooklyn blueprints available as Cloud Foundry services.
 
-You will need [Gradle](http://www.gradle.org/installation), [Brooklyn](http://brooklyn.io) and MongoDB installed.
-You will also need Java 8 -- 
-if that is not your system default, and it is too rough to change your system
-a standalone `jdk8` download can usually be activated in a single shell 
-by setting `export JAVA_HOME=/path/to/jdk8/Home` (or similar).
+## Prerequisites
 
+To build project you need:
+
+- Oracle JDK 8
+- Gradle 2.2 or higher
+- Brooklyn SNAPSHOT
+
+You should use SNAPSHOT version of Brooklyn from GitHub repo:
+
+```
+$ git clone https://github.com/apache/incubator-brooklyn.git && cd incubator-brooklyn
+```
+
+You should build it on the same machine you want to compile Service Broker. 
+
+```
+mvn clean install -DskipTests
+```
+
+This installs `org.apache.brooklyn:brooklyn-rest-client:0.7.0-SNAPSHOT` library to you local maven repository. SB compilation depends on this library.
+
+To launch SB you need running Brooklyn and MongoDB.
 
 ## Deploying locally
 
