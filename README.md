@@ -4,29 +4,18 @@ This project launches a CF broker which makes Brooklyn blueprints available as C
 
 ## Prerequisites
 
-To build project you need:
+To build this project you need:
 
 - Oracle JDK 8
 - Gradle 2.2 or higher
-- Brooklyn 0.7.0-SNAPSHOT
+- [Brooklyn 0.7.0-SNAPSHOT](https://github.com/apache/incubator-brooklyn)
 
-You should use SNAPSHOT version of Brooklyn from the GitHub repo, not from the site:
 
-```
-$ git clone https://github.com/apache/incubator-brooklyn.git && cd incubator-brooklyn
-```
+Note: You should install Brooklyn 0.7.0-SNAPSHOT to your local maven repository before compiling the Service Broker, since the service broker depends on its client library. 
 
-You should build it on the same machine you want to compile Service Broker. 
+To launch the service broker, you will need a running Brooklyn and MongoDB (these do not have to be local, the locations of which can be specified through properties).
 
-```
-$ mvn clean install -DskipTests
-```
-
-This installs `org.apache.brooklyn:brooklyn-rest-client:0.7.0-SNAPSHOT` library to your local maven repository. SB compilation depends on this library.
-
-To launch SB you need running Brooklyn and MongoDB.
-
-[Here](docs/prerequisites.md) you can find instructions for installing build and runtime prerequisites for Ubuntu 14.04.
+See the [wiki](wiki) for instruction notes on installing for specific operating systems .
 
 ## Deploying locally
 
