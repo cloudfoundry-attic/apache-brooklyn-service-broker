@@ -15,7 +15,7 @@ Note: You should install Brooklyn 0.7.0-SNAPSHOT to your local maven repository 
 
 To launch the service broker, you will need a running Brooklyn and MongoDB (these do not have to be local, the locations of which can be specified through properties).
 
-See the [wiki](wiki) for instruction notes on installing for specific operating systems .
+See the [wiki](https://github.com/cloudfoundry-community/brooklyn-service-broker/wiki) for instruction notes on installing for specific operating systems .
 
 ## Deploying locally
 
