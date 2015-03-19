@@ -2,8 +2,7 @@
 
 This project launches a CF broker which makes Brooklyn blueprints available as Cloud Foundry services.
 
-You will need [Gradle](http://www.gradle.org/installation), [Brooklyn](http://brooklyn.io) and MongoDB installed.
-You will also need Java 8 -- 
+You will need [Gradle](http://www.gradle.org/installation), [Brooklyn](http://brooklyn.io) and Java 8 -- 
 if that is not your system default, and it is too rough to change your system
 a standalone `jdk8` download can usually be activated in a single shell 
 by setting `export JAVA_HOME=/path/to/jdk8/Home` (or similar).
@@ -101,10 +100,6 @@ Create an application manifest, e.g.,
         SECURITY_USER_NAME: broker-username
         SECURITY_USER_PASSWORD: broker-password
         SPRING_PROFILES_ACTIVE=cloud
-      services:
-      - broker-mongodb
-
-(if you have a MongoDB instance running elsewhere that you would like to use, configure it using SPRING_DATA_MONGODB_HOST and SPRING_DATA_MONGODB_PORT)
 
 then 
 
@@ -132,12 +127,6 @@ then with the resulting `build/libs/brooklyn-service-broker.war` file path and p
           brooklyn.password: brooklyn-password
           security.user.name: broker-user
           security.user.password: broker-password
-          spring.data.mongodb.host: $brooklyn:component("mongodb").attributeWhenReady("host.address")
-          spring.data.mongodb.port: $brooklyn:component("mongodb").attributeWhenReady("mongodb.server.port")
-
-    - type: brooklyn.entity.nosql.mongodb.MongoDBServer
-      id: mongodb
-      name: Service Broker Mongo DB
     
 ## Using with the CF tool
 
