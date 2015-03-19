@@ -58,7 +58,7 @@ dependencies {
 	compile("org.cloudfoundry:spring-boot-cf-service-broker:${springBootCfServiceBrokerVersion}"){
 		//exclude module: "jackson-core"
 	}
-	compile("org.springframework.boot:spring-boot-starter-data-mongodb:${springBootVersion}")
+	//compile("org.springframework.boot:spring-boot-starter-data-mongodb:${springBootVersion}")
 	testCompile("org.cloudfoundry:spring-boot-cf-service-broker-tests:${springBootCfServiceBrokerVersion}")
 	testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
 	compile("org.apache.brooklyn:brooklyn-rest-client:0.7.0-SNAPSHOT"){
