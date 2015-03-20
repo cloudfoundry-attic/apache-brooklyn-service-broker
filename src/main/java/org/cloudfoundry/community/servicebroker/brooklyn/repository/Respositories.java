@@ -20,10 +20,10 @@ public class Respositories {
 						+ "\"type\": \"brooklyn.entity.basic.BasicApplication\","
 						+ "\"brooklyn.children\":[{\"name\": \"%s\", \"type\": \"brooklyn.entity.basic.BasicEntity\"},"
 						+ "{\"name\": \"%s\", \"type\": \"brooklyn.entity.basic.BasicEntity\"}]"
-						+ "}],"
-						+ "\"locations\":[\"localhost\"]"
+						+ "}]"
 						+ "}", name, bindingRepoName, instanceRepoName));
-			TaskSummary entity = BrooklynApi.getEntity(response, TaskSummary.class);
+			String entity = BrooklynApi.getEntity(response, String.class);
+			System.out.println("\n*******************" + entity + "**********************\n");
 		}
 	}
 	
@@ -32,6 +32,8 @@ public class Respositories {
 			ApplicationSummary applicationSummary = brooklynApi.getApplicationApi().get(name);
 			return true;
 		} catch (Exception e) {
+			System.out.println("\n******************** REPOSITORY NOT FOUND ***********************\n");
+			//e.printStackTrace();
 			return false;
 		}
 	}

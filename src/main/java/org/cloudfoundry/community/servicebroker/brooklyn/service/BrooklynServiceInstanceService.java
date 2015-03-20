@@ -1,6 +1,7 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
+import org.cloudfoundry.community.servicebroker.brooklyn.repository.Respositories;
 import org.cloudfoundry.community.servicebroker.exception.ServiceBrokerException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceDoesNotExistException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceExistsException;
@@ -32,6 +33,8 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 			String serviceInstanceId, String planId, String organizationGuid,
 			String spaceGuid) throws ServiceInstanceExistsException,
 			ServiceBrokerException {
+		
+		admin.createRepositoryIfNotExists();
 
 		// check if exists already
 		ServiceInstance instance = getServiceInstance(serviceInstanceId);

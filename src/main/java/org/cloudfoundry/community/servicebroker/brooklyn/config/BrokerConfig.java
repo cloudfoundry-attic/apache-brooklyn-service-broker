@@ -1,6 +1,5 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.config;
 
-import org.cloudfoundry.community.servicebroker.brooklyn.repository.Respositories;
 import org.cloudfoundry.community.servicebroker.model.BrokerApiVersion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +26,6 @@ public class BrokerConfig{
 	public BrooklynApi restApi(){
 		//System.out.printf("connecting to %s with username: %s and password: %s%n",config.toFullUrl(), config.getUsername(), config.getPassword());
 		BrooklynApi brooklynApi = new BrooklynApi(config.toFullUrl(), config.getUsername(), config.getPassword());
-		Respositories.createRepositories(brooklynApi);
 		return brooklynApi;
 	}
 	

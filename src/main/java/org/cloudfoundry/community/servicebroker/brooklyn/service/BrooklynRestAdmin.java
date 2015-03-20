@@ -9,6 +9,7 @@ import java.util.Set;
 
 import javax.ws.rs.core.Response;
 
+import org.cloudfoundry.community.servicebroker.brooklyn.repository.Respositories;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,13 @@ public class BrooklynRestAdmin {
 			"download.url.ubuntu"
 	));
 
+	public void createRepositoryIfNotExists(){
+		try{
+			Respositories.createRepositories(restApi);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
 	
 	public List<CatalogItemSummary> getCatalogApplicaitons(){
 		return restApi.getCatalogApi().listApplications("", "");
