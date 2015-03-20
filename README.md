@@ -6,7 +6,7 @@ This project launches a CF broker which makes Brooklyn blueprints available as C
 
 To build this project you need:
 
-- Oracle JDK 8
+- JDK 8
 - Gradle 2.2 or higher
 - [Brooklyn 0.7.0-SNAPSHOT](https://github.com/apache/incubator-brooklyn)
 
@@ -108,7 +108,6 @@ Create an application manifest, e.g.,
         BROOKLYN_PASSWORD: brooklyn-password
         SECURITY_USER_NAME: broker-username
         SECURITY_USER_PASSWORD: broker-password
-        SPRING_PROFILES_ACTIVE=cloud
 
 then 
 
