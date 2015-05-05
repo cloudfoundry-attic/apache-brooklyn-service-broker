@@ -46,7 +46,7 @@ public class BrooklynRestAdmin {
 	}
 	
 	public List<CatalogItemSummary> getCatalogApplicaitons(){
-		return restApi.getCatalogApi().listApplications("", "");
+		return restApi.getCatalogApi().listApplications("", "", false);
 	}
 
 	public List<LocationSummary> getLocations() {
