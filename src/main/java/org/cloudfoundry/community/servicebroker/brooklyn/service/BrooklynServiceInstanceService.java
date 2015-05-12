@@ -48,29 +48,21 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 		System.out.println(spaceGuid);
 		System.out.println("----------------------");
 
-		//ApplicationSpec applicationSpec = new ApplicationSpec();
 		String location = "localhost"; // default
 		for(Plan p : service.getPlans()){
 			if(p.getId().equals(planId)){
 				location = p.getName();
 			}
 		}
-//		applicationSpec.setLocation(location);
-//		applicationSpec.setServices(Arrays.asList(service.getId()));
-		
-//		brooklyn.rest.domain.ApplicationSpec spec = brooklyn.rest.domain.ApplicationSpec.builder()
-//			.entities(ImmutableSet.of(new EntitySpec()))
-//			.locations(ImmutableSet.of(location)).build();
 		
 		TaskSummary taskSummary = admin.createApplication(
 				"{\"services\":[\"type\": \"" + service.getId() + "\"], "
 				+ "\"locations\": [ \"" + location +"\"]"
 				+ "}");
 
-		//Entity response = admin.createApplication(applicationSpec);
 
 		instance = new ServiceInstance(serviceInstanceId,
-				taskSummary.getEntityId(),//response.getEntityId(), 
+				taskSummary.getEntityId(),
 				planId, organizationGuid, spaceGuid,
 				null);
 		
