@@ -1,6 +1,8 @@
+
 # Cloud Foundry Brooklyn Service Broker
 
 This project launches a CF broker which makes Brooklyn blueprints available as Cloud Foundry services.
+
 
 ## Prerequisites
 
@@ -10,16 +12,15 @@ To build this project you need:
 - Gradle 2.2 or higher
 - [Brooklyn 0.7.0-SNAPSHOT](https://github.com/apache/incubator-brooklyn)
 
-
 Note: You should install Brooklyn 0.7.0-SNAPSHOT to your local maven repository before compiling the Service Broker, since the service broker depends on its client library. 
 
-To launch the service broker, you will need a running Brooklyn and MongoDB (these do not have to be local, the locations of which can be specified through properties).
-
-See the [wiki](https://github.com/cloudfoundry-community/brooklyn-service-broker/wiki) for instruction notes on installing for specific operating systems .
-
+To launch the service broker, you will need a running Brooklyn (this does not have to be local, the location of which can be specified through properties).
+ 
+See the [wiki](https://github.com/cloudfoundry-community/brooklyn-service-broker/wiki) for instruction notes on installing for specific operating systems.
+ 
 ## Deploying locally
-
-Make sure Brooklyn and MongoDB is running, and put the brooklyn details into the `application.properties`
+ 
+Make sure Brooklyn is running, and put the brooklyn details into the `application.properties`
 
     brooklyn.uri=<brooklyn-uri>
     brooklyn.username=<brooklyn-username>
@@ -165,4 +166,4 @@ Bind the service
 Unbind the service
 
     $ cf unbind-service my-app my-service
-      
+ 
