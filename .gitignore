@@ -1,4 +1,7 @@
-*.yml
+
+# this is created by users but not part of the project
+application.properties
+
 *.pydevproject
 .metadata
 .gradle
