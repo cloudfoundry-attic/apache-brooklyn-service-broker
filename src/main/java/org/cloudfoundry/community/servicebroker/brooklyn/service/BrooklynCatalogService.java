@@ -28,6 +28,7 @@ public class BrooklynCatalogService implements CatalogService {
 
 	@Override
 	public Catalog getCatalog() {
+	    System.out.println("Getting catalog");
 		// CatalogApplication[] page = admin.getCatalogApplications();
 		List<CatalogItemSummary> page = admin.getCatalogApplicaitons();
 		List<ServiceDefinition> definitions = new ArrayList<ServiceDefinition>();
@@ -68,6 +69,7 @@ public class BrooklynCatalogService implements CatalogService {
 	}
 
 	private List<Plan> getPlans(String serviceId, String yaml) {
+	    System.out.println("Getting plans");
 		List<Plan> plans = new ArrayList<Plan>();
 		// check if yaml contains a location
 		// if it does extract that and use it

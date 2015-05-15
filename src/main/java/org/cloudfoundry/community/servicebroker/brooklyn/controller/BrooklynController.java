@@ -42,7 +42,8 @@ public class BrooklynController {
 		try {
 			admin.deleteCatalogEntry(name, version);
 		} catch (Exception e) {
-			// TODO create a response	
+			// TODO create a response
+		    e.printStackTrace();
 		}
 	}
 	
