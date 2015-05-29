@@ -10,6 +10,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
@@ -17,6 +18,8 @@ import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.cloudfoundry.community.servicebroker.model.BrokerApiVersion;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -28,48 +31,61 @@ import brooklyn.rest.client.BrooklynApi;
 @ComponentScan(basePackages = "org.cloudfoundry.community.servicebroker")
 public class BrokerConfig {
 
+	private static final Logger LOG = LoggerFactory.getLogger(BrokerConfig.class);
+
 	@Autowired
 	private BrooklynConfig config;
 
-	private transient BrooklynApi brooklynApi;
-	
 	@Bean
 	public BrokerApiVersion brokerApiVersion() {
 		return new BrokerApiVersion();
 	}
 
 	@Bean
-	public synchronized BrooklynApi restApi() {
-		// System.out.printf("connecting to %s with username: %s and password: %s%n",config.toFullUrl(),
-		// config.getUsername(), config.getPassword());
-		// BrooklynApi brooklynApi = new BrooklynApi(config.toFullUrl(),
-		// config.getUsername(), config.getPassword());
-		
-	    if (brooklynApi!=null) return brooklynApi;
-	    
+	public BrooklynApi restApi() {
 		URL url;
 		try {
 			url = new URL(config.toFullUrl());
-			System.out.println("Creating new brooklynApi for "+url);
+			LOG.info("Creating new brooklynApi for " + url);
 			DefaultHttpClient httpClient = new DefaultHttpClient();
-			httpClient.getCredentialsProvider().setCredentials(
-					AuthScope.ANY, new UsernamePasswordCredentials(config.getUsername(), config.getPassword()));
+			setCredentials(httpClient);
 			if (url.getProtocol().equals("https")) {
-			    System.out.println("Detected https, registering trust all / allow all");
-				Scheme sch = new Scheme(url.getProtocol(), url.getPort(), 
-						new SSLSocketFactory(new TrustAllStrategy(), SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER));
-				httpClient.getConnectionManager().getSchemeRegistry().register(sch);
+				LOG.info("Detected https, registering trust all / allow all");
+				registerScheme(httpClient, createScheme(url));
 			}
-			brooklynApi = new BrooklynApi(url, new ApacheHttpClient4Executor(httpClient));
-			return brooklynApi;
-		} catch (MalformedURLException 
-				| KeyManagementException 
-				| UnrecoverableKeyException 
-				| NoSuchAlgorithmException 
-				| KeyStoreException e) {
+			return new BrooklynApi(url, new ApacheHttpClient4Executor(httpClient));
+		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
 		return null;
+
+	}
+
+	private Scheme createScheme(URL url) {
+		Scheme sch = null;
+		try {
+			sch = new Scheme(url.getProtocol(), url.getPort(),
+					new SSLSocketFactory(new TrustAllStrategy(),
+							SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER));
+		} catch (KeyManagementException | UnrecoverableKeyException
+				| NoSuchAlgorithmException | KeyStoreException e) {
+			e.printStackTrace();
+		}
+		return sch;
+	}
+
+	private void registerScheme(DefaultHttpClient httpClient, Scheme sch) {
+		httpClient.getConnectionManager().getSchemeRegistry().register(sch);
+	}
+
+	private void setCredentials(DefaultHttpClient httpClient) {
+		httpClient.getCredentialsProvider().setCredentials(AuthScope.ANY,
+				getUsernamePasswordCredentials());
+	}
+
+	private Credentials getUsernamePasswordCredentials() {
+		return new UsernamePasswordCredentials(config.getUsername(),
+				config.getPassword());
 	}
 
 	public static class TrustAllStrategy implements TrustStrategy {
