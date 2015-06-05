@@ -17,12 +17,14 @@ public class BrooklynServiceInstanceBindingRepository {
 	private String application = "service-broker-records";
 	private String entity = "service-instance-binding-repository";
 	
-	public ServiceInstanceBinding findOne(String id) {
-		Object object = restApi.getEntityConfigApi().get(application, entity, id, false);
+	@SuppressWarnings("unchecked")
+	public ServiceInstanceBinding findOne(String bindingId) {
+		Object object = restApi.getEntityConfigApi().get(application, entity, bindingId, false);
 		if(object == null || !(object instanceof Map)) return null;
 		
 		Map<String, Object> map = (Map<String, Object>) object;
-		return new ServiceInstanceBinding((String)map.get("id"),
+		return new ServiceInstanceBinding(
+				(String)map.get("id"),
 				(String)map.get("serviceInstanceId"),
 				(Map<String, Object>)map.get("credentials"), 
 			    (String)map.get("syslogDrainUrl"), 
@@ -31,8 +33,7 @@ public class BrooklynServiceInstanceBindingRepository {
 
 	public <S extends ServiceInstanceBinding> S save(S serviceInstanceBinding) {	
 		restApi.getEntityConfigApi().set(application, entity,
-				serviceInstanceBinding.getServiceInstanceId(), false,
-				serviceInstanceBinding);
+				serviceInstanceBinding.getServiceInstanceId(), false, serviceInstanceBinding);
 		
 		return serviceInstanceBinding;
 	}
