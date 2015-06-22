@@ -22,7 +22,7 @@ public class Respositories {
 						+ "{\"name\": \"%s\", \"type\": \"brooklyn.entity.basic.BasicEntity\"}]"
 						+ "}]"
 						+ "}", name, bindingRepoName, instanceRepoName));
-			String entity = BrooklynApi.getEntity(response, String.class);
+			TaskSummary entity = BrooklynApi.getEntity(response, TaskSummary.class);
 			System.out.println("\n*******************" + entity + "**********************\n");
 		}
 	}
