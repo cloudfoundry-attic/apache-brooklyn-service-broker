@@ -21,16 +21,14 @@ import brooklyn.rest.domain.TaskSummary;
 
 @Service
 public class BrooklynServiceInstanceService implements ServiceInstanceService {
-	
 
 	private static final Logger LOG = LoggerFactory.getLogger(BrooklynServiceInstanceService.class);
-
 
 	private BrooklynRestAdmin admin;
 	private BrooklynServiceInstanceRepository repository;
 
-	//@Autowired
-	//private BrooklynCatalogService catalogService;
+	@Autowired
+	private BrooklynCatalogService catalogService;
 	
 	@Autowired
 	public BrooklynServiceInstanceService(BrooklynRestAdmin admin, BrooklynServiceInstanceRepository repository) {
@@ -62,20 +60,20 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 		);
 
 		String location = "localhost"; // default
-		//ServiceDefinition service = catalogService.getServiceDefinition(request.getServiceDefinitionId());
-		//for(Plan p : service.getPlans()){
-//			if(p.getId().equals(request.getPlanId())){
-//				location = p.getName();
-//			}
-//		}
+		ServiceDefinition service = catalogService.getServiceDefinition(request.getServiceDefinitionId());
+		for(Plan p : service.getPlans()){
+			if(p.getId().equals(request.getPlanId())){
+				location = p.getName();
+			}
+		}
 		
-//		String blueprint = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"]}", service.getId(), location);
-//		TaskSummary taskSummary = admin.createApplication(blueprint);
+		String blueprint = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"]}", service.getId(), location);
+		TaskSummary taskSummary = admin.createApplication(blueprint);
 		
 		// we set the service definition id to the entity id 
 		// as a handy way of associating the brooklyn entity
 		// with this particular service instance.
-//		request.setServiceDefinitionId(taskSummary.getEntityId());
+		request.setServiceDefinitionId(taskSummary.getEntityId());
 		instance = new ServiceInstance(request);
 		repository.save(instance);
 		return instance;
@@ -85,10 +83,12 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 	public ServiceInstance deleteServiceInstance(DeleteServiceInstanceRequest request) 
 			throws ServiceBrokerException {
 		
-		ServiceInstance instance = getServiceInstance(request.getServiceInstanceId());
+		String serviceInstanceId = request.getServiceInstanceId();
+        ServiceInstance instance = getServiceInstance(serviceInstanceId);
 		if (instance != null) {
-			repository.delete(request.getServiceInstanceId());
+			repository.delete(serviceInstanceId);
 			String entityId = instance.getServiceDefinitionId();
+			LOG.info("Deleting service: [ServiceDefinitionId={}, ServiceInstanceId={}]", entityId, serviceInstanceId);
 			admin.deleteApplication(entityId);
 		}
 		return instance;

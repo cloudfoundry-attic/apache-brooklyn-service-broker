@@ -36,8 +36,8 @@ public class BrooklynServiceInstanceRepository {
 				map.get("serviceDefinitionId"), 
 				map.get("planId"), 
 				map.get("organizationGuid"), 
-				map.get("spaceGuid"),
-				true);
+				map.get("spaceGuid")
+				);
 		return new ServiceInstance(request.withServiceInstanceId(serviceInstanceId));
 		
 	}

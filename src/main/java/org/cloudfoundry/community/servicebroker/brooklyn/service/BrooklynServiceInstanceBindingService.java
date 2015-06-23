@@ -9,14 +9,17 @@ import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceBindi
 import org.cloudfoundry.community.servicebroker.model.DeleteServiceInstanceBindingRequest;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstanceBinding;
 import org.cloudfoundry.community.servicebroker.service.ServiceInstanceBindingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class BrooklynServiceInstanceBindingService implements
 		ServiceInstanceBindingService {
-
-
+    
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynServiceInstanceBindingService.class);
+    
 	private BrooklynRestAdmin admin;
 	private BrooklynServiceInstanceBindingRepository repository;
 
@@ -40,6 +43,10 @@ public class BrooklynServiceInstanceBindingService implements
 			throw new ServiceInstanceBindingExistsException(serviceInstanceBinding);
 		}
 		
+		LOG.info("creating service binding: [bindingId={}, serviceInstanceId={}, appGuid={}", 
+		        request.getBindingId(), request.getServiceInstanceId(), request.getAppGuid()
+        );
+		
 		Map<String, Object> credentials = admin.getApplicationSensors(request.getServiceDefinitionId());
 		serviceInstanceBinding = new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, null, request.getAppGuid());
 		repository.save(serviceInstanceBinding);
@@ -50,10 +57,11 @@ public class BrooklynServiceInstanceBindingService implements
 	public ServiceInstanceBinding deleteServiceInstanceBinding(DeleteServiceInstanceBindingRequest request)
 			throws ServiceBrokerException {
 		
-		ServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(request.getBindingId());
+		String bindingId = request.getBindingId();
+        ServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(bindingId);
 		if (serviceInstanceBinding != null) {
-			// do delete stuff
-			repository.delete(request.getBindingId());
+		    LOG.info("Deleting service binding: [BindingId={}]", bindingId);
+			repository.delete(bindingId);
 		}
 		return serviceInstanceBinding;
 	}

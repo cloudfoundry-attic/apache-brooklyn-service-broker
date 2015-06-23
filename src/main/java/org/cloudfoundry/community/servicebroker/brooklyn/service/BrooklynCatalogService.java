@@ -12,24 +12,27 @@ import org.cloudfoundry.community.servicebroker.model.DashboardClient;
 import org.cloudfoundry.community.servicebroker.model.Plan;
 import org.cloudfoundry.community.servicebroker.model.ServiceDefinition;
 import org.cloudfoundry.community.servicebroker.service.CatalogService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import brooklyn.rest.domain.CatalogItemSummary;
-import brooklyn.rest.domain.LocationSummary;
+import brooklyn.rest.domain.CatalogLocationSummary;
 import brooklyn.util.text.NaturalOrderComparator;
 import brooklyn.util.yaml.Yamls;
 
 @Service
 public class BrooklynCatalogService implements CatalogService {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynCatalogService.class);
 
 	@Autowired
 	private BrooklynRestAdmin admin;
 
 	@Override
 	public Catalog getCatalog() {
-	    System.out.println("Getting catalog");
-		// CatalogApplication[] page = admin.getCatalogApplications();
+	    LOG.info("Getting catalog");
 		List<CatalogItemSummary> page = admin.getCatalogApplicaitons();
 		List<ServiceDefinition> definitions = new ArrayList<ServiceDefinition>();
 		Map<String, String> version = new HashMap<String, String>();
@@ -104,9 +107,9 @@ public class BrooklynCatalogService implements CatalogService {
 			}
 		}
 
-		List<LocationSummary> locations = admin.getLocations();
+		List<CatalogLocationSummary> locations = admin.getLocations();
 		
-		for (LocationSummary l : locations) {
+		for (CatalogLocationSummary l : locations) {
 			String id = serviceId + "." + l.getName();
 			String name = l.getName();
 			String description = "The location on which to deploy this service";

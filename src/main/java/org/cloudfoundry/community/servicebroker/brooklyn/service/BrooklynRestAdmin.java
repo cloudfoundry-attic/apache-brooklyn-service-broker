@@ -15,9 +15,9 @@ import org.springframework.stereotype.Service;
 
 import brooklyn.rest.client.BrooklynApi;
 import brooklyn.rest.domain.CatalogItemSummary;
+import brooklyn.rest.domain.CatalogLocationSummary;
 import brooklyn.rest.domain.EffectorSummary;
 import brooklyn.rest.domain.EntitySummary;
-import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.domain.TaskSummary;
 
 @Service
@@ -49,8 +49,8 @@ public class BrooklynRestAdmin {
 		return restApi.getCatalogApi().listApplications("", "", false);
 	}
 
-	public List<LocationSummary> getLocations() {
-		return restApi.getLocationApi().list();
+	public List<CatalogLocationSummary> getLocations() {
+	    return restApi.getCatalogApi().listLocations("", "", false);
 	}
 	
 	public TaskSummary createApplication(String applicationSpec){
@@ -59,9 +59,7 @@ public class BrooklynRestAdmin {
 	}
 	
 	public TaskSummary deleteApplication(String id) {
-		System.out.println("deleting id " + id);
 		Response response = restApi.getEntityApi().expunge(id, id, true);
-		//Response response = restApi.getApplicationApi().delete(id);
 		return BrooklynApi.getEntity(response, TaskSummary.class);	
 	}
 	
