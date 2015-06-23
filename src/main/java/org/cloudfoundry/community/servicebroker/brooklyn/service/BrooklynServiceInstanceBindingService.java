@@ -5,17 +5,21 @@ import java.util.Map;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceBindingRepository;
 import org.cloudfoundry.community.servicebroker.exception.ServiceBrokerException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceBindingExistsException;
-import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
+import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceBindingRequest;
+import org.cloudfoundry.community.servicebroker.model.DeleteServiceInstanceBindingRequest;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstanceBinding;
 import org.cloudfoundry.community.servicebroker.service.ServiceInstanceBindingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class BrooklynServiceInstanceBindingService implements
 		ServiceInstanceBindingService {
-
-
+    
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynServiceInstanceBindingService.class);
+    
 	private BrooklynRestAdmin admin;
 	private BrooklynServiceInstanceBindingRepository repository;
 
@@ -26,37 +30,40 @@ public class BrooklynServiceInstanceBindingService implements
 
 	}
 
-	@Override
-	public ServiceInstanceBinding createServiceInstanceBinding(String bindingId, ServiceInstance serviceInstance,
-			String serviceId, String planId, String appGuid) throws ServiceInstanceBindingExistsException,
-			ServiceBrokerException {
-
-		ServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(bindingId);
-		if (serviceInstanceBinding != null) {
-			throw new ServiceInstanceBindingExistsException(
-					serviceInstanceBinding);
-		}
-		Map<String, Object> credentials = admin.getApplicationSensors(serviceInstance.getServiceDefinitionId());
-		serviceInstanceBinding = new ServiceInstanceBinding(bindingId, serviceInstance.getId(), null, null, appGuid);
-		repository.save(serviceInstanceBinding);
-		return new ServiceInstanceBinding(bindingId, serviceInstance.getId(), credentials, null, appGuid);
+	protected ServiceInstanceBinding getServiceInstanceBinding(String bindingId) {
+		return repository.findOne(bindingId);
 	}
 
 	@Override
-	public ServiceInstanceBinding deleteServiceInstanceBinding(
-			String bindingId, ServiceInstance instance, String serviceId,
-			String planId) throws ServiceBrokerException {
+	public ServiceInstanceBinding createServiceInstanceBinding(CreateServiceInstanceBindingRequest request)
+			throws ServiceInstanceBindingExistsException, ServiceBrokerException {
 		
-		ServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(bindingId);
+		ServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(request.getBindingId());
 		if (serviceInstanceBinding != null) {
-			// do delete stuff
+			throw new ServiceInstanceBindingExistsException(serviceInstanceBinding);
+		}
+		
+		LOG.info("creating service binding: [bindingId={}, serviceInstanceId={}, appGuid={}", 
+		        request.getBindingId(), request.getServiceInstanceId(), request.getAppGuid()
+        );
+		
+		Map<String, Object> credentials = admin.getApplicationSensors(request.getServiceDefinitionId());
+		serviceInstanceBinding = new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, null, request.getAppGuid());
+		repository.save(serviceInstanceBinding);
+		return new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), credentials, null, request.getAppGuid());
+	}
+
+	@Override
+	public ServiceInstanceBinding deleteServiceInstanceBinding(DeleteServiceInstanceBindingRequest request)
+			throws ServiceBrokerException {
+		
+		String bindingId = request.getBindingId();
+        ServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(bindingId);
+		if (serviceInstanceBinding != null) {
+		    LOG.info("Deleting service binding: [BindingId={}]", bindingId);
 			repository.delete(bindingId);
 		}
 		return serviceInstanceBinding;
-	}
-
-	protected ServiceInstanceBinding getServiceInstanceBinding(String id) {
-		return repository.findOne(id);
 	}
 
 }

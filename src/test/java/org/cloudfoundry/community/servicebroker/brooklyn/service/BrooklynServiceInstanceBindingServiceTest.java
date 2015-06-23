@@ -11,6 +11,8 @@ import org.cloudfoundry.community.servicebroker.brooklyn.BrooklynConfiguration;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceBindingRepository;
 import org.cloudfoundry.community.servicebroker.exception.ServiceBrokerException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceBindingExistsException;
+import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceBindingRequest;
+import org.cloudfoundry.community.servicebroker.model.DeleteServiceInstanceBindingRequest;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstanceBinding;
 import org.cloudfoundry.community.servicebroker.model.fixture.ServiceInstanceBindingFixture;
@@ -49,7 +51,8 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 			throws ServiceBrokerException, ServiceInstanceBindingExistsException {
 
 		when(admin.getApplicationSensors(any(String.class))).thenReturn(Collections.emptyMap());
-		ServiceInstanceBinding binding = bindingService.createServiceInstanceBinding(SVC_INST_BIND_ID, serviceInstance, "serviceId", "planId", "appGuid");
+		CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid");
+		ServiceInstanceBinding binding = bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));
 		
 		assertNotNull(binding);
 		assertEquals(SVC_INST_BIND_ID, binding.getId());
@@ -61,9 +64,11 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 		
 		when(repository.findOne(any(String.class)))
 		.thenReturn(ServiceInstanceBindingFixture.getServiceInstanceBinding());	
-		when(admin.getApplicationSensors(any(String.class))).thenReturn(Collections.emptyMap());		
-		bindingService.createServiceInstanceBinding(SVC_INST_BIND_ID, serviceInstance, "serviceId", "planId", "appGuid");
-		bindingService.createServiceInstanceBinding(SVC_INST_BIND_ID, serviceInstance, "serviceId", "planId", "appGuid");
+		when(admin.getApplicationSensors(any(String.class))).thenReturn(Collections.emptyMap());
+		CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid");
+				
+		bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));
+		bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));
 	}
 	
 	@Test
@@ -83,6 +88,7 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 		ServiceInstanceBinding binding = ServiceInstanceBindingFixture.getServiceInstanceBinding();
 		when(repository.findOne(any(String.class))).thenReturn(binding);
 
-		assertNotNull(bindingService.deleteServiceInstanceBinding(binding.getId(), null, null, null));
+		DeleteServiceInstanceBindingRequest request = new DeleteServiceInstanceBindingRequest(binding.getId(), serviceInstance, "serviceId", "planId");
+		assertNotNull(bindingService.deleteServiceInstanceBinding(request));
 	}
 }

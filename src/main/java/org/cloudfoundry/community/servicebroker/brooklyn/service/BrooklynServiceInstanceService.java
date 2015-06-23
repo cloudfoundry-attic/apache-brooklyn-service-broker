@@ -1,15 +1,19 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
-import org.cloudfoundry.community.servicebroker.brooklyn.repository.Respositories;
 import org.cloudfoundry.community.servicebroker.exception.ServiceBrokerException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceDoesNotExistException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceExistsException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceUpdateNotSupportedException;
+import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceRequest;
+import org.cloudfoundry.community.servicebroker.model.DeleteServiceInstanceRequest;
 import org.cloudfoundry.community.servicebroker.model.Plan;
 import org.cloudfoundry.community.servicebroker.model.ServiceDefinition;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
+import org.cloudfoundry.community.servicebroker.model.UpdateServiceInstanceRequest;
 import org.cloudfoundry.community.servicebroker.service.ServiceInstanceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,10 +22,14 @@ import brooklyn.rest.domain.TaskSummary;
 @Service
 public class BrooklynServiceInstanceService implements ServiceInstanceService {
 
+	private static final Logger LOG = LoggerFactory.getLogger(BrooklynServiceInstanceService.class);
 
 	private BrooklynRestAdmin admin;
 	private BrooklynServiceInstanceRepository repository;
 
+	@Autowired
+	private BrooklynCatalogService catalogService;
+	
 	@Autowired
 	public BrooklynServiceInstanceService(BrooklynRestAdmin admin, BrooklynServiceInstanceRepository repository) {
 		this.admin = admin;
@@ -29,68 +37,69 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 	}
 
 	@Override
-	public ServiceInstance createServiceInstance(ServiceDefinition service,
-			String serviceInstanceId, String planId, String organizationGuid,
-			String spaceGuid) throws ServiceInstanceExistsException,
-			ServiceBrokerException {
+	public ServiceInstance getServiceInstance(String serviceInstanceId) {
+		return repository.findOne(serviceInstanceId);
+	}
+	
+	@Override
+	public ServiceInstance createServiceInstance(CreateServiceInstanceRequest request)
+			throws ServiceInstanceExistsException, ServiceBrokerException {
 		
 		admin.createRepositoryIfNotExists();
 
 		// check if exists already
-		ServiceInstance instance = getServiceInstance(serviceInstanceId);
+		ServiceInstance instance = getServiceInstance(request.getServiceInstanceId());
 		if (instance != null) {
 			throw new ServiceInstanceExistsException(instance);
 		}
-		System.out.println("-- creating service --");
-		System.out.println(serviceInstanceId);
-		System.out.println(planId);
-		System.out.println(organizationGuid);
-		System.out.println(spaceGuid);
-		System.out.println("----------------------");
+		LOG.info("creating service: [serviceInstanceId={}, planID={}, organizationGuid={}, spaceGuid={}", 
+				request.getServiceInstanceId(),
+				request.getPlanId(),
+				request.getOrganizationGuid(),
+				request.getSpaceGuid()
+		);
 
 		String location = "localhost"; // default
+		ServiceDefinition service = catalogService.getServiceDefinition(request.getServiceDefinitionId());
 		for(Plan p : service.getPlans()){
-			if(p.getId().equals(planId)){
+			if(p.getId().equals(request.getPlanId())){
 				location = p.getName();
 			}
 		}
 		
-		TaskSummary taskSummary = admin.createApplication(
-				"{\"services\":[\"type\": \"" + service.getId() + "\"], "
-				+ "\"locations\": [ \"" + location +"\"]"
-				+ "}");
-
-
-		instance = new ServiceInstance(serviceInstanceId,
-				taskSummary.getEntityId(),
-				planId, organizationGuid, spaceGuid,
-				null);
+		String blueprint = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"]}", service.getId(), location);
+		TaskSummary taskSummary = admin.createApplication(blueprint);
 		
+		// we set the service definition id to the entity id 
+		// as a handy way of associating the brooklyn entity
+		// with this particular service instance.
+		request.setServiceDefinitionId(taskSummary.getEntityId());
+		instance = new ServiceInstance(request);
 		repository.save(instance);
 		return instance;
 	}
 
 	@Override
-	public ServiceInstance getServiceInstance(String id) {
-		return repository.findOne(id);
-	}
-
-	@Override
-	public ServiceInstance updateServiceInstance(String instanceId,
-			String planId) throws ServiceInstanceUpdateNotSupportedException,
-			ServiceBrokerException, ServiceInstanceDoesNotExistException {
-		throw new ServiceInstanceUpdateNotSupportedException("");
-	}
-
-	@Override
-	public ServiceInstance deleteServiceInstance(String id, String serviceId,
-			String planId) throws ServiceBrokerException {
-		ServiceInstance instance = getServiceInstance(id);
+	public ServiceInstance deleteServiceInstance(DeleteServiceInstanceRequest request) 
+			throws ServiceBrokerException {
+		
+		String serviceInstanceId = request.getServiceInstanceId();
+        ServiceInstance instance = getServiceInstance(serviceInstanceId);
 		if (instance != null) {
-			repository.delete(id);
-			admin.deleteApplication(instance.getServiceDefinitionId());
+			repository.delete(serviceInstanceId);
+			String entityId = instance.getServiceDefinitionId();
+			LOG.info("Deleting service: [ServiceDefinitionId={}, ServiceInstanceId={}]", entityId, serviceInstanceId);
+			admin.deleteApplication(entityId);
 		}
 		return instance;
+	}
+
+	@Override
+	public ServiceInstance updateServiceInstance(UpdateServiceInstanceRequest request)
+			throws ServiceInstanceUpdateNotSupportedException,
+			ServiceBrokerException, ServiceInstanceDoesNotExistException {
+
+		throw new ServiceInstanceUpdateNotSupportedException("Update not supported at this time");
 	}
 
 }

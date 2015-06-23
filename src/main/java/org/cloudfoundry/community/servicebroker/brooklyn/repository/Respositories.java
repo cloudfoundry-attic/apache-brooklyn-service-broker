@@ -3,7 +3,6 @@ package org.cloudfoundry.community.servicebroker.brooklyn.repository;
 import javax.ws.rs.core.Response;
 
 import brooklyn.rest.client.BrooklynApi;
-import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.TaskSummary;
 
 public class Respositories {
@@ -29,11 +28,10 @@ public class Respositories {
 	
 	private static boolean repositoryExists(BrooklynApi brooklynApi, String name) {
 		try {
-			ApplicationSummary applicationSummary = brooklynApi.getApplicationApi().get(name);
+			brooklynApi.getApplicationApi().get(name);
 			return true;
 		} catch (Exception e) {
 			System.out.println("\n******************** REPOSITORY NOT FOUND ***********************\n");
-			//e.printStackTrace();
 			return false;
 		}
 	}

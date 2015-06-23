@@ -9,6 +9,8 @@ import org.cloudfoundry.community.servicebroker.brooklyn.BrooklynConfiguration;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
 import org.cloudfoundry.community.servicebroker.exception.ServiceBrokerException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceExistsException;
+import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceRequest;
+import org.cloudfoundry.community.servicebroker.model.DeleteServiceInstanceRequest;
 import org.cloudfoundry.community.servicebroker.model.ServiceDefinition;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
 import org.cloudfoundry.community.servicebroker.model.fixture.ServiceInstanceFixture;
@@ -39,6 +41,8 @@ public class BrooklynServiceInstanceServiceTest {
 	
 	@Mock
 	private BrooklynServiceInstanceRepository repository;
+	@Mock
+	private BrooklynCatalogService catalogService;
 
 	@Before
 	public void setup() {
@@ -51,19 +55,21 @@ public class BrooklynServiceInstanceServiceTest {
 			throws ServiceInstanceExistsException, ServiceBrokerException {
 
 		when(admin.createApplication(any(String.class))).thenReturn(entity);
+		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
 		
-		ServiceInstance instance = service.createServiceInstance(serviceDefinition, SVC_INST_ID, "planId", "organizationGuid", "spaceGuid");
+		CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid");
+		ServiceInstance instance = service.createServiceInstance(request.withServiceInstanceId(SVC_INST_ID));
 		
 		assertNotNull(instance);
-		assertEquals(SVC_INST_ID, instance.getId());
+		assertEquals(SVC_INST_ID, instance.getServiceInstanceId());
 	}
 	
 	@Test(expected=ServiceInstanceExistsException.class)
 	public void serviceInstanceCreationFailsWithExistingInstance()  
 			throws ServiceInstanceExistsException, ServiceBrokerException {
-		when(repository.findOne(any(String.class))).thenReturn(ServiceInstanceFixture.getServiceInstance());		
-		service.createServiceInstance(
-				serviceDefinition, SVC_INST_ID, "planId", "organizationGuid", "spaceGuid");
+		when(repository.findOne(any(String.class))).thenReturn(ServiceInstanceFixture.getServiceInstance());	
+		CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid");
+		service.createServiceInstance(request.withServiceInstanceId(SVC_INST_ID));
 	}
 	
 	@Test
@@ -71,8 +77,8 @@ public class BrooklynServiceInstanceServiceTest {
 			throws ServiceInstanceExistsException, ServiceBrokerException{
 		
 		when(repository.findOne(any(String.class))).thenReturn(ServiceInstanceFixture.getServiceInstance());
-		String id = ServiceInstanceFixture.getServiceInstance().getId();
-		assertEquals(id, service.getServiceInstance(id).getId());
+		String serviceInstanceId = ServiceInstanceFixture.getServiceInstance().getServiceInstanceId();
+		assertEquals(serviceInstanceId, service.getServiceInstance(serviceInstanceId).getServiceInstanceId());
 	}
 	
 	@Test
@@ -80,9 +86,9 @@ public class BrooklynServiceInstanceServiceTest {
 			throws ServiceInstanceExistsException, ServiceBrokerException {
 
 		when(repository.findOne(any(String.class))).thenReturn(ServiceInstanceFixture.getServiceInstance());
-		String id = ServiceInstanceFixture.getServiceInstance().getId();
-		
-		assertNotNull(service.deleteServiceInstance(id, null, null));
+		String instanceId = ServiceInstanceFixture.getServiceInstance().getServiceInstanceId();
+		DeleteServiceInstanceRequest request = new DeleteServiceInstanceRequest(instanceId, "serviceId", "planId");
+		assertNotNull(service.deleteServiceInstance(request));
 		
 	}
 }

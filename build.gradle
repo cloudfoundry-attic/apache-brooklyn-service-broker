@@ -1,6 +1,6 @@
 buildscript {
 	ext {
-		springBootVersion = '1.1.9.RELEASE'
+		springBootVersion = '1.2.2.RELEASE'
 		
 	}
 	repositories {
@@ -23,7 +23,7 @@ apply plugin: 'spring-boot'
 apply plugin: 'war'
 
 ext {
-	springBootCfServiceBrokerVersion = '2.4.0'
+	springBootCfServiceBrokerVersion = '2.4.1'
 	baseName = 'spring-boot-sample-simple'
 	version =  '0.0.0'
 }
@@ -45,21 +45,14 @@ repositories {
 
 configurations {
 	providedRuntime
-	//all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
 }
 
-//configurations.all { 
-//	resolutionStrategy.force "ch.qos.logback:logback-classic:1.0.7"
-//}
 
 dependencies {
 
 	compile("org.springframework.boot:spring-boot-starter")
 	testCompile("org.springframework.boot:spring-boot-starter-test") 
-	compile("org.cloudfoundry:spring-boot-cf-service-broker:${springBootCfServiceBrokerVersion}"){
-		//exclude module: "jackson-core"
-	}
-	//compile("org.springframework.boot:spring-boot-starter-data-mongodb:${springBootVersion}")
+	compile("org.cloudfoundry:spring-boot-cf-service-broker:${springBootCfServiceBrokerVersion}")
 	testCompile("org.cloudfoundry:spring-boot-cf-service-broker-tests:${springBootCfServiceBrokerVersion}")
 	testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
 	compile("org.apache.brooklyn:brooklyn-rest-client:0.7.0-SNAPSHOT"){
@@ -67,9 +60,7 @@ dependencies {
 		exclude module: "jetty-server"
 	}
 	providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
-	//compile('commons-codec:commons-codec:1.10')
-	//compile('org.springframework.cloud:spring-cloud-spring-service-connector:1.1.1.RELEASE')
-	compile('org.springframework.cloud:spring-cloud-cloudfoundry-connector:1.1.1.RELEASE')
+	compile("org.springframework.cloud:spring-cloud-cloudfoundry-connector")
 }
 
 task wrapper(type: Wrapper) {
