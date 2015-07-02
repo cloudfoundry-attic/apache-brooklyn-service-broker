@@ -43,8 +43,9 @@ public class BrooklynServiceInstanceBindingService implements
 			throw new ServiceInstanceBindingExistsException(serviceInstanceBinding);
 		}
 		
-		LOG.info("creating service binding: [bindingId={}, serviceInstanceId={}, appGuid={}", 
-		        request.getBindingId(), request.getServiceInstanceId(), request.getAppGuid()
+		Object parameters = request.getParameters(Object.class);
+		LOG.info("creating service binding: [bindingId={}, serviceInstanceId={}, appGuid={}, parameters={}", 
+		        request.getBindingId(), request.getServiceInstanceId(), request.getAppGuid(), parameters
         );
 		
 		Map<String, Object> credentials = admin.getApplicationSensors(request.getServiceDefinitionId());

@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Maps;
+
 import brooklyn.rest.domain.CatalogItemSummary;
 import brooklyn.rest.domain.CatalogLocationSummary;
 import brooklyn.util.text.NaturalOrderComparator;
@@ -35,6 +37,18 @@ public class BrooklynCatalogService implements CatalogService {
 	    LOG.info("Getting catalog");
 		List<CatalogItemSummary> page = admin.getCatalogApplications();
 		List<ServiceDefinition> definitions = new ArrayList<ServiceDefinition>();
+		definitions.add(new ServiceDefinition(
+		        "user-defined-service", 
+		        "User Defined", 
+		        "A Service Defined By a Blueprint", 
+		        true, 
+		        false, 
+		        Arrays.asList(new Plan("user-defined-plan", "blueprint", "The blueprint to deploy on Brooklyn")), 
+		        Arrays.asList(), 
+		        Maps.newHashMap(), 
+		        Arrays.asList(), 
+		        null)
+		);
 		Map<String, String> version = new HashMap<String, String>();
 		
 		for (CatalogItemSummary app : page) {

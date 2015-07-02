@@ -19,6 +19,9 @@ import org.springframework.stereotype.Service;
 
 import brooklyn.rest.domain.TaskSummary;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Service
 public class BrooklynServiceInstanceService implements ServiceInstanceService {
 
@@ -51,22 +54,38 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 		if (instance != null) {
 			throw new ServiceInstanceExistsException(instance);
 		}
-		LOG.info("creating service: [serviceInstanceId={}, planID={}, organizationGuid={}, spaceGuid={}", 
+		Object parameters = request.getParameters(Object.class);
+        LOG.info("creating service: [serviceInstanceId={}, planID={}, organizationGuid={}, spaceGuid={}, parameters={}", 
 				request.getServiceInstanceId(),
 				request.getPlanId(),
 				request.getOrganizationGuid(),
-				request.getSpaceGuid()
+				request.getSpaceGuid(),
+				parameters
 		);
 
 		String location = "localhost"; // default
 		ServiceDefinition service = catalogService.getServiceDefinition(request.getServiceDefinitionId());
-		for(Plan p : service.getPlans()){
-			if(p.getId().equals(request.getPlanId())){
-				location = p.getName();
-			}
-		}
+		boolean userDefined = service.getId().equals("user-defined-service");
 		
-		String blueprint = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"]}", service.getId(), location);
+		String blueprint = "";
+		if(userDefined){
+		    // User defined services expect a blueprint in the parameters as JSON.
+            ObjectMapper om = new ObjectMapper();
+            try {
+                blueprint = om.writeValueAsString(parameters);
+            } catch (JsonProcessingException e) {
+                throw new ServiceBrokerException(e);
+            }
+		} else {
+		
+            for (Plan p : service.getPlans()) {
+                if (p.getId().equals(request.getPlanId())) {
+                    location = p.getName();
+                }
+            }
+
+            blueprint = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}", service.getId(), location);
+        }
 		TaskSummary taskSummary = admin.createApplication(blueprint);
 		
 		// we set the service definition id to the entity id 
