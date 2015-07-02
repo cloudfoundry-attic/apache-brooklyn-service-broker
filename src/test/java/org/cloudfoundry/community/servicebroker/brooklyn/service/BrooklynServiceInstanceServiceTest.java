@@ -17,6 +17,7 @@ import org.cloudfoundry.community.servicebroker.model.fixture.ServiceInstanceFix
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ContextConfiguration;
@@ -36,7 +37,7 @@ public class BrooklynServiceInstanceServiceTest {
 	private ServiceDefinition serviceDefinition;
 	@Mock 
 	private TaskSummary entity;
-	
+	@InjectMocks
 	private BrooklynServiceInstanceService service;
 	
 	@Mock
@@ -47,7 +48,6 @@ public class BrooklynServiceInstanceServiceTest {
 	@Before
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
-		service = new BrooklynServiceInstanceService(admin, repository);
 	}
 	
 	@Test

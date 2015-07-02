@@ -26,14 +26,13 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 
 	private BrooklynRestAdmin admin;
 	private BrooklynServiceInstanceRepository repository;
-
-	@Autowired
 	private BrooklynCatalogService catalogService;
 	
 	@Autowired
-	public BrooklynServiceInstanceService(BrooklynRestAdmin admin, BrooklynServiceInstanceRepository repository) {
+	public BrooklynServiceInstanceService(BrooklynRestAdmin admin, BrooklynServiceInstanceRepository repository, BrooklynCatalogService catalogService) {
 		this.admin = admin;
 		this.repository = repository;
+        this.catalogService = catalogService;
 	}
 
 	@Override

@@ -33,7 +33,7 @@ public class BrooklynCatalogService implements CatalogService {
 	@Override
 	public Catalog getCatalog() {
 	    LOG.info("Getting catalog");
-		List<CatalogItemSummary> page = admin.getCatalogApplicaitons();
+		List<CatalogItemSummary> page = admin.getCatalogApplications();
 		List<ServiceDefinition> definitions = new ArrayList<ServiceDefinition>();
 		Map<String, String> version = new HashMap<String, String>();
 		
