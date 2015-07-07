@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import brooklyn.rest.domain.CatalogItemSummary;
-import brooklyn.rest.domain.CatalogLocationSummary;
+import brooklyn.rest.domain.LocationSummary;
 import brooklyn.util.text.NaturalOrderComparator;
 import brooklyn.util.yaml.Yamls;
 
@@ -107,9 +107,9 @@ public class BrooklynCatalogService implements CatalogService {
 			}
 		}
 
-		List<CatalogLocationSummary> locations = admin.getLocations();
+		List<LocationSummary> locations = admin.getLocations();
 		
-		for (CatalogLocationSummary l : locations) {
+		for (LocationSummary l : locations) {
 			String id = serviceId + "." + l.getName();
 			String name = l.getName();
 			String description = "The location on which to deploy this service";
