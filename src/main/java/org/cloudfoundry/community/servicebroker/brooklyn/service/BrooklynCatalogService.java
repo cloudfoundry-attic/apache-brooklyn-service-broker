@@ -40,7 +40,7 @@ public class BrooklynCatalogService implements CatalogService {
 		for (CatalogItemSummary app : page) {
 			
 			String id = app.getId();
-			String name = app.getName();
+			String name = "br_"+app.getName();
 			
 			// only take the most recent version
 			if (version.containsKey(name)){
