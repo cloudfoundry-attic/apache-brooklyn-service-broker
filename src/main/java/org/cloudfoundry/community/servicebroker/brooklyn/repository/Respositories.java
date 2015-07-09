@@ -2,10 +2,16 @@ package org.cloudfoundry.community.servicebroker.brooklyn.repository;
 
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.rest.client.BrooklynApi;
+import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.TaskSummary;
 
 public class Respositories {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(Respositories.class);
 
 	public static void createRepositories(BrooklynApi brooklynApi) {
 		String name = "service-broker-records";
@@ -22,16 +28,17 @@ public class Respositories {
 						+ "}]"
 						+ "}", name, bindingRepoName, instanceRepoName));
 			TaskSummary entity = BrooklynApi.getEntity(response, TaskSummary.class);
-			System.out.println("\n*******************" + entity + "**********************\n");
+			LOG.info("[entity={}]",  entity);
 		}
 	}
 	
 	private static boolean repositoryExists(BrooklynApi brooklynApi, String name) {
 		try {
-			brooklynApi.getApplicationApi().get(name);
+			ApplicationSummary repo = brooklynApi.getApplicationApi().get(name);
+			LOG.info("Got repo [name={}, status={}]", name, repo.getStatus());
 			return true;
 		} catch (Exception e) {
-			System.out.println("\n******************** REPOSITORY NOT FOUND ***********************\n");
+		    LOG.error("Could not find repo: {}", name);
 			return false;
 		}
 	}

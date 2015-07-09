@@ -72,7 +72,6 @@ public class BrooklynCatalogService implements CatalogService {
 	}
 
 	private List<Plan> getPlans(String serviceId, String yaml) {
-	    System.out.println("Getting plans");
 		List<Plan> plans = new ArrayList<Plan>();
 		// check if yaml contains a location
 		// if it does extract that and use it

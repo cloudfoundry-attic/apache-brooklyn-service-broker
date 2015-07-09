@@ -3,10 +3,12 @@ package org.cloudfoundry.community.servicebroker.brooklyn.service;
 import java.util.Map;
 
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceBindingRepository;
+import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
 import org.cloudfoundry.community.servicebroker.exception.ServiceBrokerException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceBindingExistsException;
 import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceBindingRequest;
 import org.cloudfoundry.community.servicebroker.model.DeleteServiceInstanceBindingRequest;
+import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstanceBinding;
 import org.cloudfoundry.community.servicebroker.service.ServiceInstanceBindingService;
 import org.slf4j.Logger;
@@ -21,17 +23,19 @@ public class BrooklynServiceInstanceBindingService implements
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynServiceInstanceBindingService.class);
     
 	private BrooklynRestAdmin admin;
-	private BrooklynServiceInstanceBindingRepository repository;
+	private BrooklynServiceInstanceBindingRepository bindingRepository;
+    private BrooklynServiceInstanceRepository instanceRepository;
 
 	@Autowired
-	public BrooklynServiceInstanceBindingService(BrooklynRestAdmin admin, BrooklynServiceInstanceBindingRepository repository) {
+	public BrooklynServiceInstanceBindingService(BrooklynRestAdmin admin, BrooklynServiceInstanceBindingRepository bindingRepository, BrooklynServiceInstanceRepository instanceRepository) {
 		this.admin = admin;
-		this.repository = repository;
+		this.bindingRepository = bindingRepository;
+        this.instanceRepository = instanceRepository;
 
 	}
 
 	protected ServiceInstanceBinding getServiceInstanceBinding(String bindingId) {
-		return repository.findOne(bindingId);
+		return bindingRepository.findOne(bindingId);
 	}
 
 	@Override
@@ -43,13 +47,16 @@ public class BrooklynServiceInstanceBindingService implements
 			throw new ServiceInstanceBindingExistsException(serviceInstanceBinding);
 		}
 		
-		LOG.info("creating service binding: [bindingId={}, serviceInstanceId={}, appGuid={}", 
-		        request.getBindingId(), request.getServiceInstanceId(), request.getAppGuid()
+		ServiceInstance serviceInstance = instanceRepository.findOne(request.getServiceInstanceId());
+		String entityId = serviceInstance.getServiceDefinitionId();
+		
+		LOG.info("creating service binding: [entity={}, serviceDefinitionId={}, bindingId={}, serviceInstanceId={}, appGuid={}", 
+		      entityId, request.getServiceDefinitionId(), request.getBindingId(), request.getServiceInstanceId(), request.getAppGuid()
         );
 		
-		Map<String, Object> credentials = admin.getApplicationSensors(request.getServiceDefinitionId());
+		Map<String, Object> credentials = admin.getApplicationSensors(entityId);
 		serviceInstanceBinding = new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, null, request.getAppGuid());
-		repository.save(serviceInstanceBinding);
+		bindingRepository.save(serviceInstanceBinding);
 		return new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), credentials, null, request.getAppGuid());
 	}
 
@@ -61,7 +68,7 @@ public class BrooklynServiceInstanceBindingService implements
         ServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(bindingId);
 		if (serviceInstanceBinding != null) {
 		    LOG.info("Deleting service binding: [BindingId={}]", bindingId);
-			repository.delete(bindingId);
+			bindingRepository.delete(bindingId);
 		}
 		return serviceInstanceBinding;
 	}

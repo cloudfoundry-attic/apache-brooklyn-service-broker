@@ -55,7 +55,7 @@ dependencies {
 	compile("org.cloudfoundry:spring-boot-cf-service-broker:${springBootCfServiceBrokerVersion}")
 	testCompile("org.cloudfoundry:spring-boot-cf-service-broker-tests:${springBootCfServiceBrokerVersion}")
 	testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
-	compile("org.apache.brooklyn:brooklyn-rest-client:0.7.0-SNAPSHOT"){
+	compile("org.apache.brooklyn:brooklyn-rest-client:0.8.0-SNAPSHOT"){
 		exclude module: "slf4j-log4j12"
 		exclude module: "jetty-server"
 	}
