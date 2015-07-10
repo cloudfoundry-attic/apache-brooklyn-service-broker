@@ -1,5 +1,5 @@
-
 # Cloud Foundry Brooklyn Service Broker
+[![Build Status](https://travis-ci.org/cloudfoundry-incubator/brooklyn-service-broker.svg?branch=master)](https://travis-ci.org/cloudfoundry-incubator/brooklyn-service-broker)
 
 This project makes a CF broker which makes [Apache Brooklyn](http://brooklyn.io) blueprints 
 available as Cloud Foundry services.
