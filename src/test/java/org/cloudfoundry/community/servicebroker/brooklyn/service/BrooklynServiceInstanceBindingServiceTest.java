@@ -54,7 +54,7 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 			throws ServiceBrokerException, ServiceInstanceBindingExistsException {
 
 		when(admin.getApplicationSensors(any(String.class))).thenReturn(Collections.<String, Object>emptyMap());
-		when(instanceRepository.findOne(any())).thenReturn(serviceInstance);
+		when(instanceRepository.findOne(any(String.class))).thenReturn(serviceInstance);
 		CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid");
 		ServiceInstanceBinding binding = bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));
 		
