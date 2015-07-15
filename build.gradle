@@ -45,6 +45,7 @@ repositories {
 
 configurations {
 	providedRuntime
+    compile.exclude module: "spring-boot-starter-tomcat"
 }
 
 
@@ -59,8 +60,9 @@ dependencies {
 		exclude module: "slf4j-log4j12"
 		exclude module: "jetty-server"
 	}
-	providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
-	compile("org.springframework.cloud:spring-cloud-cloudfoundry-connector")
+
+    compile("org.springframework.boot:spring-boot-starter-web:1.2.5.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter-jetty:1.2.5.RELEASE")
 }
 
 task wrapper(type: Wrapper) {
