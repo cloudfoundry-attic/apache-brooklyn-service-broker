@@ -44,6 +44,7 @@ public class LocationPlanStrategy implements CatalogPlanStrategy {
                              String name = s;
                              String description = "The location on which to deploy this service";
                              Map<String, Object> metadata = new HashMap<String, Object>();
+                             metadata.put("location", s);
                              plans.add(new Plan(id, name, description, metadata));
                          }
                      } else if (location instanceof String){
@@ -51,6 +52,7 @@ public class LocationPlanStrategy implements CatalogPlanStrategy {
                          String name = (String) location;
                          String description = "The location on which to deploy this service";
                          Map<String, Object> metadata = new HashMap<String, Object>();
+                         metadata.put("location", name);
                          plans.add(new Plan(id, name, description, metadata));
                      }
                      return plans;
@@ -66,6 +68,7 @@ public class LocationPlanStrategy implements CatalogPlanStrategy {
          String name = l.getName();
          String description = "The location on which to deploy this service";
          Map<String, Object> metadata = new HashMap<String, Object>();
+         metadata.put("location", name);
          plans.add(new Plan(id, name, description, metadata));
      }
      return plans;

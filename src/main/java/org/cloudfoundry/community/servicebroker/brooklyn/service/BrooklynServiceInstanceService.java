@@ -1,5 +1,8 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
+import java.util.Map;
+
+import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
 import org.cloudfoundry.community.servicebroker.exception.ServiceBrokerException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceDoesNotExistException;
@@ -18,16 +21,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import brooklyn.rest.domain.TaskSummary;
+import brooklyn.util.exceptions.Exceptions;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 
 @Service
 public class BrooklynServiceInstanceService implements ServiceInstanceService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BrooklynServiceInstanceService.class);
 
-	private BrooklynRestAdmin admin;
-	private BrooklynServiceInstanceRepository repository;
-	private BrooklynCatalogService catalogService;
-	
+    private BrooklynRestAdmin admin;
+    private BrooklynServiceInstanceRepository repository;
+    private BrooklynCatalogService catalogService;
+
 	@Autowired
 	public BrooklynServiceInstanceService(BrooklynRestAdmin admin, BrooklynServiceInstanceRepository repository, BrooklynCatalogService catalogService) {
 		this.admin = admin;
@@ -58,25 +68,48 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 				request.getSpaceGuid()
 		);
 
-		String location = "localhost"; // default
-		ServiceDefinition service = catalogService.getServiceDefinition(request.getServiceDefinitionId());
-		for(Plan p : service.getPlans()){
-			if(p.getId().equals(request.getPlanId())){
-				location = p.getName();
-			}
-		}
-		
-		String blueprint = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"]}", service.getId(), location);
-		TaskSummary taskSummary = admin.createApplication(blueprint);
-		
-		// we set the service definition id to the entity id 
-		// as a handy way of associating the brooklyn entity
-		// with this particular service instance.
-		request.setServiceDefinitionId(taskSummary.getEntityId());
-		instance = new ServiceInstance(request);
-		repository.save(instance);
-		return instance;
-	}
+        ServiceDefinition service = catalogService.getServiceDefinition(request.getServiceDefinitionId());
+
+        String blueprint = createBlueprint(service, request);
+        TaskSummary taskSummary = admin.createApplication(blueprint);
+
+        // we set the service definition id to the entity id
+        // as a handy way of associating the brooklyn entity
+        // with this particular service instance.
+        request.setServiceDefinitionId(taskSummary.getEntityId());
+        instance = new ServiceInstance(request);
+        repository.save(instance);
+        return instance;
+
+    }
+
+    @VisibleForTesting
+    public String createBlueprint(ServiceDefinition serviceDefinition, CreateServiceInstanceRequest request) {
+        String location = "localhost"; // default
+        Plan selectedPlan = null;
+        for(Plan p : serviceDefinition.getPlans()){
+            if(p.getId().equals(request.getPlanId())){
+                selectedPlan = p;
+            }
+        }
+        Map<String, Object> metadata = selectedPlan.getMetadata();
+        if (metadata.containsKey("location")) {
+            location = metadata.get("location").toString();
+        }
+
+        if (metadata.containsKey("provisioning.properties")) {
+            ObjectWriter writer = new ObjectMapper().writer();
+            String metadataJson = null;
+            try {
+                metadataJson = writer.writeValueAsString(ImmutableMap.of("provisioning.properties", metadata.get("provisioning.properties")));
+                return String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"], \"brooklyn.config\":%s}", serviceDefinition.getId(), location, metadataJson);
+            } catch (JsonProcessingException e) {
+                throw Exceptions.propagate(e);
+            }
+        } else {
+            return String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"]}", serviceDefinition.getId(), location);
+        }
+    }
 
 	@Override
 	public ServiceInstance deleteServiceInstance(DeleteServiceInstanceRequest request) 
