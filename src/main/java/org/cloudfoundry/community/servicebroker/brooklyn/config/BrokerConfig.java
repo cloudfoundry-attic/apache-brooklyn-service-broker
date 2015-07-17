@@ -16,6 +16,9 @@ import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
+import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.CatalogPlanStrategy;
+import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.LocationPlanStrategy;
 import org.cloudfoundry.community.servicebroker.model.BrokerApiVersion;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
 import org.slf4j.Logger;
@@ -40,6 +43,12 @@ public class BrokerConfig {
 	public BrokerApiVersion brokerApiVersion() {
 		return new BrokerApiVersion();
 	}
+	
+	@Bean
+	public CatalogPlanStrategy CatalogPlanStrategy(BrooklynRestAdmin admin){
+	    return new LocationPlanStrategy(admin);
+	}
+	
 
 	@Bean
 	public BrooklynApi restApi() {
