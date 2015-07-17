@@ -1,0 +1,48 @@
+---
+resources:
+- name: broker-parent
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry-community/spring-boot-cf-service-broker
+    branch: master
+
+- name: brooklyn-broker
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry-incubator/brooklyn-service-broker
+    branch: master
+
+- name: brooklyn-binary
+  type: s3
+  source:
+    bucket: cip-releases
+    regexp: brooklyn-service-broker.war
+    access_key_id: {{s3-access-key-id}}
+    secret_access_key: {{s3-secret-access-key}}
+
+- name: version
+  type: semver
+  source:
+    bucket: cip-releases/brooklyn-broker
+    access_key_id: {{s3-access-key-id}}
+    secret_access_key: {{s3-secret-access-key}}
+    key: current-version
+
+jobs:
+- name: build-brooklyn
+  plan:
+  - aggregate:
+    - get: broker-parent
+    - get: brooklyn-broker
+      trigger: true
+    - get: version
+      params: {bump: patch}
+  - task: build-and-test-broker
+    file: brooklyn-broker/ci/build-and-test-broker.yml
+  - put: brooklyn-binary 
+    params:
+      from: build-broker/build/libs/brooklyn-service-broker.war
+      to: brooklyn-broker
+  - put: version
+    params:
+      file: version/number
