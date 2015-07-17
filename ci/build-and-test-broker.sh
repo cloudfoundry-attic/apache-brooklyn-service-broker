@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/bin/bash -ex
+
+export TERM=dumb
 
 cd broker-parent
 

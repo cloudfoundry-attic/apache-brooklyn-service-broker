@@ -4,8 +4,8 @@ platform: linux
 image: docker:///pierrevincent/gradle-java8
 
 inputs:
-- name: brooklyn-parent
+- name: broker-parent
 - name: brooklyn-broker
 
 run:
-  path: ci/build-and-test-broker.sh
+  path: brooklyn-broker/ci/build-and-test-broker.sh
