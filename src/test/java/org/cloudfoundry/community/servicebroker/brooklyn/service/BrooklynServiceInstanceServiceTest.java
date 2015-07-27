@@ -100,7 +100,7 @@ public class BrooklynServiceInstanceServiceTest {
 	}
 
     @Test
-    public void testCreateBlueprint() {
+    public void testCreateBlueprintWithProvisioningProperties() {
         CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid")
                 .withServiceInstanceId(SVC_INST_ID);
         when(serviceDefinition.getId()).thenReturn("testService");
@@ -117,6 +117,39 @@ public class BrooklynServiceInstanceServiceTest {
         String blueprint = service.createBlueprint(serviceDefinition, request);
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
         assertEquals(expectedBlueprint.replace(" ", ""), blueprint.replace(" ", ""));
+    }
 
+    @Test
+    public void testCreateBlueprintWithBrooklynProperties() {
+        CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid")
+                .withServiceInstanceId(SVC_INST_ID);
+        when(serviceDefinition.getId()).thenReturn("testService");
+        when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
+                new Plan("planId", "planName", "planDescription", ImmutableMap.of(
+                        "location", "testLocation",
+                        "provisioning.properties", ImmutableMap.of(
+                                "minCores", TEST_MIN_CORES,
+                                "minRam", TEST_MIN_RAM
+                        )
+                ))
+        ));
+        String expectedBlueprint = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
+        String blueprint = service.createBlueprint(serviceDefinition, request);
+        // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
+        assertEquals(expectedBlueprint.replace(" ", ""), blueprint.replace(" ", ""));
+    }
+
+    @Test
+    public void testCreateBlueprintNoMetadata() {
+        CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid")
+                .withServiceInstanceId(SVC_INST_ID);
+        when(serviceDefinition.getId()).thenReturn("testService");
+        when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
+                new Plan("planId", "planName", "planDescription", ImmutableMap.of("location", "testLocation"))
+        ));
+        String expectedBlueprint = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"]}", serviceDefinition.getId(), "testLocation");
+        String blueprint = service.createBlueprint(serviceDefinition, request);
+        // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
+        assertEquals(expectedBlueprint.replace(" ", ""), blueprint.replace(" ", ""));
     }
 }

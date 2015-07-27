@@ -40,6 +40,10 @@ public class SizePlanStrategy implements CatalogPlanStrategy {
                 }
             }
         }
+        if (plans.size() == 0) {
+            // FIXME: All services must have at least one plan. What to do if no plans are found?
+            plans.add(new Plan(serviceId + ".dummy-plan", serviceId + ".dummy-plan", "No plans found"));
+        }
         return plans;
     }
 
@@ -50,7 +54,7 @@ public class SizePlanStrategy implements CatalogPlanStrategy {
         for (String planName : planDefinitions.keySet()) {
             Map<String, Object> planDefinition = (Map<String, Object>) planDefinitions.get(planName);
             Map<String, Object> properties = Maps.newHashMap();
-            properties.put("provisioning.properties", planDefinition.get("provisioning.properties"));
+            properties.putAll(planDefinition);
             properties.put("location", brooklynConfig.getLocation());
             String id = serviceId + "." + planName;
             String name = planName;

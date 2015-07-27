@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import brooklyn.rest.domain.TaskSummary;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -92,16 +93,16 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
                 selectedPlan = p;
             }
         }
-        Map<String, Object> metadata = selectedPlan.getMetadata();
+        Map<String, Object> metadata = MutableMap.copyOf(selectedPlan.getMetadata());
         if (metadata.containsKey("location")) {
-            location = metadata.get("location").toString();
+            location = metadata.remove("location").toString();
         }
 
-        if (metadata.containsKey("provisioning.properties")) {
+        if (metadata.keySet().size() > 0) {
             ObjectWriter writer = new ObjectMapper().writer();
             String metadataJson = null;
             try {
-                metadataJson = writer.writeValueAsString(ImmutableMap.of("provisioning.properties", metadata.get("provisioning.properties")));
+                metadataJson = writer.writeValueAsString(metadata);
                 return String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"], \"brooklyn.config\":%s}", serviceDefinition.getId(), location, metadataJson);
             } catch (JsonProcessingException e) {
                 throw Exceptions.propagate(e);
