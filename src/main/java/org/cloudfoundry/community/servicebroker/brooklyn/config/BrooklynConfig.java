@@ -12,7 +12,8 @@ public class BrooklynConfig {
 	private String uri;
 	private String username;
 	private String password;
-	
+	private String location;
+
 	public String getUri() {
 		return uri;
 	}
@@ -46,4 +47,12 @@ public class BrooklynConfig {
 	public void setUsername(String username) {
 		this.username = username;
 	}
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
 }

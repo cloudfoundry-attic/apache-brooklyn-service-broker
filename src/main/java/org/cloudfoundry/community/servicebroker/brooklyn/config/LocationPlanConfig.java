@@ -1,16 +1,18 @@
-package org.cloudfoundry.community.servicebroker.brooklyn;
+package org.cloudfoundry.community.servicebroker.brooklyn.config;
 
-import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.CatalogPlanStrategy;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.LocationPlanStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 @Configuration
-public class BrooklynConfiguration {
+@Profile("location-plan")
+public class LocationPlanConfig {
 
-	public @Bean BrooklynConfig brooklynConfig() {
-		return new BrooklynConfig();
-	}
+    @Bean
+    public CatalogPlanStrategy planStrategy(BrooklynRestAdmin brooklynRestAdmin){
+        return new LocationPlanStrategy(brooklynRestAdmin);
+    }
 }

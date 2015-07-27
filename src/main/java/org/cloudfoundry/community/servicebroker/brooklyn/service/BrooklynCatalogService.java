@@ -3,10 +3,10 @@ package org.cloudfoundry.community.servicebroker.brooklyn.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.CatalogPlanStrategy;
 import org.cloudfoundry.community.servicebroker.model.Catalog;
 import org.cloudfoundry.community.servicebroker.model.DashboardClient;
 import org.cloudfoundry.community.servicebroker.model.Plan;
@@ -18,17 +18,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import brooklyn.rest.domain.CatalogItemSummary;
-import brooklyn.rest.domain.LocationSummary;
 import brooklyn.util.text.NaturalOrderComparator;
-import brooklyn.util.yaml.Yamls;
 
 @Service
 public class BrooklynCatalogService implements CatalogService {
     
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynCatalogService.class);
 
-	@Autowired
 	private BrooklynRestAdmin admin;
+	private CatalogPlanStrategy planStrategy;
+	
+	@Autowired
+	public BrooklynCatalogService(BrooklynRestAdmin admin, CatalogPlanStrategy planStrategy) {
+        this.admin = admin;
+        this.planStrategy = planStrategy;
+    }
+	
+	public void setPlanStrategy(CatalogPlanStrategy planStrategy) {
+        this.planStrategy = planStrategy;
+    }
 
 	@Override
 	public Catalog getCatalog() {
@@ -67,55 +75,12 @@ public class BrooklynCatalogService implements CatalogService {
 		return new Catalog(definitions);
 	}
 
-	private List<String> getTags() {
+	public List<Plan> getPlans(String id, String planYaml) {
+        return planStrategy.makePlans(id, planYaml);
+    }
+
+    private List<String> getTags() {
 		return Arrays.asList();
-	}
-
-	private List<Plan> getPlans(String serviceId, String yaml) {
-		List<Plan> plans = new ArrayList<Plan>();
-		// check if yaml contains a location
-		// if it does extract that and use it
-		// as the plan.
-		if (yaml != null) {
-			Iterator<Object> iterator = Yamls.parseAll(yaml).iterator();
-			while (iterator.hasNext()) {
-				Object next = iterator.next();
-				if (next instanceof Map){
-					Map<String, Object> map = (Map<String, Object>) next;
-					if (map.containsKey("location")){
-						Object location = map.get("location");
-						if (location instanceof Map){
-							// just use the keys
-							for(String s : ((Map<String, Object>) location).keySet()){
-								String id = serviceId + "." + s;
-								String name = s;
-								String description = "The location on which to deploy this service";
-								Map<String, Object> metadata = new HashMap<String, Object>();
-								plans.add(new Plan(id, name, description, metadata));
-							}
-						} else if (location instanceof String){
-							String id = serviceId + "." + location;
-							String name = (String) location;
-							String description = "The location on which to deploy this service";
-							Map<String, Object> metadata = new HashMap<String, Object>();
-							plans.add(new Plan(id, name, description, metadata));
-						}
-						return plans;
-					}
-				}
-			}
-		}
-
-		List<LocationSummary> locations = admin.getLocations();
-		
-		for (LocationSummary l : locations) {
-			String id = serviceId + "." + l.getName();
-			String name = l.getName();
-			String description = "The location on which to deploy this service";
-			Map<String, Object> metadata = new HashMap<String, Object>();
-			plans.add(new Plan(id, name, description, metadata));
-		}
-		return plans;
 	}
 
 	private Map<String, Object> getServiceDefinitionMetadata(String iconUrl) {
