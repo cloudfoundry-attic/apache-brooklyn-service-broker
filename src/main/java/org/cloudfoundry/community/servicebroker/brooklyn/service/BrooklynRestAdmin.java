@@ -157,9 +157,10 @@ public class BrooklynRestAdmin {
 
     @Async
 	public Future<Boolean> isApplicationRunning(String application) {
-		Object result = restApi.getSensorApi().get(application, application, "service.isUp", false);
-		if (result instanceof Boolean){
-			return new AsyncResult<>((Boolean) result);
+        Object result = restApi.getSensorApi().get(application, application, "service.state", false);
+
+		if (result instanceof String){
+			return new AsyncResult<>(result.toString().toUpperCase().equals("RUNNING"));
 		}
 		return new AsyncResult<>(false);
 	}

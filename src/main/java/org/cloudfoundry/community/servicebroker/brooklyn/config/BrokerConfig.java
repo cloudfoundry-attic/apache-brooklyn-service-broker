@@ -83,10 +83,6 @@ public class BrokerConfig {
                     .setDefaultCredentialsProvider(credentialsProvider)
                     .setDefaultRequestConfig(requestConfig)
                     .build();
-//			if (url.getProtocol().equals("https")) {
-//				LOG.info("Detected https, registering trust all / allow all");
-//				registerScheme(httpClient, createScheme(url));
-//			}
 			return new BrooklynApi(url, new ApacheHttpClient4Executor(httpClient));
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
