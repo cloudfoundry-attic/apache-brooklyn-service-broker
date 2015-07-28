@@ -64,7 +64,7 @@ dependencies {
         exclude module: "slf4j-log4j12"
         exclude module: "jetty-server"
     }
-
+    compile("org.apache.httpcomponents:httpclient:4.5")
     compile("org.springframework.boot:spring-boot-starter-web:1.2.5.RELEASE")
     compile("org.springframework.boot:spring-boot-starter-jetty:1.2.5.RELEASE")
 }

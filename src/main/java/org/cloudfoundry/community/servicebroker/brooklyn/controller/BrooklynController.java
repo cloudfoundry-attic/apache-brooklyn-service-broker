@@ -3,11 +3,13 @@ package org.cloudfoundry.community.servicebroker.brooklyn.controller;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 import javax.ws.rs.core.MediaType;
 
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
+import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -68,7 +70,8 @@ public class BrooklynController {
 		ServiceInstance instance = instanceRepository.findOne(application);
 		if (instance != null) {
 			String appId = instance.getServiceDefinitionId();
-			return admin.getApplicationEffectors(appId);
+            Future<Map<String, Object>> applicationEffectorsFuture = admin.getApplicationEffectors(appId);
+            return ServiceUtil.getFutureValueLoggingError(applicationEffectorsFuture);
 		}	
 		System.out.println(instanceRepository);
 		return Collections.emptyMap();
@@ -79,7 +82,8 @@ public class BrooklynController {
 		ServiceInstance instance = instanceRepository.findOne(application);
 		if (instance != null) {
 			String appId = instance.getServiceDefinitionId();
-			return admin.getApplicationSensors(appId);
+            Future<Map<String, Object>> applicationSensorsFuture = admin.getApplicationSensors(appId);
+            return ServiceUtil.getFutureValueLoggingError(applicationSensorsFuture);
 		}	
 		System.out.println(instanceRepository);
 		return Collections.emptyMap();
@@ -90,7 +94,8 @@ public class BrooklynController {
 		ServiceInstance instance = instanceRepository.findOne(application);
 		if (instance != null) {
 			String appId = instance.getServiceDefinitionId();
-			return admin.isApplicationRunning(appId);
+            Future<Boolean> applicationRunningFuture = admin.isApplicationRunning(appId);
+            return ServiceUtil.getFutureValueLoggingError(applicationRunningFuture);
 		}
 		
 		return false;

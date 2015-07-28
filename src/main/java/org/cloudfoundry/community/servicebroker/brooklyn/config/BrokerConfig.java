@@ -12,10 +12,19 @@ import java.security.cert.X509Certificate;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.config.AuthSchemes;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.CatalogPlanStrategy;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.LocationPlanStrategy;
@@ -29,6 +38,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 import brooklyn.rest.client.BrooklynApi;
+import scala.actors.threadpool.Arrays;
+
+import com.google.common.collect.ImmutableList;
 
 @Configuration
 @ComponentScan(basePackages = "org.cloudfoundry.community.servicebroker")
@@ -43,12 +55,12 @@ public class BrokerConfig {
 	public BrokerApiVersion brokerApiVersion() {
 		return new BrokerApiVersion();
 	}
-	
+
 	@Bean
 	public CatalogPlanStrategy CatalogPlanStrategy(BrooklynRestAdmin admin){
 	    return new LocationPlanStrategy(admin);
 	}
-	
+
 
 	@Bean
 	public BrooklynApi restApi() {
@@ -56,12 +68,25 @@ public class BrokerConfig {
 		try {
 			url = new URL(config.toFullUrl());
 			LOG.info("Creating new brooklynApi for " + url);
-			DefaultHttpClient httpClient = new DefaultHttpClient();
-			setCredentials(httpClient);
-			if (url.getProtocol().equals("https")) {
-				LOG.info("Detected https, registering trust all / allow all");
-				registerScheme(httpClient, createScheme(url));
-			}
+            HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+
+            RequestConfig requestConfig = RequestConfig.custom()
+                    .setSocketTimeout(30000)
+                    .setConnectTimeout(30000)
+                    .setTargetPreferredAuthSchemes(ImmutableList.of(AuthSchemes.BASIC))
+                    .setProxyPreferredAuthSchemes(ImmutableList.of(AuthSchemes.BASIC))
+                    .build();
+
+            CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(AuthScope.ANY, getUsernamePasswordCredentials());
+            CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(cm)
+                    .setDefaultCredentialsProvider(credentialsProvider)
+                    .setDefaultRequestConfig(requestConfig)
+                    .build();
+//			if (url.getProtocol().equals("https")) {
+//				LOG.info("Detected https, registering trust all / allow all");
+//				registerScheme(httpClient, createScheme(url));
+//			}
 			return new BrooklynApi(url, new ApacheHttpClient4Executor(httpClient));
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
@@ -83,13 +108,8 @@ public class BrokerConfig {
 		return sch;
 	}
 
-	private void registerScheme(DefaultHttpClient httpClient, Scheme sch) {
+	private void registerScheme(CloseableHttpClient httpClient, Scheme sch) {
 		httpClient.getConnectionManager().getSchemeRegistry().register(sch);
-	}
-
-	private void setCredentials(DefaultHttpClient httpClient) {
-		httpClient.getCredentialsProvider().setCredentials(AuthScope.ANY,
-				getUsernamePasswordCredentials());
 	}
 
 	private Credentials getUsernamePasswordCredentials() {

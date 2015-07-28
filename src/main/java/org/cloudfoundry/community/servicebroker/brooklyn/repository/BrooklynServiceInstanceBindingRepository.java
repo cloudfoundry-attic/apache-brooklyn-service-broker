@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import brooklyn.rest.client.BrooklynApi;
 
+// TODO Consider using @Async for access to REST api
 @Service
 public class BrooklynServiceInstanceBindingRepository {
     

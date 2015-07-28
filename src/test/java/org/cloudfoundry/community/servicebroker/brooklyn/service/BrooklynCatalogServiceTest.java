@@ -3,7 +3,6 @@ package org.cloudfoundry.community.servicebroker.brooklyn.service;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -65,7 +65,7 @@ public class BrooklynCatalogServiceTest {
     @Test
     public void testGetLocationPlans(){
         brooklynCatalogService.setPlanStrategy(new LocationPlanStrategy(admin));
-        when(admin.getLocations()).thenReturn(LOCATION_SUMMARIES);
+        when(admin.getLocations()).thenReturn(new AsyncResult<>(LOCATION_SUMMARIES));
         List<Plan> plans = brooklynCatalogService.getPlans("test_id", "");
         
         assertEquals(LOCATION_SUMMARIES.size(), plans.size());
@@ -74,7 +74,7 @@ public class BrooklynCatalogServiceTest {
     @Test
     public void testGetServicesWithSizeStrategy(){
         brooklynCatalogService.setPlanStrategy(new SizePlanStrategy(brooklynConfig));
-        when(admin.getCatalogApplications()).thenReturn(CATALOG_ITEM_SUMMARIES);
+        when(admin.getCatalogApplications()).thenReturn(new AsyncResult<>(CATALOG_ITEM_SUMMARIES));
         Catalog catalog = brooklynCatalogService.getCatalog();
         List<ServiceDefinition> serviceDefinitions = catalog.getServiceDefinitions();
         assertEquals(1, serviceDefinitions.size());

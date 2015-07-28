@@ -9,9 +9,10 @@ import brooklyn.rest.client.BrooklynApi;
 import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.TaskSummary;
 
-public class Respositories {
+// TODO Consider using @Async on calls to the REST api
+public class Repositories {
     
-    private static final Logger LOG = LoggerFactory.getLogger(Respositories.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Repositories.class);
 
 	public static void createRepositories(BrooklynApi brooklynApi) {
 		String name = "service-broker-records";

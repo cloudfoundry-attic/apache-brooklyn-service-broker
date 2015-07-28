@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.scheduling.annotation.AsyncResult;
 
 import brooklyn.rest.domain.LocationSummary;
 
@@ -41,7 +42,7 @@ public class LocationPlanStrategyTest {
 
     @Test
     public void testMakePlansNoLocationsInYAML() {
-        when(admin.getLocations()).thenReturn(LOCATION_SUMMARIES);
+        when(admin.getLocations()).thenReturn(new AsyncResult<>(LOCATION_SUMMARIES));
         List<Plan> plans = locationPlanStrategy.makePlans(TEST_ID, "the_yaml");
         assertEquals(LOCATION_SUMMARIES.size(), plans.size());
         checkLocationSummariesEqualsPlan(LOCATION_SUMMARIES.get(0), plans.get(0));

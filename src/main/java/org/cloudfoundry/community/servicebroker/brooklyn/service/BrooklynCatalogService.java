@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.CatalogPlanStrategy;
 import org.cloudfoundry.community.servicebroker.model.Catalog;
@@ -19,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import brooklyn.rest.domain.CatalogItemSummary;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.NaturalOrderComparator;
 
 import com.google.common.collect.Sets;
@@ -44,11 +47,12 @@ public class BrooklynCatalogService implements CatalogService {
 	@Override
 	public Catalog getCatalog() {
 	    LOG.info("Getting catalog");
-		List<CatalogItemSummary> page = admin.getCatalogApplications();
-		List<ServiceDefinition> definitions = new ArrayList<ServiceDefinition>();
-		Map<String, String> version = new HashMap<String, String>();
+		Future<List<CatalogItemSummary>> pageFuture = admin.getCatalogApplications();
+		List<ServiceDefinition> definitions = new ArrayList<>();
+		Map<String, String> version = new HashMap<>();
         Set<String> names = Sets.newHashSet();
 
+        List<CatalogItemSummary> page = ServiceUtil.getFutureValueLoggingError(pageFuture);
         for (CatalogItemSummary app : page) {
 			
 			String id = app.getId();
@@ -81,7 +85,9 @@ public class BrooklynCatalogService implements CatalogService {
 		return new Catalog(definitions);
 	}
 
-	public List<Plan> getPlans(String id, String planYaml) {
+
+
+    public List<Plan> getPlans(String id, String planYaml) {
         return planStrategy.makePlans(id, planYaml);
     }
 
@@ -90,7 +96,7 @@ public class BrooklynCatalogService implements CatalogService {
 	}
 
 	private Map<String, Object> getServiceDefinitionMetadata(String iconUrl) {
-		Map<String, Object> metadata = new HashMap<String, Object>();
+		Map<String, Object> metadata = new HashMap<>();
 		metadata.put("imageUrl", iconUrl);
 		return metadata;
 	}

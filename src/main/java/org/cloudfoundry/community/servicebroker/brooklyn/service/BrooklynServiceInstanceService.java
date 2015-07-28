@@ -1,8 +1,8 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
 import java.util.Map;
+import java.util.concurrent.Future;
 
-import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
 import org.cloudfoundry.community.servicebroker.exception.ServiceBrokerException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceDoesNotExistException;
@@ -28,7 +28,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 
 @Service
 public class BrooklynServiceInstanceService implements ServiceInstanceService {
@@ -72,8 +71,9 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
         ServiceDefinition service = catalogService.getServiceDefinition(request.getServiceDefinitionId());
 
         String blueprint = createBlueprint(service, request);
-        TaskSummary taskSummary = admin.createApplication(blueprint);
 
+        Future<TaskSummary> taskSummaryFuture = admin.createApplication(blueprint);
+        TaskSummary taskSummary = ServiceUtil.getFutureValueLoggingError(taskSummaryFuture);
         // we set the service definition id to the entity id
         // as a handy way of associating the brooklyn entity
         // with this particular service instance.

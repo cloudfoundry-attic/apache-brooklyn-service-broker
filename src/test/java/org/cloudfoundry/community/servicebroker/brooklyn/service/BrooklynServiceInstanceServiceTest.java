@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -60,7 +61,7 @@ public class BrooklynServiceInstanceServiceTest {
 	public void newServiceInstanceCreatedSuccessfully() 
 			throws ServiceInstanceExistsException, ServiceBrokerException {
 
-		when(admin.createApplication(any(String.class))).thenReturn(entity);
+		when(admin.createApplication(any(String.class))).thenReturn(new AsyncResult<>(entity));
 		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
         when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(new Plan("planId", "test_name", "test_description", ImmutableMap.of("location", "test_location"))));
 		

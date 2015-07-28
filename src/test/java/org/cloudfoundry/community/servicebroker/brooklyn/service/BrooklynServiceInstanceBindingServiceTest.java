@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -53,7 +54,7 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 	public void newServiceInstanceBindingCreatedSuccessfully() 
 			throws ServiceBrokerException, ServiceInstanceBindingExistsException {
 
-		when(admin.getApplicationSensors(any(String.class))).thenReturn(Collections.<String, Object>emptyMap());
+		when(admin.getApplicationSensors(any(String.class))).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
 		when(instanceRepository.findOne(any(String.class))).thenReturn(serviceInstance);
 		CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid");
 		ServiceInstanceBinding binding = bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));
@@ -68,7 +69,7 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 		
 		when(bindingRepository.findOne(any(String.class)))
 		.thenReturn(ServiceInstanceBindingFixture.getServiceInstanceBinding());	
-		when(admin.getApplicationSensors(any(String.class))).thenReturn(Collections.<String, Object>emptyMap());
+		when(admin.getApplicationSensors(any(String.class))).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
 		CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid");
 				
 		bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));

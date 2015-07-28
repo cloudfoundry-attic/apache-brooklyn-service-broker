@@ -1,6 +1,8 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceBindingRepository;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
@@ -54,8 +56,9 @@ public class BrooklynServiceInstanceBindingService implements
 		      entityId, request.getServiceDefinitionId(), request.getBindingId(), request.getServiceInstanceId(), request.getAppGuid()
         );
 		
-		Map<String, Object> credentials = admin.getApplicationSensors(entityId);
-		serviceInstanceBinding = new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, null, request.getAppGuid());
+		Future<Map<String, Object>> credentialsFuture = admin.getApplicationSensors(entityId);
+        Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
+        serviceInstanceBinding = new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, null, request.getAppGuid());
 		bindingRepository.save(serviceInstanceBinding);
 		return new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), credentials, null, request.getAppGuid());
 	}
