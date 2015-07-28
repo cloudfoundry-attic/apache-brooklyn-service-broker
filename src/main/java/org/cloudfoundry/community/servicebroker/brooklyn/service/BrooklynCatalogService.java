@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.CatalogPlanStrategy;
 import org.cloudfoundry.community.servicebroker.model.Catalog;
@@ -19,6 +20,8 @@ import org.springframework.stereotype.Service;
 
 import brooklyn.rest.domain.CatalogItemSummary;
 import brooklyn.util.text.NaturalOrderComparator;
+
+import com.google.common.collect.Sets;
 
 @Service
 public class BrooklynCatalogService implements CatalogService {
@@ -44,12 +47,12 @@ public class BrooklynCatalogService implements CatalogService {
 		List<CatalogItemSummary> page = admin.getCatalogApplications();
 		List<ServiceDefinition> definitions = new ArrayList<ServiceDefinition>();
 		Map<String, String> version = new HashMap<String, String>();
-		
-		for (CatalogItemSummary app : page) {
+        Set<String> names = Sets.newHashSet();
+
+        for (CatalogItemSummary app : page) {
 			
 			String id = app.getId();
-			String name = "br_"+app.getName();
-			
+			String name = ServiceUtil.getUniqueName("br_"+app.getName(), names);
 			// only take the most recent version
 			if (version.containsKey(name)){
 				if (new NaturalOrderComparator().compare(app.getVersion(), version.get(name)) <= 0){
@@ -62,6 +65,9 @@ public class BrooklynCatalogService implements CatalogService {
 			boolean bindable = true;
 			boolean planUpdatable = false;
 			List<Plan> plans = getPlans(id, app.getPlanYaml());
+            if (plans.size() == 0) {
+                continue;
+            }
 			List<String> tags = getTags();
 			Map<String, Object> metadata = getServiceDefinitionMetadata(app.getIconUrl());
 			List<String> requires = getTags();

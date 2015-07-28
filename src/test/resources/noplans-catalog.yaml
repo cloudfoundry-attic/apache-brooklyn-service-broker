@@ -1,0 +1,10 @@
+brooklyn.catalog:
+  id: com.cloudsoft.development.noplans
+  version: 1.0
+  description: A Basic Entity with no plans
+  displayName: BasicEntity
+  itemType: template
+
+services:
+- type: brooklyn.entity.basic.BasicEntity
+  defaultDisplayName: Basic Entity

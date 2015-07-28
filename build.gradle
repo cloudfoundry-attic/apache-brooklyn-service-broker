@@ -60,6 +60,10 @@ dependencies {
 		exclude module: "slf4j-log4j12"
 		exclude module: "jetty-server"
 	}
+    testCompile("org.apache.brooklyn:brooklyn-core:0.8.0-SNAPSHOT"){
+        exclude module: "slf4j-log4j12"
+        exclude module: "jetty-server"
+    }
 
     compile("org.springframework.boot:spring-boot-starter-web:1.2.5.RELEASE")
     compile("org.springframework.boot:spring-boot-starter-jetty:1.2.5.RELEASE")
