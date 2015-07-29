@@ -25,21 +25,28 @@ import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.domain.TaskSummary;
 
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
 
 @Service
 public class BrooklynRestAdmin {
 
 	private BrooklynApi restApi;
 
-	private Set<String> sensorBlacklist = new HashSet<>(Arrays.asList(
-			"download.url",
-			"expandedinstall.dir",
-			"install.dir",
-			"download.url.debian",
-			"download.url.mac",
-			"download.url.rhelcentos",
-			"download.url.ubuntu"
-	));
+	private static final Predicate<String> SENSOR_GLOBAL_BLACKLIST_PREDICATE = s -> !ImmutableSet.of(
+            "download.url",
+            "expandedinstall.dir",
+            "install.dir",
+            "download.url.debian",
+            "download.url.mac",
+            "download.url.rhelcentos",
+            "download.url.ubuntu"
+    ).contains(s);
+
+    private static final Predicate<String> SENSOR_GLOBAL_WHITELIST_PREDICATE = s -> ImmutableSet.of(
+            "host.name",
+            "host.address",
+            "host.sshAddress"
+    ).contains(s);
 
     @Autowired
     public BrooklynRestAdmin(BrooklynApi restApi) {
@@ -106,10 +113,10 @@ public class BrooklynRestAdmin {
 		Map<String, Object> sensors = new HashMap<>();
 		for (brooklyn.rest.domain.SensorSummary sensorSummary : restApi.getSensorApi().list(application, entity)) {
 			String sensor = sensorSummary.getName();
-			if(sensorBlacklist.contains(sensor)) continue;
-            if (!filter.apply(sensor)) continue;
-			sensors.put(sensor, restApi.getSensorApi().get(application, entity, sensor, false));
-		}	
+            if (Predicates.and(SENSOR_GLOBAL_BLACKLIST_PREDICATE, Predicates.or(SENSOR_GLOBAL_WHITELIST_PREDICATE, filter)).apply(sensor)) {
+                sensors.put(sensor, restApi.getSensorApi().get(application, entity, sensor, false));
+            }
+		}
 		return sensors;
 	}
 
