@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
+import com.google.common.base.Predicate;
 
 import javax.ws.rs.core.Response;
 
@@ -23,13 +24,13 @@ import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.domain.TaskSummary;
 
+import com.google.common.base.Predicates;
+
 @Service
 public class BrooklynRestAdmin {
-	
 
-	@Autowired
 	private BrooklynApi restApi;
-	
+
 	private Set<String> sensorBlacklist = new HashSet<>(Arrays.asList(
 			"download.url",
 			"expandedinstall.dir",
@@ -39,6 +40,11 @@ public class BrooklynRestAdmin {
 			"download.url.rhelcentos",
 			"download.url.ubuntu"
 	));
+
+    @Autowired
+    public BrooklynRestAdmin(BrooklynApi restApi) {
+        this.restApi = restApi;
+    }
 
 	public void createRepositoryIfNotExists(){
 		try{
@@ -72,28 +78,36 @@ public class BrooklynRestAdmin {
 
     @Async
 	public Future<Map<String, Object>> getApplicationSensors(String application){
-		return new AsyncResult<>(getApplicationSensors(application, restApi.getEntityApi().list(application)));
+        Predicate<String> p = Predicates.<String>alwaysTrue();
+        return new AsyncResult<>(getApplicationSensors(application, restApi.getEntityApi().list(application), p));
 	}
+
+    @Async
+    public Future<Map<String, Object>> getCredentialsFromSensors(String application, Predicate<String> filter){
+        return new AsyncResult<>(getApplicationSensors(application, restApi.getEntityApi().list(application), filter));
+    }
 	
-	private Map<String, Object> getApplicationSensors(String application, List<EntitySummary> entities){
+	private Map<String, Object> getApplicationSensors(String application, List<EntitySummary> entities, Predicate<String> filter){
 		Map<String, Object> result = new HashMap<>();
 		for (EntitySummary s : entities) {
 			String entity = s.getId();
-			Map<String, Object> sensors = getSensors(application, entity);
+			Map<String, Object> sensors = getSensors(application, entity, filter);
 			Map<String, Object> childSensors = getApplicationSensors(
 					application,
-					restApi.getEntityApi().getChildren(application, entity));
+					restApi.getEntityApi().getChildren(application, entity),
+                    filter);
 			sensors.put("children", childSensors);
 			result.put(s.getName(), sensors);
 		}
 		return result;
 	}
 	
-	private Map<String, Object> getSensors(String application, String entity){
+	private Map<String, Object> getSensors(String application, String entity, Predicate<String> filter){
 		Map<String, Object> sensors = new HashMap<>();
 		for (brooklyn.rest.domain.SensorSummary sensorSummary : restApi.getSensorApi().list(application, entity)) {
 			String sensor = sensorSummary.getName();
 			if(sensorBlacklist.contains(sensor)) continue;
+            if (!filter.apply(sensor)) continue;
 			sensors.put(sensor, restApi.getSensorApi().get(application, entity, sensor, false));
 		}	
 		return sensors;

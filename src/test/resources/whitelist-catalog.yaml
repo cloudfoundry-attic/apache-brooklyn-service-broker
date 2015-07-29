@@ -1,0 +1,23 @@
+brooklyn.catalog:
+  id: com.cloudsoft.development.whitelist
+  version: 1.0
+  description: A Basic Entity with a sensor whitelist
+  displayName: BasicEntity
+  itemType: template
+
+brooklyn.config:
+  broker.config:
+    sensor.whitelist:
+    - foo.bar
+    - sensor.one.name
+    plans:
+      small:
+        cluster.initial.size: 1
+      medium:
+        cluster.initial.size: 3
+      large:
+        cluster.initial.size: 5
+
+services:
+- type: brooklyn.entity.basic.BasicEntity
+  defaultDisplayName: Basic Entity

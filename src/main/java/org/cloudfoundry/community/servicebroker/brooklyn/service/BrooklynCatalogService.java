@@ -73,7 +73,7 @@ public class BrooklynCatalogService implements CatalogService {
                 continue;
             }
 			List<String> tags = getTags();
-			Map<String, Object> metadata = getServiceDefinitionMetadata(app.getIconUrl());
+			Map<String, Object> metadata = getServiceDefinitionMetadata(app.getIconUrl(), app.getPlanYaml());
 			List<String> requires = getTags();
 			DashboardClient dashboardClient = null;
 
@@ -95,9 +95,10 @@ public class BrooklynCatalogService implements CatalogService {
 		return Arrays.asList();
 	}
 
-	private Map<String, Object> getServiceDefinitionMetadata(String iconUrl) {
+	private Map<String, Object> getServiceDefinitionMetadata(String iconUrl, String planYaml) {
 		Map<String, Object> metadata = new HashMap<>();
 		metadata.put("imageUrl", iconUrl);
+        metadata.put("planYaml", planYaml);
 		return metadata;
 	}
 
