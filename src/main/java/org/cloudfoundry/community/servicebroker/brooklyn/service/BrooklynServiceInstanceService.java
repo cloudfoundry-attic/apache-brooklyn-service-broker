@@ -4,15 +4,18 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
+import org.cloudfoundry.community.servicebroker.brooklyn.repository.Operations;
 import org.cloudfoundry.community.servicebroker.exception.ServiceBrokerException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceDoesNotExistException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceExistsException;
 import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceUpdateNotSupportedException;
 import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceRequest;
 import org.cloudfoundry.community.servicebroker.model.DeleteServiceInstanceRequest;
+import org.cloudfoundry.community.servicebroker.model.OperationState;
 import org.cloudfoundry.community.servicebroker.model.Plan;
 import org.cloudfoundry.community.servicebroker.model.ServiceDefinition;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
+import org.cloudfoundry.community.servicebroker.model.ServiceInstanceLastOperation;
 import org.cloudfoundry.community.servicebroker.model.UpdateServiceInstanceRequest;
 import org.cloudfoundry.community.servicebroker.service.ServiceInstanceService;
 import org.slf4j.Logger;
@@ -78,7 +81,10 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
         // as a handy way of associating the brooklyn entity
         // with this particular service instance.
         request.setServiceDefinitionId(taskSummary.getEntityId());
-        instance = new ServiceInstance(request);
+        ServiceInstanceLastOperation lastOp = new ServiceInstanceLastOperation(Operations.CREATING, OperationState.IN_PROGRESS);
+        instance = new ServiceInstance(request)
+                .withLastOperation(lastOp)
+                .isAsync(true);
         repository.save(instance);
         return instance;
 
@@ -117,12 +123,14 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 			throws ServiceBrokerException {
 		
 		String serviceInstanceId = request.getServiceInstanceId();
-        ServiceInstance instance = getServiceInstance(serviceInstanceId);
-		if (instance != null) {
-			repository.delete(serviceInstanceId);
-			String entityId = instance.getServiceDefinitionId();
-			LOG.info("Deleting service: [ServiceDefinitionId={}, ServiceInstanceId={}]", entityId, serviceInstanceId);
-			admin.deleteApplication(entityId);
+        ServiceInstanceLastOperation lastOp = new ServiceInstanceLastOperation(Operations.DELETING, OperationState.IN_PROGRESS);
+        ServiceInstance instance = getServiceInstance(serviceInstanceId)
+                .withLastOperation(lastOp)
+                .isAsync(true);
+        if (instance != null) {
+            String entityId = instance.getServiceDefinitionId();
+            admin.deleteApplication(entityId);
+            LOG.info("Deleting service: [ServiceDefinitionId={}, ServiceInstanceId={}]", entityId, serviceInstanceId);
 		}
 		return instance;
 	}

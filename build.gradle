@@ -23,7 +23,7 @@ apply plugin: 'spring-boot'
 apply plugin: 'war'
 
 ext {
-	springBootCfServiceBrokerVersion = '2.4.2'
+	springBootCfServiceBrokerVersion = '2.4.2-async'
 	baseName = 'spring-boot-sample-simple'
 	version =  '0.0.0'
 }

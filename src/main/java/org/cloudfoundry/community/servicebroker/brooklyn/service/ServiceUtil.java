@@ -34,6 +34,7 @@ public class ServiceUtil {
             v = future.get();
         } catch (InterruptedException | ExecutionException e) {
             LOG.error(e.getMessage());
+            e.printStackTrace();
             Exceptions.propagateIfFatal(e);
         }
         return v;
