@@ -1,7 +1,7 @@
 buildscript {
 	ext {
 		springBootVersion = '1.2.2.RELEASE'
-		
+
 	}
 	repositories {
 		// NOTE: You should declare only repositories that you need here
@@ -23,7 +23,7 @@ apply plugin: 'spring-boot'
 apply plugin: 'war'
 
 ext {
-	springBootCfServiceBrokerVersion = '2.4.2'
+	springBootCfServiceBrokerVersion = '2.5.0-async'
 	baseName = 'spring-boot-sample-simple'
 	version =  '0.0.0'
 }
@@ -52,7 +52,7 @@ configurations {
 dependencies {
 
 	compile("org.springframework.boot:spring-boot-starter")
-	testCompile("org.springframework.boot:spring-boot-starter-test") 
+	testCompile("org.springframework.boot:spring-boot-starter-test")
 	compile("org.cloudfoundry:spring-boot-cf-service-broker:${springBootCfServiceBrokerVersion}")
 	testCompile("org.cloudfoundry:spring-boot-cf-service-broker-tests:${springBootCfServiceBrokerVersion}")
 	testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
