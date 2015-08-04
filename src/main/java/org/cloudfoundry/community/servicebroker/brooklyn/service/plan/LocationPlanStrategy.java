@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 
+import org.cloudfoundry.community.servicebroker.brooklyn.model.BlueprintPlan;
+import org.cloudfoundry.community.servicebroker.brooklyn.model.DefaultBlueprintPlan;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
 import org.cloudfoundry.community.servicebroker.model.Plan;
@@ -18,14 +20,11 @@ import brooklyn.util.yaml.Yamls;
 
 import com.google.common.collect.Sets;
 
-public class LocationPlanStrategy implements CatalogPlanStrategy{
-
-
-    private BrooklynRestAdmin admin;
+public class LocationPlanStrategy extends AbstractCatalogPlanStrategy{
 
     @Autowired
     public LocationPlanStrategy(BrooklynRestAdmin admin) {
-        this.admin = admin;
+        super(admin);
     }
 
     @Override
@@ -50,7 +49,7 @@ public class LocationPlanStrategy implements CatalogPlanStrategy{
                                 String description = "The location on which to deploy this service";
                                 Map<String, Object> metadata = new HashMap<>();
                                 metadata.put("location", s);
-                                plans.add(new Plan(id, name, description, metadata));
+                                plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
                             }
                         } else if (location instanceof String) {
                             String id = serviceId + "." + location;
@@ -58,7 +57,7 @@ public class LocationPlanStrategy implements CatalogPlanStrategy{
                             String description = "The location on which to deploy this service";
                             Map<String, Object> metadata = new HashMap<>();
                             metadata.put("location", name);
-                            plans.add(new Plan(id, name, description, metadata));
+                            plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
                         }
                         return plans;
                     }
@@ -66,7 +65,7 @@ public class LocationPlanStrategy implements CatalogPlanStrategy{
             }
         }
 
-        Future<List<LocationSummary>> locationsFuture = admin.getLocations();
+        Future<List<LocationSummary>> locationsFuture = getAdmin().getLocations();
         List<LocationSummary> locations = ServiceUtil.getFutureValueLoggingError(locationsFuture);
 
         Set<String> names = Sets.newHashSet();
@@ -77,9 +76,8 @@ public class LocationPlanStrategy implements CatalogPlanStrategy{
             String description = "The location on which to deploy this service";
             Map<String, Object> metadata = new HashMap<>();
             metadata.put("location", name);
-            plans.add(new Plan(id, name, description, metadata));
+            plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
         }
         return plans;
     }
-
 }

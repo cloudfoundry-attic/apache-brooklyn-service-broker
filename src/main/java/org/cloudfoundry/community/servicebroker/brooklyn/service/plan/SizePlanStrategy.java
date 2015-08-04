@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
+import org.cloudfoundry.community.servicebroker.brooklyn.model.DefaultBlueprintPlan;
+import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
 import org.cloudfoundry.community.servicebroker.model.Plan;
 import org.slf4j.Logger;
@@ -18,14 +20,15 @@ import brooklyn.util.yaml.Yamls;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public class SizePlanStrategy implements CatalogPlanStrategy {
+public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
 
     private final BrooklynConfig brooklynConfig;
 
     private static final Logger LOG = LoggerFactory.getLogger(SizePlanStrategy.class);
 
     @Autowired
-    public SizePlanStrategy(BrooklynConfig brooklynConfig) {
+    public SizePlanStrategy(BrooklynRestAdmin admin, BrooklynConfig brooklynConfig) {
+    	super(admin);
         this.brooklynConfig = brooklynConfig;
     }
 
@@ -63,7 +66,7 @@ public class SizePlanStrategy implements CatalogPlanStrategy {
             String id = serviceId + "." + planName;
             String name = ServiceUtil.getUniqueName(planName, names);
             String description = planName;
-            Plan plan = new Plan(id, name, description, properties);
+            Plan plan = new DefaultBlueprintPlan(id, name, description, properties);
             plans.add(plan);
         }
         return plans;

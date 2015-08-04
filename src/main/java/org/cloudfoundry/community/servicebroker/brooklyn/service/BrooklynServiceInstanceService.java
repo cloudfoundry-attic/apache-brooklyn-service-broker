@@ -1,8 +1,8 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
-import java.util.Map;
 import java.util.concurrent.Future;
 
+import org.cloudfoundry.community.servicebroker.brooklyn.model.BlueprintPlan;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.Operations;
 import org.cloudfoundry.community.servicebroker.exception.ServiceBrokerException;
@@ -24,12 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import brooklyn.rest.domain.TaskSummary;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.annotations.VisibleForTesting;
 
 @Service
@@ -99,29 +94,7 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
                 selectedPlan = p;
             }
         }
-        Map<String, Object> metadata = MutableMap.copyOf(selectedPlan.getMetadata());
-        if (metadata.containsKey("location")) {
-            location = metadata.remove("location").toString();
-        }
-        
-        Map<Object, Object> config = MutableMap.of();
-        // add parameters
-        // TODO sanitize this input from user
-        config.putAll(request.getParameters());
-        config.putAll(metadata);
-        
-        if (config.keySet().size() > 0) {
-            ObjectWriter writer = new ObjectMapper().writer();
-            String configJson = null;
-            try {
-                configJson = writer.writeValueAsString(config);
-                return String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"], \"brooklyn.config\":%s}", serviceDefinition.getId(), location, configJson);
-            } catch (JsonProcessingException e) {
-                throw Exceptions.propagate(e);
-            }
-        } else {
-            return String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"]}", serviceDefinition.getId(), location);
-        }
+        return ((BlueprintPlan)selectedPlan).toBlueprint(location, request);
     }
 
 	@Override
