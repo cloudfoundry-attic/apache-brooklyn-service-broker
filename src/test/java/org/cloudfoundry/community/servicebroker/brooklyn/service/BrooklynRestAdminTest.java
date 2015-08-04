@@ -33,7 +33,8 @@ public class BrooklynRestAdminTest {
 
     private static final List<SensorSummary> TEST_SENSOR_SUMMARIES_1 = ImmutableList.of(
             new SensorSummary("sensor.one.name", "sensor.one.type", "sensor.one.description", ImmutableMap.of()),
-            new SensorSummary("sensor.two.name", "sensor.two.type", "sensor.two.description", ImmutableMap.of())
+            new SensorSummary("sensor.two.name", "sensor.two.type", "sensor.two.description", ImmutableMap.of()),
+            new SensorSummary("host.name", "sensor.two.type", "myHostName", ImmutableMap.of())
     );
 
     private static final List<String> SENSOR_WHITELIST = ImmutableList.of("foo.bar", "sensor.one.name");
@@ -47,12 +48,14 @@ public class BrooklynRestAdminTest {
         testResultChild.put("children", ImmutableMap.of());
         testResultChild.put("sensor.one.name", null);
         testResultChild.put("sensor.two.name", null);
+        testResultChild.put("host.name", null);
 
         TEST_RESULT.put("name", testResultChild);
 
         Map<String, Object> expectedCredentialsChild = Maps.newHashMap();
         expectedCredentialsChild.put("children", ImmutableMap.of());
         expectedCredentialsChild.put("sensor.one.name", null);
+        expectedCredentialsChild.put("host.name", null);
 
         EXPECTED_CREDENTIALS.put("name", expectedCredentialsChild);
     }

@@ -65,7 +65,7 @@ public class BrooklynServiceInstanceServiceTest {
 		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
         when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(new Plan("planId", "test_name", "test_description", ImmutableMap.of("location", "test_location"))));
 		
-		CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid");
+		CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid", true);
 		ServiceInstance instance = service.createServiceInstance(request.withServiceInstanceId(SVC_INST_ID));
 		
 		assertNotNull(instance);
@@ -76,7 +76,7 @@ public class BrooklynServiceInstanceServiceTest {
 	public void serviceInstanceCreationFailsWithExistingInstance()  
 			throws ServiceInstanceExistsException, ServiceBrokerException {
 		when(repository.findOne(any(String.class))).thenReturn(ServiceInstanceFixture.getServiceInstance());	
-		CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid");
+		CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid", true);
 		service.createServiceInstance(request.withServiceInstanceId(SVC_INST_ID));
 	}
 	
@@ -95,14 +95,14 @@ public class BrooklynServiceInstanceServiceTest {
 
 		when(repository.findOne(any(String.class))).thenReturn(ServiceInstanceFixture.getServiceInstance());
 		String instanceId = ServiceInstanceFixture.getServiceInstance().getServiceInstanceId();
-		DeleteServiceInstanceRequest request = new DeleteServiceInstanceRequest(instanceId, "serviceId", "planId");
+		DeleteServiceInstanceRequest request = new DeleteServiceInstanceRequest(instanceId, "serviceId", "planId", true);
 		assertNotNull(service.deleteServiceInstance(request));
 		
 	}
 
     @Test
     public void testCreateBlueprintWithProvisioningProperties() {
-        CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid")
+        CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid", true)
                 .withServiceInstanceId(SVC_INST_ID);
         when(serviceDefinition.getId()).thenReturn("testService");
         when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
@@ -122,7 +122,7 @@ public class BrooklynServiceInstanceServiceTest {
 
     @Test
     public void testCreateBlueprintWithBrooklynProperties() {
-        CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid")
+        CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid", true)
                 .withServiceInstanceId(SVC_INST_ID);
         when(serviceDefinition.getId()).thenReturn("testService");
         when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
@@ -142,7 +142,7 @@ public class BrooklynServiceInstanceServiceTest {
 
     @Test
     public void testCreateBlueprintNoMetadata() {
-        CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid")
+        CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid", true)
                 .withServiceInstanceId(SVC_INST_ID);
         when(serviceDefinition.getId()).thenReturn("testService");
         when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
