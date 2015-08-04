@@ -2,12 +2,6 @@ package org.cloudfoundry.community.servicebroker.brooklyn.config;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -15,14 +9,9 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.HttpClientConnectionManager;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
@@ -38,7 +27,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 import brooklyn.rest.client.BrooklynApi;
-import scala.actors.threadpool.Arrays;
 
 import com.google.common.collect.ImmutableList;
 
@@ -91,34 +79,9 @@ public class BrokerConfig {
 
 	}
 
-	private Scheme createScheme(URL url) {
-		Scheme sch = null;
-		try {
-			sch = new Scheme(url.getProtocol(), url.getPort(),
-					new SSLSocketFactory(new TrustAllStrategy(),
-							SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER));
-		} catch (KeyManagementException | UnrecoverableKeyException
-				| NoSuchAlgorithmException | KeyStoreException e) {
-			e.printStackTrace();
-		}
-		return sch;
-	}
-
-	private void registerScheme(CloseableHttpClient httpClient, Scheme sch) {
-		httpClient.getConnectionManager().getSchemeRegistry().register(sch);
-	}
-
 	private Credentials getUsernamePasswordCredentials() {
 		return new UsernamePasswordCredentials(config.getUsername(),
 				config.getPassword());
-	}
-
-	public static class TrustAllStrategy implements TrustStrategy {
-		@Override
-		public boolean isTrusted(X509Certificate[] chain, String authType)
-				throws CertificateException {
-			return true;
-		}
 	}
 
 }
