@@ -75,7 +75,7 @@ public class LocationPlanStrategy extends AbstractCatalogPlanStrategy{
             String name = ServiceUtil.getUniqueName(l.getName(), names);
             String description = "The location on which to deploy this service";
             Map<String, Object> metadata = new HashMap<>();
-            metadata.put("location", name);
+            metadata.put("location", l.getName());
             plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
         }
         return plans;

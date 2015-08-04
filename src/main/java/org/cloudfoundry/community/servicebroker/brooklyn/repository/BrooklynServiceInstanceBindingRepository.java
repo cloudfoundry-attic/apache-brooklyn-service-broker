@@ -24,9 +24,15 @@ public class BrooklynServiceInstanceBindingRepository {
 	
 	@SuppressWarnings("unchecked")
 	public ServiceInstanceBinding findOne(String bindingId) {
-		Object object = restApi.getEntityConfigApi().get(application, entity, bindingId, false);
+		Object object;
+		try{
+			object = restApi.getEntityConfigApi().get(application, entity, bindingId, false);
+		} catch(Exception e) {
+		    LOG.error("Unable to get instance with bindingId={}", bindingId);
+		    return null;
+		}
 		if(object == null || !(object instanceof Map)) {
-		    LOG.info("Unable to get instance with bindingId={}", bindingId);
+		    LOG.error("Unable to get instance with bindingId={}", bindingId);
 		    return null;
 		}
 		
@@ -39,11 +45,15 @@ public class BrooklynServiceInstanceBindingRepository {
 				(String)map.get("appGuid"));
 	}
 
-	public <S extends ServiceInstanceBinding> S save(S serviceInstanceBinding) {	
-		restApi.getEntityConfigApi().set(application, entity,
+	public <S extends ServiceInstanceBinding> S save(S serviceInstanceBinding) {
+		try{
+			restApi.getEntityConfigApi().set(application, entity,
 				serviceInstanceBinding.getServiceInstanceId(), false, serviceInstanceBinding);
-		
-		return serviceInstanceBinding;
+			return serviceInstanceBinding;
+		} catch(Exception e){
+			LOG.error("unable to save {} {}", serviceInstanceBinding, e);
+			return null;
+		}
 	}
 
 	public void delete(String bindingId) {

@@ -94,7 +94,9 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
                 selectedPlan = p;
             }
         }
-        return ((BlueprintPlan)selectedPlan).toBlueprint(location, request);
+        String blueprint = ((BlueprintPlan)selectedPlan).toBlueprint(location, request);
+        LOG.info("launching from blueprint: [blueprint={}]", blueprint);
+		return blueprint;
     }
 
 	@Override
@@ -103,10 +105,9 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 		
 		String serviceInstanceId = request.getServiceInstanceId();
         ServiceInstanceLastOperation lastOp = new ServiceInstanceLastOperation(Operations.DELETING, OperationState.IN_PROGRESS);
-        ServiceInstance instance = getServiceInstance(serviceInstanceId)
-                .withLastOperation(lastOp)
-                .isAsync(true);
+        ServiceInstance instance = getServiceInstance(serviceInstanceId);
         if (instance != null) {
+        	instance = instance.withLastOperation(lastOp).isAsync(true);
             String entityId = instance.getServiceDefinitionId();
             admin.deleteApplication(entityId);
             LOG.info("Deleting service: [ServiceDefinitionId={}, ServiceInstanceId={}]", entityId, serviceInstanceId);

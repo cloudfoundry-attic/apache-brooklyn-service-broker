@@ -44,6 +44,18 @@ public class DefaultBlueprintPlanTest {
 	@Test
 	public void testToBlueprintWithoutConfig() throws JsonProcessingException{
 		String location = "localhost";
+		Map<String,Object> config = ImmutableMap.of();
+		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", config);
+		when(request.getParameters()).thenReturn((Map)config);
+		String expected = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"]}", 
+				request.getServiceDefinitionId(), location);
+		String result = plan.toBlueprint(location, request);
+		assertEquals(expected, result);
+	}
+	
+	@Test
+	public void testToBlueprintWithNullConfig() throws JsonProcessingException{
+		String location = "localhost";
 		Map<String,Object> config = null;
 		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", config);
 		when(request.getParameters()).thenReturn((Map)config);
