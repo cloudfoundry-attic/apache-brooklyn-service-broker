@@ -103,13 +103,19 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
         if (metadata.containsKey("location")) {
             location = metadata.remove("location").toString();
         }
-
-        if (metadata.keySet().size() > 0) {
+        
+        Map<Object, Object> config = MutableMap.of();
+        // add parameters
+        // TODO sanitize this input from user
+        config.putAll(request.getParameters());
+        config.putAll(metadata);
+        
+        if (config.keySet().size() > 0) {
             ObjectWriter writer = new ObjectMapper().writer();
-            String metadataJson = null;
+            String configJson = null;
             try {
-                metadataJson = writer.writeValueAsString(metadata);
-                return String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"], \"brooklyn.config\":%s}", serviceDefinition.getId(), location, metadataJson);
+                configJson = writer.writeValueAsString(config);
+                return String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"], \"brooklyn.config\":%s}", serviceDefinition.getId(), location, configJson);
             } catch (JsonProcessingException e) {
                 throw Exceptions.propagate(e);
             }
