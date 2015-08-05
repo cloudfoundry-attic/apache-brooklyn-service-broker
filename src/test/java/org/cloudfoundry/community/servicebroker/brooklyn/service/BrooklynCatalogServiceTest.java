@@ -73,7 +73,7 @@ public class BrooklynCatalogServiceTest {
 
     @Test
     public void testGetServicesWithSizeStrategy(){
-        brooklynCatalogService.setPlanStrategy(new SizePlanStrategy(brooklynConfig));
+        brooklynCatalogService.setPlanStrategy(new SizePlanStrategy(admin, brooklynConfig));
         when(admin.getCatalogApplications()).thenReturn(new AsyncResult<>(CATALOG_ITEM_SUMMARIES));
         Catalog catalog = brooklynCatalogService.getCatalog();
         List<ServiceDefinition> serviceDefinitions = catalog.getServiceDefinitions();

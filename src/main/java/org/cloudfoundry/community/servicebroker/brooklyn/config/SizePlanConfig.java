@@ -1,5 +1,6 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.config;
 
+import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.CatalogPlanStrategy;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.SizePlanStrategy;
 import org.springframework.context.annotation.Bean;
@@ -11,8 +12,8 @@ import org.springframework.context.annotation.Profile;
 public class SizePlanConfig {
     
     @Bean
-    public CatalogPlanStrategy planStrategy(BrooklynConfig brooklynConfig){
-        return new SizePlanStrategy(brooklynConfig);
+    public CatalogPlanStrategy planStrategy(BrooklynRestAdmin brooklynRestAdmin, BrooklynConfig brooklynConfig){
+        return new SizePlanStrategy(brooklynRestAdmin, brooklynConfig);
     }
 
 }

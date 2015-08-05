@@ -22,6 +22,7 @@ import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -45,6 +46,7 @@ public class BrokerConfig {
 	}
 
 	@Bean
+	@ConditionalOnMissingBean(CatalogPlanStrategy.class)
 	public CatalogPlanStrategy CatalogPlanStrategy(BrooklynRestAdmin admin){
 	    return new LocationPlanStrategy(admin);
 	}

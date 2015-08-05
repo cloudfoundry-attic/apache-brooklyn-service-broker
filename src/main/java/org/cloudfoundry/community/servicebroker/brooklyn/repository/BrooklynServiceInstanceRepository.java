@@ -6,7 +6,6 @@ import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceReque
 import org.cloudfoundry.community.servicebroker.model.OperationState;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstanceLastOperation;
-import org.jboss.resteasy.client.ClientResponseFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import brooklyn.rest.client.BrooklynApi;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 
 @Service
@@ -39,16 +37,24 @@ public class BrooklynServiceInstanceRepository {
 
 	@SuppressWarnings("unchecked")
 	public ServiceInstance findOne(String serviceInstanceId) {
-		Object object = restApi.getEntityConfigApi().get(application, entity, serviceInstanceId, false);
-		if(object == null || !(object instanceof Map)) {
-			LOG.info("Unable to get instance with serviceInstanceId={}", serviceInstanceId);
+		Object object;
+		try{
+			object = restApi.getEntityConfigApi().get(application, entity, serviceInstanceId, false);
+		}catch(Exception e){
+			LOG.error("Unable to get instance with serviceInstanceId={}", serviceInstanceId);
 			return null;
 		}
 		
+		if (object == null || !(object instanceof Map)) {
+			LOG.error("Unable to get instance with serviceInstanceId={}", serviceInstanceId);
+			return null;
+		}
 		Map<String, Object> map = (Map<String, Object>) object;
-
-        String brooklynEntity = map.get("serviceDefinitionId").toString();
-        LOG.info("***** serviceDefinitionId: " + brooklynEntity);
+		if (!map.containsKey("serviceDefinitionId") || map.get("serviceDefinitionId") == null) {
+			LOG.error("Unable to get serviceDefinitionId: {}", map);
+		}
+		
+        String brooklynEntity = String.valueOf(map.get("serviceDefinitionId"));
         CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(
                 brooklynEntity,
 				map.get("planId").toString(),
@@ -65,7 +71,7 @@ public class BrooklynServiceInstanceRepository {
         try {
             serviceState = String.valueOf(restApi.getSensorApi().get(brooklynEntity, brooklynEntity, "service.state", false));
             state = SERVICE_STATE_TO_OPERATION_STATE.get(serviceState);
-        } catch (ClientResponseFailure e) {
+        } catch (Exception e) {
             // Entity is no longer managed by Brooklyn
             LOG.debug(e.getMessage());
             serviceState = "DESTROYED";
@@ -76,7 +82,7 @@ public class BrooklynServiceInstanceRepository {
             } else if (Operations.CREATING.equals(previousOperation)) {
                 state = OperationState.FAILED;
             } else {
-                LOG.warn("Unexpected previous operation: " + previousOperation);
+                LOG.error("Unexpected previous operation: " + previousOperation);
                 return null;
             }
         }
@@ -102,7 +108,12 @@ public class BrooklynServiceInstanceRepository {
 
 	
 	public <S extends ServiceInstance> S save(S instance) {
-		restApi.getEntityConfigApi().set(application, entity, instance.getServiceInstanceId(), false, instance);
-		return instance;
+		try{
+			restApi.getEntityConfigApi().set(application, entity, instance.getServiceInstanceId(), false, instance);
+			return instance;
+		} catch(Exception e){
+			LOG.error("unable to save {} {}", instance, e);
+			return null;
+		}
 	}
 }
