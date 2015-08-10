@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.apache.brooklyn.rest.client.BrooklynApi;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -17,7 +18,6 @@ import org.mockito.MockitoAnnotations;
 
 import brooklyn.rest.api.EntityApi;
 import brooklyn.rest.api.SensorApi;
-import brooklyn.rest.client.BrooklynApi;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.SensorSummary;
 

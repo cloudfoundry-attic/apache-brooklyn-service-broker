@@ -2,13 +2,13 @@ package org.cloudfoundry.community.servicebroker.brooklyn.repository;
 
 import java.util.Map;
 
+import org.apache.brooklyn.rest.client.BrooklynApi;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstanceBinding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import brooklyn.rest.client.BrooklynApi;
 
 // TODO Consider using @Async for access to REST api
 @Service

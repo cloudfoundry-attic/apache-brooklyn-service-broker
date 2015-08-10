@@ -2,10 +2,10 @@ package org.cloudfoundry.community.servicebroker.brooklyn.repository;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.brooklyn.rest.client.BrooklynApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.rest.client.BrooklynApi;
 import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.TaskSummary;
 

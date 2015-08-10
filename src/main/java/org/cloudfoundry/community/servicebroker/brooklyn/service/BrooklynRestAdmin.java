@@ -1,23 +1,20 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Future;
 import com.google.common.base.Predicate;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.brooklyn.rest.client.BrooklynApi;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.Repositories;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
-import brooklyn.rest.client.BrooklynApi;
 import brooklyn.rest.domain.CatalogItemSummary;
 import brooklyn.rest.domain.EffectorSummary;
 import brooklyn.rest.domain.EntitySummary;

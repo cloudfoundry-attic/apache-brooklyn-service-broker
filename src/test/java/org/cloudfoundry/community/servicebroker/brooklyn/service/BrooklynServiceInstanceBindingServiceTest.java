@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.brooklyn.rest.client.BrooklynApi;
 import org.cloudfoundry.community.servicebroker.brooklyn.BrooklynConfiguration;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceBindingRepository;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
@@ -33,7 +34,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import brooklyn.rest.api.EntityApi;
 import brooklyn.rest.api.SensorApi;
-import brooklyn.rest.client.BrooklynApi;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.SensorSummary;
 import brooklyn.util.ResourceUtils;

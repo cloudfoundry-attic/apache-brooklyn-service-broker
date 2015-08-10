@@ -3,6 +3,7 @@ package org.cloudfoundry.community.servicebroker.brooklyn.config;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.apache.brooklyn.rest.client.BrooklynApi;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -27,7 +28,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-import brooklyn.rest.client.BrooklynApi;
 
 import com.google.common.collect.ImmutableList;
 
