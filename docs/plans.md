@@ -1,9 +1,9 @@
 # Using Catalog Plan Strategies
 
 Catalog Plan Strategies are responsible for creating the plans associated with catalog items. There are currently
-two types of catalog plan strategy: SizePlanStrategy and LocationPlanStrategy.  These are set in the properties 
+two types of catalog plan strategy: `SizePlanStrategy` and `LocationPlanStrategy`.  These are set in the properties 
 used by the broker, e.g. if you have deployed the service broker to cloud foundry, these are set in the `manifest.yaml` 
-file using the SPRING_PROFILES_ACTIVE variable.
+file using the `SPRING_PROFILES_ACTIVE` variable.
 
 In this example, the size plan strategy has been selected:
 
@@ -21,7 +21,7 @@ applications:
     BROOKLYN_LOCATION: aws-cloudfoundry
 ```
 
-The size plan strategy allows a location to be set in the BROOKLYN_LOCATION variable. 
+The size plan strategy allows a location to be set in the `BROOKLYN_LOCATION` variable. 
 The plans are determined by the blueprints in the brooklyn catalog in the `broker.config` section. An example
 `broker.config` section is as follows:
 
