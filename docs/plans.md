@@ -7,6 +7,7 @@ file using the SPRING_PROFILES_ACTIVE variable.
 
 In this example, the size plan strategy has been selected:
 
+```
 applications:
 - name: Brooklyn-Service-Broker
   memory: 1G
@@ -18,6 +19,7 @@ applications:
     SECURITY_USER_PASSWORD: password
     SPRING_PROFILES_ACTIVE: size-plan
     BROOKLYN_LOCATION: aws-cloudfoundry
+```
 
 The size plan strategy allows a location to be set in the BROOKLYN_LOCATION variable. 
 The plans are determined by the blueprints in the brooklyn catalog in the `broker.config` section. An example
