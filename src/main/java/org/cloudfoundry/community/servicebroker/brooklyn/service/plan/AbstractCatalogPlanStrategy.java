@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 
+import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
 import org.cloudfoundry.community.servicebroker.model.DashboardClient;
@@ -15,7 +16,6 @@ import org.cloudfoundry.community.servicebroker.model.Plan;
 import org.cloudfoundry.community.servicebroker.model.ServiceDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import brooklyn.rest.domain.CatalogItemSummary;
 import brooklyn.util.text.NaturalOrderComparator;
 
 import com.google.common.collect.Sets;

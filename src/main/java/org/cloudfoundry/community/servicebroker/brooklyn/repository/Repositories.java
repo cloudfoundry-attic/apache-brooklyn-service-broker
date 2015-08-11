@@ -3,11 +3,11 @@ package org.cloudfoundry.community.servicebroker.brooklyn.repository;
 import javax.ws.rs.core.Response;
 
 import org.apache.brooklyn.rest.client.BrooklynApi;
+import org.apache.brooklyn.rest.domain.ApplicationSummary;
+import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.rest.domain.ApplicationSummary;
-import brooklyn.rest.domain.TaskSummary;
 
 // TODO Consider using @Async on calls to the REST api
 public class Repositories {

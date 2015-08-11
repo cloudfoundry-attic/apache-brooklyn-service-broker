@@ -1,25 +1,24 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
-import static org.junit.Assert.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.apache.brooklyn.rest.api.EntityApi;
+import org.apache.brooklyn.rest.api.SensorApi;
 import org.apache.brooklyn.rest.client.BrooklynApi;
+import org.apache.brooklyn.rest.domain.EntitySummary;
+import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-
-import brooklyn.rest.api.EntityApi;
-import brooklyn.rest.api.SensorApi;
-import brooklyn.rest.domain.EntitySummary;
-import brooklyn.rest.domain.SensorSummary;
 
 import com.google.api.client.util.Maps;
 import com.google.common.collect.ImmutableList;

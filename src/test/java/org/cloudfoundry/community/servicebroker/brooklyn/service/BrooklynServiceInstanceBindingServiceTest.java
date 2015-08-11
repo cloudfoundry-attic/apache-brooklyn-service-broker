@@ -1,16 +1,20 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.brooklyn.rest.api.EntityApi;
+import org.apache.brooklyn.rest.api.SensorApi;
 import org.apache.brooklyn.rest.client.BrooklynApi;
+import org.apache.brooklyn.rest.domain.EntitySummary;
+import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.cloudfoundry.community.servicebroker.brooklyn.BrooklynConfiguration;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceBindingRepository;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
@@ -32,10 +36,6 @@ import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import brooklyn.rest.api.EntityApi;
-import brooklyn.rest.api.SensorApi;
-import brooklyn.rest.domain.EntitySummary;
-import brooklyn.rest.domain.SensorSummary;
 import brooklyn.util.ResourceUtils;
 
 import com.google.api.client.util.Maps;

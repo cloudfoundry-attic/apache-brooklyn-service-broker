@@ -1,11 +1,12 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service.plan;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.model.Plan;
 import org.junit.Before;
@@ -14,8 +15,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.scheduling.annotation.AsyncResult;
-
-import brooklyn.rest.domain.LocationSummary;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;

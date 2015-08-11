@@ -6,6 +6,8 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.brooklyn.rest.domain.CatalogItemSummary;
+import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.cloudfoundry.community.servicebroker.brooklyn.BrooklynConfiguration;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.CatalogPlanStrategy;
@@ -24,8 +26,6 @@ import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import brooklyn.rest.domain.CatalogItemSummary;
-import brooklyn.rest.domain.LocationSummary;
 import brooklyn.util.ResourceUtils;
 
 import com.google.common.collect.ImmutableMap;

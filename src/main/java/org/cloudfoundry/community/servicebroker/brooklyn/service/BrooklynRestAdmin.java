@@ -4,23 +4,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
-import com.google.common.base.Predicate;
 
 import javax.ws.rs.core.Response;
 
 import org.apache.brooklyn.rest.client.BrooklynApi;
+import org.apache.brooklyn.rest.domain.CatalogItemSummary;
+import org.apache.brooklyn.rest.domain.EffectorSummary;
+import org.apache.brooklyn.rest.domain.EntitySummary;
+import org.apache.brooklyn.rest.domain.LocationSummary;
+import org.apache.brooklyn.rest.domain.SensorSummary;
+import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.Repositories;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
-import brooklyn.rest.domain.CatalogItemSummary;
-import brooklyn.rest.domain.EffectorSummary;
-import brooklyn.rest.domain.EntitySummary;
-import brooklyn.rest.domain.LocationSummary;
-import brooklyn.rest.domain.TaskSummary;
-
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 
@@ -108,7 +108,7 @@ public class BrooklynRestAdmin {
 	
 	private Map<String, Object> getSensors(String application, String entity, Predicate<String> filter){
 		Map<String, Object> sensors = new HashMap<>();
-		for (brooklyn.rest.domain.SensorSummary sensorSummary : restApi.getSensorApi().list(application, entity)) {
+		for (SensorSummary sensorSummary : restApi.getSensorApi().list(application, entity)) {
 			String sensor = sensorSummary.getName();
             if (Predicates.and(SENSOR_GLOBAL_BLACKLIST_PREDICATE, Predicates.or(SENSOR_GLOBAL_WHITELIST_PREDICATE, filter)).apply(sensor)) {
                 sensors.put(sensor, restApi.getSensorApi().get(application, entity, sensor, false));

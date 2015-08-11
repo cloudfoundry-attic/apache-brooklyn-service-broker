@@ -2,6 +2,7 @@ package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
 import java.util.concurrent.Future;
 
+import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.BlueprintPlan;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.Operations;
@@ -22,8 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import brooklyn.rest.domain.TaskSummary;
 
 import com.google.common.annotations.VisibleForTesting;
 

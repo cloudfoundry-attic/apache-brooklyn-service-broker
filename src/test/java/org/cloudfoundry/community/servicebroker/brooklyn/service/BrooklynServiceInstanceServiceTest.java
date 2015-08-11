@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.cloudfoundry.community.servicebroker.brooklyn.BrooklynConfiguration;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.DefaultBlueprintPlan;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
@@ -24,8 +25,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import brooklyn.rest.domain.TaskSummary;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
