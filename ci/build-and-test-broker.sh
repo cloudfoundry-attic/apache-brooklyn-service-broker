@@ -11,3 +11,5 @@ cd ../brooklyn-broker
 ./gradlew check
 ./gradlew clean build
 
+pwd
+find . -name '*.war'
