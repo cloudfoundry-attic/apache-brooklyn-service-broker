@@ -33,7 +33,6 @@ jobs:
     params:
       name: brooklyn-broker/release/name
       tag: brooklyn-broker/release/tag
-      body: brooklyn-broker/release/body
       globs:
         - "build-and-test-broker/brooklyn-broker/build/libs/brooklyn-broker-*.war"
 
