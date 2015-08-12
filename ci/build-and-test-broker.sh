@@ -9,3 +9,5 @@ cd broker-parent
 cd ../brooklyn-broker
 
 ./gradlew clean build
+
+cp build/libs/brooklyn-broker.war /tmp
