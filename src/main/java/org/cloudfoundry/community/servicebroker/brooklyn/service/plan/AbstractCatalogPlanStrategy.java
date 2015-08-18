@@ -23,14 +23,20 @@ import com.google.common.collect.Sets;
 public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy{
 	
 	private BrooklynRestAdmin admin;
+	private PlaceholderReplacer replacer;
 	
 	@Autowired
-	public AbstractCatalogPlanStrategy(BrooklynRestAdmin admin) {
+	public AbstractCatalogPlanStrategy(BrooklynRestAdmin admin, PlaceholderReplacer replacer) {
 		this.admin = admin;
+		this.replacer = replacer;
 	}
 	
 	protected BrooklynRestAdmin getAdmin() {
 		return admin;
+	}
+	
+	protected PlaceholderReplacer replacer(){
+		return replacer;
 	}
 	
 	@Override

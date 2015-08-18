@@ -2,6 +2,7 @@ package org.cloudfoundry.community.servicebroker.brooklyn.config;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Random;
 
 import org.apache.brooklyn.rest.client.BrooklynApi;
 import org.apache.http.auth.AuthScope;
@@ -18,6 +19,7 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.CatalogPlanStrategy;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.LocationPlanStrategy;
+import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.PlaceholderReplacer;
 import org.cloudfoundry.community.servicebroker.model.BrokerApiVersion;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
 import org.slf4j.Logger;
@@ -27,7 +29,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-
 
 import com.google.common.collect.ImmutableList;
 
@@ -47,8 +48,13 @@ public class BrokerConfig {
 
 	@Bean
 	@ConditionalOnMissingBean(CatalogPlanStrategy.class)
-	public CatalogPlanStrategy CatalogPlanStrategy(BrooklynRestAdmin admin){
-	    return new LocationPlanStrategy(admin);
+	public CatalogPlanStrategy CatalogPlanStrategy(BrooklynRestAdmin admin, PlaceholderReplacer replacer){
+	    return new LocationPlanStrategy(admin, replacer);
+	}
+	
+	@Bean
+	public PlaceholderReplacer placeholderReplacer(){
+		return new PlaceholderReplacer(new Random());
 	}
 
 

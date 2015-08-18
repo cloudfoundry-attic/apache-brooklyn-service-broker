@@ -6,12 +6,14 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.cloudfoundry.community.servicebroker.brooklyn.BrooklynConfiguration;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.CatalogPlanStrategy;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.LocationPlanStrategy;
+import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.PlaceholderReplacer;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.SizePlanStrategy;
 import org.cloudfoundry.community.servicebroker.model.Catalog;
 import org.cloudfoundry.community.servicebroker.model.Plan;
@@ -21,12 +23,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import brooklyn.util.ResourceUtils;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -56,6 +57,8 @@ public class BrooklynCatalogServiceTest {
     private CatalogPlanStrategy catalogPlanStrategy;
     @Mock
     private BrooklynConfig brooklynConfig;
+    @Mock 
+    private PlaceholderReplacer replacer;
     
     @Before
     public void setup() {
@@ -64,7 +67,7 @@ public class BrooklynCatalogServiceTest {
     
     @Test
     public void testGetLocationPlans(){
-        brooklynCatalogService.setPlanStrategy(new LocationPlanStrategy(admin));
+        brooklynCatalogService.setPlanStrategy(new LocationPlanStrategy(admin, replacer));
         when(admin.getLocations()).thenReturn(new AsyncResult<>(LOCATION_SUMMARIES));
         List<Plan> plans = brooklynCatalogService.getPlans("test_id", "");
         
@@ -73,7 +76,8 @@ public class BrooklynCatalogServiceTest {
 
     @Test
     public void testGetServicesWithSizeStrategy(){
-        brooklynCatalogService.setPlanStrategy(new SizePlanStrategy(admin, brooklynConfig));
+        brooklynCatalogService.setPlanStrategy(new SizePlanStrategy(admin, brooklynConfig, replacer));
+        when(replacer.replaceValues(Mockito.anyMap())).thenCallRealMethod();
         when(admin.getCatalogApplications()).thenReturn(new AsyncResult<>(CATALOG_ITEM_SUMMARIES));
         Catalog catalog = brooklynCatalogService.getCatalog();
         List<ServiceDefinition> serviceDefinitions = catalog.getServiceDefinitions();

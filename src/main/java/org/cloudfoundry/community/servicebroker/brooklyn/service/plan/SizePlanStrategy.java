@@ -1,6 +1,7 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service.plan;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +28,8 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
     private static final Logger LOG = LoggerFactory.getLogger(SizePlanStrategy.class);
 
     @Autowired
-    public SizePlanStrategy(BrooklynRestAdmin admin, BrooklynConfig brooklynConfig) {
-    	super(admin);
+    public SizePlanStrategy(BrooklynRestAdmin admin, BrooklynConfig brooklynConfig, PlaceholderReplacer replacer) {
+    	super(admin, replacer);
         this.brooklynConfig = brooklynConfig;
     }
 
@@ -54,14 +55,34 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
     }
 
     private List<Plan> parseConfig(Map<String, Object> brooklynConfigMap, String serviceId) {
-        List<Plan> plans = new ArrayList<>();
         Map<String, Object> brokerConfig = (Map<String, Object>)brooklynConfigMap.get("broker.config");
-        Map<String, Object> planDefinitions = (Map<String, Object>)brokerConfig.get("plans");
-        Set<String> names = Sets.newHashSet();
+        brokerConfig = replacer().replaceValues(brokerConfig);
+        Map<String, Object> planConfig = (Map<String, Object>)brokerConfig.get("plan.config");
+        Object plans = brokerConfig.get("plans");
+		if (plans instanceof Map) {
+            Map<String, Object> planDefinitions = (Map<String, Object>)plans;
+            return getPlansFromMap(planDefinitions, serviceId, planConfig);
+        } else if (plans instanceof List) {
+        	List<Object> planDefinitions = (List<Object>) plans;
+        	return getPlansfromList(planDefinitions, serviceId, planConfig);
+        } else {
+        	LOG.error("Unable to parse config {}", plans);
+        	return Collections.emptyList();
+        }
+    }
+    
+    private List<Plan> getPlansFromMap(Map<String, Object> planDefinitions, String serviceId, Map<String, Object> planConfig) {
+    	List<Plan> plans = new ArrayList<>();
+    	Set<String> names = Sets.newHashSet();
         for (String planName : planDefinitions.keySet()) {
             Map<String, Object> planDefinition = (Map<String, Object>) planDefinitions.get(planName);
             Map<String, Object> properties = Maps.newHashMap();
-            properties.putAll(planDefinition);
+            if(planConfig != null){
+            	properties.putAll(planConfig);
+            }
+            if(planDefinition != null){
+            	properties.putAll(planDefinition);
+            }
             properties.put("location", brooklynConfig.getLocation());
             String id = serviceId + "." + planName;
             String name = ServiceUtil.getUniqueName(planName, names);
@@ -70,6 +91,30 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
             plans.add(plan);
         }
         return plans;
+    }
+    
+    private List<Plan> getPlansfromList(List<Object> planDefinitions, String serviceId, Map<String, Object> planConfig) {
+    	List<Plan> plans = new ArrayList<>();
+    	Set<String> names = Sets.newHashSet();
+    	for(Object planDefinition : planDefinitions){
+    		Map<String, Object> planMap = (Map<String, Object>) planDefinition;
+    		String planName = String.valueOf(planMap.get("name"));
+    		Map<String, Object> properties = Maps.newHashMap();
+    		Map<String, Object> config = (Map<String, Object>) planMap.get("plan.config");
+    		if(planConfig != null){
+            	properties.putAll(planConfig);
+            }
+            if(planDefinition != null){
+            	properties.putAll(config);
+            }
+            properties.put("location", brooklynConfig.getLocation());
+			String id = serviceId + "." + planName;
+    		String name = ServiceUtil.getUniqueName(planName, names);
+    		String description = String.valueOf(planMap.get("description"));
+    		Plan plan = new DefaultBlueprintPlan(id, name, description, properties);
+            plans.add(plan);
+    	}
+    	return plans;
     }
 
 }

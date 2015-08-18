@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.rest.api.EntityApi;
 import org.apache.brooklyn.rest.api.SensorApi;
 import org.apache.brooklyn.rest.client.BrooklynApi;
@@ -35,8 +36,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import brooklyn.util.ResourceUtils;
 
 import com.google.api.client.util.Maps;
 import com.google.common.base.Predicate;

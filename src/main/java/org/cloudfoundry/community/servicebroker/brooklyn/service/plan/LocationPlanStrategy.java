@@ -22,8 +22,8 @@ import com.google.common.collect.Sets;
 public class LocationPlanStrategy extends AbstractCatalogPlanStrategy{
 
     @Autowired
-    public LocationPlanStrategy(BrooklynRestAdmin admin) {
-        super(admin);
+    public LocationPlanStrategy(BrooklynRestAdmin admin, PlaceholderReplacer replacer) {
+        super(admin, replacer);
     }
 
     @Override
@@ -45,7 +45,7 @@ public class LocationPlanStrategy extends AbstractCatalogPlanStrategy{
                             for (String s : ((Map<String, Object>) location).keySet()) {
                                 String id = serviceId + "." + s;
                                 String name = s;
-                                String description = "The location on which to deploy this service";
+                                String description = "Deploys to " + s;
                                 Map<String, Object> metadata = new HashMap<>();
                                 metadata.put("location", s);
                                 plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
@@ -53,7 +53,7 @@ public class LocationPlanStrategy extends AbstractCatalogPlanStrategy{
                         } else if (location instanceof String) {
                             String id = serviceId + "." + location;
                             String name = (String) location;
-                            String description = "The location on which to deploy this service";
+                            String description = "Deploys to " + location;
                             Map<String, Object> metadata = new HashMap<>();
                             metadata.put("location", name);
                             plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
@@ -72,7 +72,7 @@ public class LocationPlanStrategy extends AbstractCatalogPlanStrategy{
         for (LocationSummary l : locations) {
             String id = serviceId + "." + l.getName();
             String name = ServiceUtil.getUniqueName(l.getName(), names);
-            String description = "The location on which to deploy this service";
+            String description = "Deploys to " + l.getName();
             Map<String, Object> metadata = new HashMap<>();
             metadata.put("location", l.getName());
             plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
