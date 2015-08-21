@@ -1,42 +1,36 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.repository;
 
 import java.util.Map;
+import java.util.concurrent.Future;
 
-import org.apache.brooklyn.rest.client.BrooklynApi;
+import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
+import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstanceBinding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
-// TODO Consider using @Async for access to REST api
 @Service
 public class BrooklynServiceInstanceBindingRepository {
     
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynServiceInstanceBindingRepository.class);
 
-	@Autowired
-	private BrooklynApi restApi;
-
+	private BrooklynRestAdmin restAdmin;
 	private String application = "service-broker-records";
 	private String entity = "service-instance-binding-repository";
 	
+	@Autowired
+	public BrooklynServiceInstanceBindingRepository(BrooklynRestAdmin restApi) {
+		this.restAdmin = restApi;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public ServiceInstanceBinding findOne(String bindingId) {
-		Object object;
-		try{
-			object = restApi.getEntityConfigApi().get(application, entity, bindingId, false);
-		} catch(Exception e) {
-		    LOG.error("Unable to get instance with bindingId={}", bindingId);
-		    return null;
-		}
-		if(object == null || !(object instanceof Map)) {
-		    LOG.error("Unable to get instance with bindingId={}", bindingId);
-		    return null;
-		}
+		Future<Map<String, Object>> serviceBindingFuture = restAdmin.getConfigAsMap(application, entity, bindingId);
+		Map<String, Object> map = ServiceUtil.getFutureValueLoggingError(serviceBindingFuture);
+		if (map == null) return null;
 		
-		Map<String, Object> map = (Map<String, Object>) object;
 		return new ServiceInstanceBinding(
 				(String)map.get("id"),
 				(String)map.get("serviceInstanceId"),
@@ -46,22 +40,12 @@ public class BrooklynServiceInstanceBindingRepository {
 	}
 
 	public <S extends ServiceInstanceBinding> S save(S serviceInstanceBinding) {
-		try{
-			restApi.getEntityConfigApi().set(application, entity,
-				serviceInstanceBinding.getServiceInstanceId(), false, serviceInstanceBinding);
-			return serviceInstanceBinding;
-		} catch(Exception e){
-			LOG.error("unable to save {} {}", serviceInstanceBinding, e);
-			return null;
-		}
+		Object object = ServiceUtil.getFutureValueLoggingError(restAdmin.setConfig(application, entity, serviceInstanceBinding.getServiceInstanceId(), serviceInstanceBinding));
+		return (S)object;
 	}
 
 	public void delete(String bindingId) {
-		try {
-			restApi.getEntityConfigApi().set(application, entity, bindingId, false, "");
-		} catch (Exception e) {
-			LOG.error("unable to delete {} {}", bindingId, e);
-		}
+		restAdmin.deleteConfig(application, entity, bindingId);
 	}
 
 

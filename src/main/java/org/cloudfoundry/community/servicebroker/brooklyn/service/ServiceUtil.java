@@ -4,11 +4,10 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.Strings;
 
 public class ServiceUtil {
 
@@ -32,9 +31,8 @@ public class ServiceUtil {
         V v = null;
         try {
             v = future.get();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (Exception e) {
             LOG.error(e.getMessage());
-            e.printStackTrace();
             Exceptions.propagateIfFatal(e);
         }
         return v;

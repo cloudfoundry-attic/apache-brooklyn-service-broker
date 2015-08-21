@@ -2,10 +2,9 @@ package org.cloudfoundry.community.servicebroker.brooklyn.model;
 
 import java.util.Map;
 
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceRequest;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

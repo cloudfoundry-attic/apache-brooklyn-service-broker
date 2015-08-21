@@ -63,7 +63,8 @@ public class BrooklynServiceInstanceServiceTest {
 		when(admin.createApplication(any(String.class))).thenReturn(new AsyncResult<>(entity));
 		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
         when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(new DefaultBlueprintPlan("planId", "test_name", "test_description", ImmutableMap.of("location", "test_location"))));
-		
+		when(admin.getDashboardUrl(any(String.class))).thenReturn(new AsyncResult<>(null));
+        
 		CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid", true);
 		ServiceInstance instance = service.createServiceInstance(request.withServiceInstanceId(SVC_INST_ID));
 		

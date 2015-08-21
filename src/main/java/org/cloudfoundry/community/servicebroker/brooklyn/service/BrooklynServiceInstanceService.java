@@ -76,7 +76,10 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
         // with this particular service instance.
         request.setServiceDefinitionId(taskSummary.getEntityId());
         ServiceInstanceLastOperation lastOp = new ServiceInstanceLastOperation(Operations.CREATING, OperationState.IN_PROGRESS);
+        Future<String> dashboardUrlFuture = admin.getDashboardUrl(taskSummary.getEntityId());
+        String dashboardUrl = ServiceUtil.getFutureValueLoggingError(dashboardUrlFuture);
         instance = new ServiceInstance(request)
+        		.withDashboardUrl(dashboardUrl)
                 .withLastOperation(lastOp)
                 .isAsync(true);
         repository.save(instance);
@@ -111,6 +114,7 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
             admin.deleteApplication(entityId);
             LOG.info("Deleting service: [ServiceDefinitionId={}, ServiceInstanceId={}]", entityId, serviceInstanceId);
 		}
+        repository.save(instance);
 		return instance;
 	}
 

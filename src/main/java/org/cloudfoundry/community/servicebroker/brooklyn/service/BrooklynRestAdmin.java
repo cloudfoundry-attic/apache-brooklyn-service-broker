@@ -1,5 +1,7 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +17,8 @@ import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.Repositories;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
@@ -27,6 +31,8 @@ import com.google.common.collect.ImmutableSet;
 @Service
 public class BrooklynRestAdmin {
 
+	private static final Logger LOG = LoggerFactory.getLogger(BrooklynRestAdmin.class);
+	
 	private BrooklynApi restApi;
 
 	private static final Predicate<String> SENSOR_GLOBAL_BLACKLIST_PREDICATE = s -> !ImmutableSet.of(
@@ -181,6 +187,80 @@ public class BrooklynRestAdmin {
 			return new AsyncResult<>(result.toString().toUpperCase().equals("RUNNING"));
 		}
 		return new AsyncResult<>(false);
+	}
+
+    @Async
+	public Future<String> getDashboardUrl(String application) {
+    	// search in breadth first order for first sensor that matches
+    	List<EntitySummary> entities = restApi.getEntityApi().list(application);
+		Deque<EntitySummary> q = new ArrayDeque<>(entities);
+		while(!q.isEmpty()) {
+			EntitySummary e = q.remove();
+			List<SensorSummary> sensors = restApi.getSensorApi().list(application, e.getId());
+			for(SensorSummary sensor : sensors) {
+				if(sensor.getName().equals("management.url")){
+				  String url = String.valueOf(restApi.getSensorApi().get(application, e.getId(), sensor.getName(), false));
+				  LOG.info("found dashboard url={} for application={}", url, application);
+				  return new AsyncResult<>(url);
+				}
+			}
+			q.addAll(restApi.getEntityApi().getChildren(application, e.getId()));
+		}
+		
+		LOG.info("no dashboard url found for application={}", application);
+		return new AsyncResult<>(null);
+	}
+    
+    @Async
+    public Future<Map<String, Object>> getConfigAsMap(String application, String entity, String key){
+    	Object object;
+		try{
+			object = restApi.getEntityConfigApi().get(application, entity, key, false);
+		}catch(Exception e){
+			LOG.error("Unable to get config with key={}", key);
+			return new AsyncResult<>(null);
+		}
+		
+		if (object == null || !(object instanceof Map)) {
+			LOG.error("Unable to get Map with key={}", key);
+			return new AsyncResult<>(null);
+		}
+		Map<String, Object> map = (Map<String, Object>) object;
+		if (!map.containsKey("serviceDefinitionId") || map.get("serviceDefinitionId") == null) {
+			LOG.error("Unable to get serviceDefinitionId: {}", map);
+		}
+		return new AsyncResult<>(map);
+    }
+
+    @Async
+	public Future<String> getServiceState(String application) {
+    	try{
+    		Object object = restApi.getSensorApi().get(application, application, "service.state", false);
+    		return new AsyncResult<>(object.toString());
+    	} catch (Exception e) {
+    		return new AsyncResult<>(null);
+    	}
+        
+	}
+
+	@Async
+	public void deleteConfig(String application, String entity, String key) {
+		try{
+			restApi.getEntityConfigApi().set(application, entity, key, false, "");
+		} catch(Exception e){
+			LOG.error("unable to delete {} {}", key, e.getMessage());
+		}
+	}
+	
+	@Async
+	public Future<Object> setConfig(String application, String entity, String key, Object value) {
+		try{
+			restApi.getEntityConfigApi().set(application, entity, key, false, value);
+			return new AsyncResult<>(value);
+		} catch(Exception e){
+			LOG.error("unable to save {} {}", value, e.getMessage());
+			return new AsyncResult<>(null);
+		}
 	}
 
 }

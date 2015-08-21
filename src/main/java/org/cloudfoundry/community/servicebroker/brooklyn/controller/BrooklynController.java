@@ -7,6 +7,7 @@ import java.util.concurrent.Future;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.brooklyn.util.stream.Streams;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
@@ -18,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import brooklyn.util.stream.Streams;
 
 @RestController
 public class BrooklynController {
