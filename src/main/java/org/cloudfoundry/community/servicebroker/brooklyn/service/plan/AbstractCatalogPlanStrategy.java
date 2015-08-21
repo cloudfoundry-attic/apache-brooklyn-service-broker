@@ -15,11 +15,15 @@ import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
 import org.cloudfoundry.community.servicebroker.model.DashboardClient;
 import org.cloudfoundry.community.servicebroker.model.Plan;
 import org.cloudfoundry.community.servicebroker.model.ServiceDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.collect.Sets;
 
 public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy{
+	
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractCatalogPlanStrategy.class);
 	
 	private BrooklynRestAdmin admin;
 	private PlaceholderReplacer replacer;
@@ -47,32 +51,35 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 
         List<CatalogItemSummary> page = ServiceUtil.getFutureValueLoggingError(pageFuture);
         for (CatalogItemSummary app : page) {
-			
-			String id = app.getSymbolicName();
-			String name = ServiceUtil.getUniqueName("br_"+app.getName(), names);
-			// only take the most recent version
-			if (version.containsKey(name)){
-				if (new NaturalOrderComparator().compare(app.getVersion(), version.get(name)) <= 0){
-					// don't add to catalog
+			try {
+				String id = app.getSymbolicName();
+				String name = ServiceUtil.getUniqueName("br_" + app.getName(), names);
+				// only take the most recent version
+				if (version.containsKey(name)) {
+					if (new NaturalOrderComparator().compare(app.getVersion(), version.get(name)) <= 0) {
+						// don't add to catalog
+						continue;
+					}
+				}
+				version.put(name, app.getVersion());
+				String description = app.getDescription();
+				boolean bindable = true;
+				boolean planUpdatable = false;
+				List<Plan> plans = makePlans(id, app.getPlanYaml());
+				if (plans.size() == 0) {
 					continue;
 				}
-			}
-			version.put(name, app.getVersion());
-			String description = app.getDescription();
-			boolean bindable = true;
-			boolean planUpdatable = false;
-			List<Plan> plans = makePlans(id, app.getPlanYaml());
-            if (plans.size() == 0) {
-                continue;
-            }
-			List<String> tags = getTags();
-			Map<String, Object> metadata = getServiceDefinitionMetadata(app.getIconUrl(), app.getPlanYaml());
-			List<String> requires = getTags();
-			DashboardClient dashboardClient = null;
+				List<String> tags = getTags();
+				Map<String, Object> metadata = getServiceDefinitionMetadata(app.getIconUrl(), app.getPlanYaml());
+				List<String> requires = getTags();
+				DashboardClient dashboardClient = null;
 
-			definitions.add(new ServiceDefinition(id, name, description,
-					bindable, planUpdatable, plans, tags, metadata, requires,
-					dashboardClient));
+				definitions.add(new ServiceDefinition(id, name, description,
+						bindable, planUpdatable, plans, tags, metadata,
+						requires, dashboardClient));
+			} catch (Exception e) {
+				LOG.error("unable to add catalog item: {}", e.getMessage());
+			}
 		}
         return definitions;
 	}
