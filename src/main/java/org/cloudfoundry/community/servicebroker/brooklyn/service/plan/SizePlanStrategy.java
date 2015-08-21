@@ -103,7 +103,7 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
     		if(planConfig != null){
             	properties.putAll(planConfig);
             }
-            if(planDefinition != null){
+            if(config != null){
             	properties.putAll(config);
             }
             properties.put("location", brooklynConfig.getLocation());
