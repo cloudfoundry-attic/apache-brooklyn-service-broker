@@ -48,7 +48,7 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
         List<CatalogItemSummary> page = ServiceUtil.getFutureValueLoggingError(pageFuture);
         for (CatalogItemSummary app : page) {
 			
-			String id = app.getId();
+			String id = app.getSymbolicName();
 			String name = ServiceUtil.getUniqueName("br_"+app.getName(), names);
 			// only take the most recent version
 			if (version.containsKey(name)){
