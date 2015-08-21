@@ -65,7 +65,12 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 				String description = app.getDescription();
 				boolean bindable = true;
 				boolean planUpdatable = false;
-				List<Plan> plans = makePlans(id, app.getPlanYaml());
+				List<Plan> plans = new ArrayList<>();
+				try {
+					plans = makePlans(id, app.getPlanYaml());
+				} catch(Exception e) {
+					LOG.error("unable to make plans: Unexpected blueprint format");
+				}
 				if (plans.size() == 0) {
 					continue;
 				}
