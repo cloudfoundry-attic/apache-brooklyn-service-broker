@@ -75,7 +75,9 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 					continue;
 				}
 				List<String> tags = getTags();
-				Map<String, Object> metadata = getServiceDefinitionMetadata(app.getIconUrl(), app.getPlanYaml());
+				Future<String> iconAsBase64Future = admin.getIconAsBase64(app.getIconUrl());
+				String iconUrl = ServiceUtil.getFutureValueLoggingError(iconAsBase64Future);
+				Map<String, Object> metadata = getServiceDefinitionMetadata(iconUrl, app.getPlanYaml());
 				List<String> requires = getTags();
 				DashboardClient dashboardClient = null;
 

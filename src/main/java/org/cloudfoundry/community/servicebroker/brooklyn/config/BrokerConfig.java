@@ -9,6 +9,7 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.HttpClientConnectionManager;
@@ -56,29 +57,34 @@ public class BrokerConfig {
 	public PlaceholderReplacer placeholderReplacer(){
 		return new PlaceholderReplacer(new Random());
 	}
+	
+	@Bean
+	public HttpClient httpClient(){
+		HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setSocketTimeout(30000)
+                .setConnectTimeout(30000)
+                .setTargetPreferredAuthSchemes(ImmutableList.of(AuthSchemes.BASIC))
+                .setProxyPreferredAuthSchemes(ImmutableList.of(AuthSchemes.BASIC))
+                .build();
+
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(AuthScope.ANY, getUsernamePasswordCredentials());
+        return HttpClients.custom().setConnectionManager(cm)
+                .setDefaultCredentialsProvider(credentialsProvider)
+                .setDefaultRequestConfig(requestConfig)
+                .build();
+	}
 
 
 	@Bean
-	public BrooklynApi restApi() {
+	public BrooklynApi restApi(HttpClient httpClient) {
 		URL url;
 		try {
 			url = new URL(config.toFullUrl());
 			LOG.info("Creating new brooklynApi for " + url);
-            HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-
-            RequestConfig requestConfig = RequestConfig.custom()
-                    .setSocketTimeout(30000)
-                    .setConnectTimeout(30000)
-                    .setTargetPreferredAuthSchemes(ImmutableList.of(AuthSchemes.BASIC))
-                    .setProxyPreferredAuthSchemes(ImmutableList.of(AuthSchemes.BASIC))
-                    .build();
-
-            CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-            credentialsProvider.setCredentials(AuthScope.ANY, getUsernamePasswordCredentials());
-            CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(cm)
-                    .setDefaultCredentialsProvider(credentialsProvider)
-                    .setDefaultRequestConfig(requestConfig)
-                    .build();
+            
 			return new BrooklynApi(url, new ApacheHttpClient4Executor(httpClient));
 		} catch (MalformedURLException e) {
 			e.printStackTrace();

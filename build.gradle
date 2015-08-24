@@ -60,7 +60,7 @@ dependencies {
 		exclude module: "slf4j-log4j12"
 		exclude module: "jetty-server"
 	}
-    testCompile("org.apache.brooklyn:brooklyn-core:0.8.0-SNAPSHOT"){
+    compile("org.apache.brooklyn:brooklyn-core:0.8.0-SNAPSHOT"){
         exclude module: "slf4j-log4j12"
         exclude module: "jetty-server"
     }

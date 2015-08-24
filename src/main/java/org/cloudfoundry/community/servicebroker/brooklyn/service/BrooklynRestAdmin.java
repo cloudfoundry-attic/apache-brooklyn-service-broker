@@ -1,6 +1,8 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
+import java.net.URI;
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +18,10 @@ import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.rest.domain.TaskSummary;
+import org.apache.brooklyn.util.core.http.HttpTool;
+import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.http.client.HttpClient;
+import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.Repositories;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,13 +33,13 @@ import org.springframework.stereotype.Service;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.BaseEncoding;
 
 @Service
 public class BrooklynRestAdmin {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BrooklynRestAdmin.class);
 	
-	private BrooklynApi restApi;
 
 	private static final Predicate<String> SENSOR_GLOBAL_BLACKLIST_PREDICATE = s -> !ImmutableSet.of(
             "download.url",
@@ -51,9 +57,15 @@ public class BrooklynRestAdmin {
             "host.sshAddress"
     ).contains(s);
 
+	private HttpClient httpClient;
+	private BrooklynApi restApi;
+	private BrooklynConfig config;
+
     @Autowired
-    public BrooklynRestAdmin(BrooklynApi restApi) {
+    public BrooklynRestAdmin(BrooklynApi restApi, HttpClient httpClient, BrooklynConfig config) {
         this.restApi = restApi;
+		this.httpClient = httpClient;
+		this.config = config;
     }
 
 	public void createRepositoryIfNotExists(){
@@ -259,6 +271,17 @@ public class BrooklynRestAdmin {
 			return new AsyncResult<>(value);
 		} catch(Exception e){
 			LOG.error("unable to save {} {}", value, e.getMessage());
+			return new AsyncResult<>(null);
+		}
+	}
+	
+	@Async
+	public Future<String> getIconAsBase64(String url){
+		try {
+			HttpToolResponse response = HttpTool.httpGet(httpClient, new URI(config.toFullUrl(url)), Collections.<String, String>emptyMap());
+			return new AsyncResult<>("data:img/png;base64," + BaseEncoding.base64().encode(response.getContent())); 
+		} catch (Exception e) {
+			LOG.error("unable to encode icon as base64");
 			return new AsyncResult<>(null);
 		}
 	}

@@ -16,7 +16,9 @@ import org.apache.brooklyn.rest.client.BrooklynApi;
 import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.http.client.HttpClient;
 import org.cloudfoundry.community.servicebroker.brooklyn.BrooklynConfiguration;
+import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceBindingRepository;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
 import org.cloudfoundry.community.servicebroker.exception.ServiceBrokerException;
@@ -82,6 +84,10 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
     private BrooklynApi brooklynApi;
     @Mock
     private EntityApi entityApi;
+    @Mock
+    private HttpClient httpClient;
+    @Mock
+    private BrooklynConfig config;
 
     @Before
 	public void setup() {
@@ -107,7 +113,7 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
     @Test
     public void testWhitelistCreatedSuccessfully() throws ServiceInstanceBindingExistsException, ServiceBrokerException {
 
-        bindingService = new BrooklynServiceInstanceBindingService(new BrooklynRestAdmin(brooklynApi), bindingRepository, instanceRepository, brooklynCatalogService);
+        bindingService = new BrooklynServiceInstanceBindingService(new BrooklynRestAdmin(brooklynApi, httpClient, config), bindingRepository, instanceRepository, brooklynCatalogService);
 
         when(admin.getCredentialsFromSensors(Mockito.anyString(), Mockito.any(Predicate.class))).thenCallRealMethod();
 
