@@ -58,20 +58,22 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 			try {
 				String id = app.getSymbolicName();
                 String name;
+                LOG.info("Brooklyn Application={}", app);
                 if(config.isAllCatalogVersions()) {
                     id = ServiceUtil.getUniqueName(id, new HashSet<>(definitions.keySet()));
                     name = ServiceUtil.getSafeName("br_" + app.getName() + "_" + app.getVersion());
                 } else {
                     name = ServiceUtil.getUniqueName("br_" + app.getName(), names);
+                    // only take the most recent version
+    				if (version.containsKey(id)) {
+    					if (new NaturalOrderComparator().compare(app.getVersion(), version.get(id)) <= 0) {
+    						// don't add to catalog
+    						continue;
+    					}
+    				}
+    				version.put(id, app.getVersion());
                 }
-				// only take the most recent version
-				if (version.containsKey(id)) {
-					if (new NaturalOrderComparator().compare(app.getVersion(), version.get(id)) <= 0) {
-						// don't add to catalog
-						continue;
-					}
-				}
-				version.put(id, app.getVersion());
+				
 				String description = app.getDescription();
 				boolean bindable = true;
 				boolean planUpdatable = false;
