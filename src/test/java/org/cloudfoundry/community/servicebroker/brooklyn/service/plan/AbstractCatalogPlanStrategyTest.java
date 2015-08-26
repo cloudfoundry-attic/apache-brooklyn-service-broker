@@ -14,6 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.scheduling.annotation.AsyncResult;
 
@@ -38,8 +39,8 @@ public class AbstractCatalogPlanStrategyTest {
 
     @Test
     public void testMakeServiceDefinitionsLatestVersions() {
-        when(admin.getCatalogApplications()).thenReturn(new AsyncResult<>(CATALOG_ITEM_SUMMARIES));
-        when(brooklynConfig.isAllCatalogVersions()).thenReturn(false);
+        when(admin.getCatalogApplications(Mockito.anyBoolean())).thenReturn(new AsyncResult<>(CATALOG_ITEM_SUMMARIES));
+        when(brooklynConfig.includesAllCatalogVersions()).thenReturn(false);
         List<ServiceDefinition> serviceDefinitions = catalogPlanStrategy.makeServiceDefinitions();
         assertEquals(1, serviceDefinitions.size());
         assertEquals("1.1", serviceDefinitions.get(0).getDescription());
@@ -47,8 +48,8 @@ public class AbstractCatalogPlanStrategyTest {
 
     @Test
     public void testMakeServiceDefinitionsAllVersions() {
-        when(admin.getCatalogApplications()).thenReturn(new AsyncResult<>(CATALOG_ITEM_SUMMARIES));
-        when(brooklynConfig.isAllCatalogVersions()).thenReturn(true);
+        when(admin.getCatalogApplications(Mockito.anyBoolean())).thenReturn(new AsyncResult<>(CATALOG_ITEM_SUMMARIES));
+        when(brooklynConfig.includesAllCatalogVersions()).thenReturn(true);
         List<ServiceDefinition> serviceDefinitions = catalogPlanStrategy.makeServiceDefinitions();
         assertEquals(2, serviceDefinitions.size());
     }

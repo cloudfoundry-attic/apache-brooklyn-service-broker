@@ -15,7 +15,7 @@ public class BrooklynConfig {
 	private String location;
     private boolean allCatalogVersions;
 
-    public boolean isAllCatalogVersions() {
+    public boolean includesAllCatalogVersions() {
         return allCatalogVersions;
     }
 

@@ -77,8 +77,8 @@ public class BrooklynRestAdmin {
 	}
 
     @Async
-	public Future<List<CatalogItemSummary>> getCatalogApplications(){
-		return new AsyncResult<>(restApi.getCatalogApi().listApplications("", "", true));
+	public Future<List<CatalogItemSummary>> getCatalogApplications(boolean includeAllVersions){
+		return new AsyncResult<>(restApi.getCatalogApi().listApplications("", "", includeAllVersions));
 	}
 
     @Async

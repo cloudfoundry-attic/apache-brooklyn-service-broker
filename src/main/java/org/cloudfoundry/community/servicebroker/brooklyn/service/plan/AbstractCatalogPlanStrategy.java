@@ -48,9 +48,8 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 	
 	@Override
 	public List<ServiceDefinition> makeServiceDefinitions() {
-		Future<List<CatalogItemSummary>> pageFuture = admin.getCatalogApplications();
+		Future<List<CatalogItemSummary>> pageFuture = admin.getCatalogApplications(config.includesAllCatalogVersions());
 		Map<String, ServiceDefinition> definitions = new HashMap<>();
-		Map<String, String> version = new HashMap<>();
         Set<String> names = Sets.newHashSet();
 
         List<CatalogItemSummary> page = ServiceUtil.getFutureValueLoggingError(pageFuture);
@@ -59,19 +58,11 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 				String id = app.getSymbolicName();
                 String name;
                 LOG.info("Brooklyn Application={}", app);
-                if(config.isAllCatalogVersions()) {
+                if(config.includesAllCatalogVersions()) {
                     id = ServiceUtil.getUniqueName(id, new HashSet<>(definitions.keySet()));
                     name = ServiceUtil.getSafeName("br_" + app.getName() + "_" + app.getVersion());
                 } else {
                     name = ServiceUtil.getUniqueName("br_" + app.getName(), names);
-                    // only take the most recent version
-    				if (version.containsKey(id)) {
-    					if (new NaturalOrderComparator().compare(app.getVersion(), version.get(id)) <= 0) {
-    						// don't add to catalog
-    						continue;
-    					}
-    				}
-    				version.put(id, app.getVersion());
                 }
 				
 				String description = app.getDescription();

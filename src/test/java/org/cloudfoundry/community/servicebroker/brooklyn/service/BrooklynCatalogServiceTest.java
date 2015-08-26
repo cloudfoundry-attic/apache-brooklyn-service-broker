@@ -78,7 +78,7 @@ public class BrooklynCatalogServiceTest {
     public void testGetServicesWithSizeStrategy() {
         brooklynCatalogService.setPlanStrategy(new SizePlanStrategy(admin, brooklynConfig, replacer));
         when(replacer.replaceValues(Mockito.anyMap())).thenCallRealMethod();
-        when(admin.getCatalogApplications()).thenReturn(new AsyncResult<>(CATALOG_ITEM_SUMMARIES));
+        when(admin.getCatalogApplications(Mockito.anyBoolean())).thenReturn(new AsyncResult<>(CATALOG_ITEM_SUMMARIES));
         Catalog catalog = brooklynCatalogService.getCatalog();
         List<ServiceDefinition> serviceDefinitions = catalog.getServiceDefinitions();
         assertEquals(1, serviceDefinitions.size());
