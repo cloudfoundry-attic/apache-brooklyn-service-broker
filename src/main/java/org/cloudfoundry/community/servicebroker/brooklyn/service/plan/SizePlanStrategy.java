@@ -28,7 +28,7 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
 
     @Autowired
     public SizePlanStrategy(BrooklynRestAdmin admin, BrooklynConfig brooklynConfig, PlaceholderReplacer replacer) {
-    	super(admin, replacer);
+    	super(admin, replacer, brooklynConfig);
         this.brooklynConfig = brooklynConfig;
     }
 

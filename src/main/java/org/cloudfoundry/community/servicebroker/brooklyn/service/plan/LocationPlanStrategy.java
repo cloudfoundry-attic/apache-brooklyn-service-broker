@@ -10,6 +10,7 @@ import java.util.concurrent.Future;
 
 import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.util.yaml.Yamls;
+import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.DefaultBlueprintPlan;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
@@ -21,8 +22,8 @@ import com.google.common.collect.Sets;
 public class LocationPlanStrategy extends AbstractCatalogPlanStrategy{
 
     @Autowired
-    public LocationPlanStrategy(BrooklynRestAdmin admin, PlaceholderReplacer replacer) {
-        super(admin, replacer);
+    public LocationPlanStrategy(BrooklynRestAdmin admin, PlaceholderReplacer replacer, BrooklynConfig config) {
+        super(admin, replacer, config);
     }
 
     @Override

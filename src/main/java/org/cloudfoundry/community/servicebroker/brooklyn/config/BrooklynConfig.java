@@ -13,6 +13,15 @@ public class BrooklynConfig {
 	private String username;
 	private String password;
 	private String location;
+    private boolean allCatalogVersions;
+
+    public boolean isAllCatalogVersions() {
+        return allCatalogVersions;
+    }
+
+    public void setAllCatalogVersions(boolean allCatalogVersions) {
+        this.allCatalogVersions = allCatalogVersions;
+    }
 
 	public String getUri() {
 		return uri;

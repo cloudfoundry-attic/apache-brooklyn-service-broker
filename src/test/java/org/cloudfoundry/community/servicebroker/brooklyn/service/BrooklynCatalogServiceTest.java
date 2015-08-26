@@ -67,7 +67,7 @@ public class BrooklynCatalogServiceTest {
     
     @Test
     public void testGetLocationPlans(){
-        brooklynCatalogService.setPlanStrategy(new LocationPlanStrategy(admin, replacer));
+        brooklynCatalogService.setPlanStrategy(new LocationPlanStrategy(admin, replacer, brooklynConfig));
         when(admin.getLocations()).thenReturn(new AsyncResult<>(LOCATION_SUMMARIES));
         List<Plan> plans = brooklynCatalogService.getPlans("test_id", "");
         
@@ -75,7 +75,7 @@ public class BrooklynCatalogServiceTest {
     }
 
     @Test
-    public void testGetServicesWithSizeStrategy(){
+    public void testGetServicesWithSizeStrategy() {
         brooklynCatalogService.setPlanStrategy(new SizePlanStrategy(admin, brooklynConfig, replacer));
         when(replacer.replaceValues(Mockito.anyMap())).thenCallRealMethod();
         when(admin.getCatalogApplications()).thenReturn(new AsyncResult<>(CATALOG_ITEM_SUMMARIES));

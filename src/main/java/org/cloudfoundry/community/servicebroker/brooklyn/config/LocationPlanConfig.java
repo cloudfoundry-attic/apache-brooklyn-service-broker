@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Profile;
 public class LocationPlanConfig {
 
     @Bean
-    public CatalogPlanStrategy planStrategy(BrooklynRestAdmin brooklynRestAdmin, PlaceholderReplacer replacer){
-        return new LocationPlanStrategy(brooklynRestAdmin, replacer);
+    public CatalogPlanStrategy planStrategy(BrooklynRestAdmin brooklynRestAdmin, PlaceholderReplacer replacer, BrooklynConfig brooklynConfig) {
+        return new LocationPlanStrategy(brooklynRestAdmin, replacer, brooklynConfig);
     }
 }

@@ -1,0 +1,20 @@
+brooklyn.catalog:
+  id: com.cloudsoft.development.plans
+  version: 1.1
+  description: A Basic Entity with plans
+  displayName: BasicEntity
+  itemType: template
+
+brooklyn.config:
+  broker.config:
+    plans:
+      small:
+        cluster.initial.size: 1
+      medium:
+        cluster.initial.size: 3
+      large:
+        cluster.initial.size: 5
+
+services:
+- type: brooklyn.entity.basic.BasicEntity
+  defaultDisplayName: Basic Entity

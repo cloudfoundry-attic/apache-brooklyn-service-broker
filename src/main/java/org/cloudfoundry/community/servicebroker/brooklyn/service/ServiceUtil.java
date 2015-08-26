@@ -1,7 +1,6 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -14,7 +13,7 @@ public class ServiceUtil {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceUtil.class);
 
     public static String getUniqueName(String name, Set<String> names) {
-        name = Strings.makeValidJavaName(name).toLowerCase();
+        name = getSafeName(name);
         if (!names.contains(name)) {
             names.add(name);
             return name;
@@ -36,5 +35,9 @@ public class ServiceUtil {
             Exceptions.propagateIfFatal(e);
         }
         return v;
+    }
+
+    public static String getSafeName(String name) {
+        return Strings.makeValidJavaName(name).toLowerCase();
     }
 }

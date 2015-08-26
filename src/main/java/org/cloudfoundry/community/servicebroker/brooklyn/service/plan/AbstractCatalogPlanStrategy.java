@@ -3,6 +3,7 @@ package org.cloudfoundry.community.servicebroker.brooklyn.service.plan;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +11,7 @@ import java.util.concurrent.Future;
 
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.apache.brooklyn.util.text.NaturalOrderComparator;
+import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
 import org.cloudfoundry.community.servicebroker.model.DashboardClient;
@@ -27,11 +29,13 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 	
 	private BrooklynRestAdmin admin;
 	private PlaceholderReplacer replacer;
+    private BrooklynConfig config;
 	
 	@Autowired
-	public AbstractCatalogPlanStrategy(BrooklynRestAdmin admin, PlaceholderReplacer replacer) {
+	public AbstractCatalogPlanStrategy(BrooklynRestAdmin admin, PlaceholderReplacer replacer, BrooklynConfig config) {
 		this.admin = admin;
 		this.replacer = replacer;
+        this.config = config;
 	}
 	
 	protected BrooklynRestAdmin getAdmin() {
@@ -45,7 +49,7 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 	@Override
 	public List<ServiceDefinition> makeServiceDefinitions() {
 		Future<List<CatalogItemSummary>> pageFuture = admin.getCatalogApplications();
-		List<ServiceDefinition> definitions = new ArrayList<>();
+		Map<String, ServiceDefinition> definitions = new HashMap<>();
 		Map<String, String> version = new HashMap<>();
         Set<String> names = Sets.newHashSet();
 
@@ -53,15 +57,21 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
         for (CatalogItemSummary app : page) {
 			try {
 				String id = app.getSymbolicName();
-				String name = ServiceUtil.getUniqueName("br_" + app.getName(), names);
+                String name;
+                if(config.isAllCatalogVersions()) {
+                    id = ServiceUtil.getUniqueName(id, new HashSet<>(definitions.keySet()));
+                    name = ServiceUtil.getSafeName("br_" + app.getName() + "_" + app.getVersion());
+                } else {
+                    name = ServiceUtil.getUniqueName("br_" + app.getName(), names);
+                }
 				// only take the most recent version
-				if (version.containsKey(name)) {
-					if (new NaturalOrderComparator().compare(app.getVersion(), version.get(name)) <= 0) {
+				if (version.containsKey(id)) {
+					if (new NaturalOrderComparator().compare(app.getVersion(), version.get(id)) <= 0) {
 						// don't add to catalog
 						continue;
 					}
 				}
-				version.put(name, app.getVersion());
+				version.put(id, app.getVersion());
 				String description = app.getDescription();
 				boolean bindable = true;
 				boolean planUpdatable = false;
@@ -80,15 +90,14 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 				Map<String, Object> metadata = getServiceDefinitionMetadata(iconUrl, app.getPlanYaml());
 				List<String> requires = getTags();
 				DashboardClient dashboardClient = null;
-
-				definitions.add(new ServiceDefinition(id, name, description,
-						bindable, planUpdatable, plans, tags, metadata,
-						requires, dashboardClient));
+                definitions.put(id, new ServiceDefinition(id, name, description,
+                        bindable, planUpdatable, plans, tags, metadata,
+                        requires, dashboardClient));
 			} catch (Exception e) {
 				LOG.error("unable to add catalog item: {}", e.getMessage());
 			}
 		}
-        return definitions;
+        return new ArrayList<>(definitions.values());
 	}
 	
     private List<String> getTags() {

@@ -49,8 +49,8 @@ public class BrokerConfig {
 
 	@Bean
 	@ConditionalOnMissingBean(CatalogPlanStrategy.class)
-	public CatalogPlanStrategy CatalogPlanStrategy(BrooklynRestAdmin admin, PlaceholderReplacer replacer){
-	    return new LocationPlanStrategy(admin, replacer);
+	public CatalogPlanStrategy CatalogPlanStrategy(BrooklynRestAdmin admin, PlaceholderReplacer replacer, BrooklynConfig config) {
+	    return new LocationPlanStrategy(admin, replacer, config);
 	}
 	
 	@Bean
