@@ -106,22 +106,29 @@ public class BrooklynRestAdmin {
 
     @Async
     public Future<Map<String, Object>> getCredentialsFromSensors(String application, Predicate<String> filter){
-        return new AsyncResult<>(getApplicationSensors(application, restApi.getEntityApi().list(application), filter));
+        List<EntitySummary> entities = restApi.getEntityApi().list(application);
+        if(entities.size() == 1){
+        	String entity = entities.get(0).getId();
+			return new AsyncResult<>(getEntitySensors(application, filter, entity));
+        }
+		return new AsyncResult<>(getApplicationSensors(application, entities, filter));
     }
 	
 	private Map<String, Object> getApplicationSensors(String application, List<EntitySummary> entities, Predicate<String> filter){
 		Map<String, Object> result = new HashMap<>();
 		for (EntitySummary s : entities) {
-			String entity = s.getId();
-			Map<String, Object> sensors = getSensors(application, entity, filter);
-			Map<String, Object> childSensors = getApplicationSensors(
-					application,
-					restApi.getEntityApi().getChildren(application, entity),
-                    filter);
-			sensors.put("children", childSensors);
-			result.put(s.getName(), sensors);
+			result.put(s.getName(), getEntitySensors(application, filter, s.getId()));
 		}
 		return result;
+	}
+
+	private Map<String, Object> getEntitySensors(String application, Predicate<String> filter, String entity) {
+		Map<String, Object> sensors = getSensors(application, entity, filter);
+		Map<String, Object> childSensors = getApplicationSensors(application, restApi.getEntityApi().getChildren(application, entity), filter);
+		if(childSensors.size() > 0){
+		  sensors.put("children", childSensors);
+		}
+		return sensors;
 	}
 	
 	private Map<String, Object> getSensors(String application, String entity, Predicate<String> filter){
@@ -129,7 +136,10 @@ public class BrooklynRestAdmin {
 		for (SensorSummary sensorSummary : restApi.getSensorApi().list(application, entity)) {
 			String sensor = sensorSummary.getName();
             if (Predicates.and(SENSOR_GLOBAL_BLACKLIST_PREDICATE, Predicates.or(SENSOR_GLOBAL_WHITELIST_PREDICATE, filter)).apply(sensor)) {
+            	LOG.info("Using senor={} while making credentials", sensor);
                 sensors.put(sensor, restApi.getSensorApi().get(application, entity, sensor, false));
+            } else {
+            	LOG.info("Ignoring sensor={} while making credentials", sensor);
             }
 		}
 		return sensors;

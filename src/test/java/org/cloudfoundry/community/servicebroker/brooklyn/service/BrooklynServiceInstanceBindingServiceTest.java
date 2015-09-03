@@ -57,10 +57,9 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 
     static {
         Map<String, Object> expectedCredentialsChild = Maps.newHashMap();
-        expectedCredentialsChild.put("children", ImmutableMap.of());
         expectedCredentialsChild.put("sensor.one.name", null);
 
-        EXPECTED_CREDENTIALS.put("name", expectedCredentialsChild);
+        EXPECTED_CREDENTIALS.putAll(expectedCredentialsChild);
     }
 
     @Mock
