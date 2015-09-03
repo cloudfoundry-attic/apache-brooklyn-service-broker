@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.util.yaml.Yamls;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.model.Plan;
 import org.junit.Before;
@@ -58,7 +59,8 @@ public class SizePlanStrategyTest {
                 "          minCores: 4",
                 "          minRam: 4");
 
-        List<Plan> plans = strategy.makePlans("test_id", yaml);
+        Object rootObject = Yamls.parseAll(yaml).iterator().next();
+        List<Plan> plans = strategy.makePlans("test_id", rootObject);
         assertEquals(3, plans.size());
         assertEquals("small", plans.get(0).getName());
         assertEquals("medium", plans.get(1).getName());
@@ -104,8 +106,8 @@ public class SizePlanStrategyTest {
            		"        CREATE USER sqluser WITH PASSWORD '$(string.random)';", 
 		        "        CREATE DATABASE mydatabase OWNER sqluser;"
         		);
-
-        List<Plan> plans = strategy.makePlans("test_id", yaml);
+        Object rootObject = Yamls.parseAll(yaml).iterator().next();
+        List<Plan> plans = strategy.makePlans("test_id", rootObject);
         assertEquals(3, plans.size());
         assertEquals("small", plans.get(0).getName());
         assertEquals("small plan", plans.get(0).getDescription());

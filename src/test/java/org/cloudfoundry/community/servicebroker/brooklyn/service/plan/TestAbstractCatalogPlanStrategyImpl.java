@@ -22,7 +22,7 @@ public class TestAbstractCatalogPlanStrategyImpl extends AbstractCatalogPlanStra
     }
 
     @Override
-    public List<Plan> makePlans(String serviceId, String yaml) {
+    public List<Plan> makePlans(String serviceId, Object yaml) {
         return CATALOG_PLANS;
     }
 }

@@ -114,7 +114,7 @@ public class BrooklynServiceInstanceServiceTest {
                         )
                 ))
         ));
-        String expectedBlueprint = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
+        String expectedBlueprint = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
         String blueprint = service.createBlueprint(serviceDefinition, request);
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
         assertEquals(expectedBlueprint.replace(" ", ""), blueprint.replace(" ", ""));
@@ -134,7 +134,7 @@ public class BrooklynServiceInstanceServiceTest {
                         )
                 ))
         ));
-        String expectedBlueprint = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
+        String expectedBlueprint = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
         String blueprint = service.createBlueprint(serviceDefinition, request);
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
         assertEquals(expectedBlueprint.replace(" ", ""), blueprint.replace(" ", ""));
@@ -148,7 +148,7 @@ public class BrooklynServiceInstanceServiceTest {
         when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
                 new DefaultBlueprintPlan("planId", "planName", "planDescription", ImmutableMap.of("location", "testLocation"))
         ));
-        String expectedBlueprint = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"]}", serviceDefinition.getId(), "testLocation");
+        String expectedBlueprint = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}", serviceDefinition.getId(), "testLocation");
         String blueprint = service.createBlueprint(serviceDefinition, request);
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
         assertEquals(expectedBlueprint.replace(" ", ""), blueprint.replace(" ", ""));

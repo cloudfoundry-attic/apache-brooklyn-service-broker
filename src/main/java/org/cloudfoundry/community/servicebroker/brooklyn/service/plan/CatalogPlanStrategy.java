@@ -1,5 +1,6 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service.plan;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.cloudfoundry.community.servicebroker.model.Plan;
@@ -9,6 +10,6 @@ public interface CatalogPlanStrategy {
 	
 	List<ServiceDefinition> makeServiceDefinitions();
     
-    List<Plan> makePlans(String serviceId, String yaml);
+    List<Plan> makePlans(String serviceId, Object yaml);
 
 }

@@ -105,13 +105,15 @@ public class BrooklynRestAdmin {
 	}
 
     @Async
-    public Future<Map<String, Object>> getCredentialsFromSensors(String application, Predicate<String> filter){
+    public Future<Map<String, Object>> getCredentialsFromSensors(String application, Predicate<String> filter) {
         List<EntitySummary> entities = restApi.getEntityApi().list(application);
-        if(entities.size() == 1){
-        	String entity = entities.get(0).getId();
-			return new AsyncResult<>(getEntitySensors(application, filter, entity));
+        if (entities.size() == 0) {
+            return new AsyncResult<>(getEntitySensors(application, filter, application));
+        } else if (entities.size() == 1) {
+            String entity = entities.get(0).getId();
+            return new AsyncResult<>(getEntitySensors(application, filter, entity));
         }
-		return new AsyncResult<>(getApplicationSensors(application, entities, filter));
+        return new AsyncResult<>(getApplicationSensors(application, entities, filter));
     }
 	
 	private Map<String, Object> getApplicationSensors(String application, List<EntitySummary> entities, Predicate<String> filter){

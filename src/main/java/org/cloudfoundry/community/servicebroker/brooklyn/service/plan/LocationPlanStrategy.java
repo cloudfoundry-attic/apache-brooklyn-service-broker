@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.apache.brooklyn.rest.domain.LocationSummary;
-import org.apache.brooklyn.util.yaml.Yamls;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.DefaultBlueprintPlan;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
@@ -27,40 +26,34 @@ public class LocationPlanStrategy extends AbstractCatalogPlanStrategy{
     }
 
     @Override
-    public List<Plan> makePlans(String serviceId, String yaml) {
+    public List<Plan> makePlans(String serviceId, Object rootElement) {
         List<Plan> plans = new ArrayList<>();
         // check if yaml contains a location
         // if it does extract that and use it
         // as the plan.
-        if (yaml != null) {
-            Iterator<Object> iterator = Yamls.parseAll(yaml).iterator();
-            while (iterator.hasNext()) {
-                Object next = iterator.next();
-                if (next instanceof Map) {
-                    Map<String, Object> map = (Map<String, Object>) next;
-                    if (map.containsKey("location")) {
-                        Object location = map.get("location");
-                        if (location instanceof Map) {
-                            // just use the keys
-                            for (String s : ((Map<String, Object>) location).keySet()) {
-                                String id = serviceId + "." + s;
-                                String name = s;
-                                String description = "Deploys to " + s;
-                                Map<String, Object> metadata = new HashMap<>();
-                                metadata.put("location", s);
-                                plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
-                            }
-                        } else if (location instanceof String) {
-                            String id = serviceId + "." + location;
-                            String name = (String) location;
-                            String description = "Deploys to " + location;
-                            Map<String, Object> metadata = new HashMap<>();
-                            metadata.put("location", name);
-                            plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
-                        }
-                        return plans;
+        if (rootElement instanceof Map) {
+            Map<String, Object> map = (Map<String, Object>) rootElement;
+            if (map.containsKey("location")) {
+                Object location = map.get("location");
+                if (location instanceof Map) {
+                    // just use the keys
+                    for (String s : ((Map<String, Object>) location).keySet()) {
+                        String id = serviceId + "." + s;
+                        String name = s;
+                        String description = "Deploys to " + s;
+                        Map<String, Object> metadata = new HashMap<>();
+                        metadata.put("location", s);
+                        plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
                     }
+                } else if (location instanceof String) {
+                    String id = serviceId + "." + location;
+                    String name = (String) location;
+                    String description = "Deploys to " + location;
+                    Map<String, Object> metadata = new HashMap<>();
+                    metadata.put("location", name);
+                    plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
                 }
+                return plans;
             }
         }
 

@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.brooklyn.rest.domain.LocationSummary;
+import org.apache.brooklyn.util.yaml.Yamls;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.model.Plan;
 import org.junit.Before;
@@ -54,7 +55,8 @@ public class LocationPlanStrategyTest {
                 "location: aws-ec2:eu-west-1",
                 "services:",
                 "- serviceType: brooklyn.entity.basic.BasicApplication");
-        List<Plan> plans = locationPlanStrategy.makePlans(TEST_ID, yaml);
+        Object rootObject = Yamls.parseAll(yaml).iterator().next();
+        List<Plan> plans = locationPlanStrategy.makePlans(TEST_ID, rootObject);
         assertEquals(plans.size(), 1);
         assertEquals(plans.get(0).getId(), TEST_ID + "." + "aws-ec2:eu-west-1");
         assertEquals(plans.get(0).getName(), "aws-ec2:eu-west-1");
@@ -69,7 +71,8 @@ public class LocationPlanStrategyTest {
                 "    region: us-east-1",
                 "services:",
                 "- serviceType: brooklyn.entity.basic.BasicApplication");
-        List<Plan> plans = locationPlanStrategy.makePlans(TEST_ID, yaml);
+        Object rootObject = Yamls.parseAll(yaml).iterator().next();
+        List<Plan> plans = locationPlanStrategy.makePlans(TEST_ID, rootObject);
         assertEquals(plans.size(), 1);
         assertEquals(plans.get(0).getId(), TEST_ID + "." + "jclouds:aws-ec2");
         assertEquals(plans.get(0).getName(), "jclouds:aws-ec2");

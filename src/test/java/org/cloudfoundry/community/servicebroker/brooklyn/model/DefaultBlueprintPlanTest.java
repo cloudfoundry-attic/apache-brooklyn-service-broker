@@ -35,7 +35,7 @@ public class DefaultBlueprintPlanTest {
 		ObjectWriter writer = new ObjectMapper().writer();
 		String configJson = writer.writeValueAsString(config);
 		when(request.getParameters()).thenReturn((Map)config);
-		String expected = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"], \"brooklyn.config\":%s}", 
+		String expected = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":%s}",
 				request.getServiceDefinitionId(), location, configJson);
 		String result = plan.toBlueprint(location, request);
 		assertEquals(expected, result);
@@ -47,7 +47,7 @@ public class DefaultBlueprintPlanTest {
 		Map<String,Object> config = ImmutableMap.of();
 		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", config);
 		when(request.getParameters()).thenReturn((Map)config);
-		String expected = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"]}", 
+		String expected = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}",
 				request.getServiceDefinitionId(), location);
 		String result = plan.toBlueprint(location, request);
 		assertEquals(expected, result);
@@ -59,7 +59,7 @@ public class DefaultBlueprintPlanTest {
 		Map<String,Object> config = null;
 		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", config);
 		when(request.getParameters()).thenReturn((Map)config);
-		String expected = String.format("{\"services\":[\"type\": \"%s\"], \"locations\": [\"%s\"]}", 
+		String expected = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}",
 				request.getServiceDefinitionId(), location);
 		String result = plan.toBlueprint(location, request);
 		assertEquals(expected, result);

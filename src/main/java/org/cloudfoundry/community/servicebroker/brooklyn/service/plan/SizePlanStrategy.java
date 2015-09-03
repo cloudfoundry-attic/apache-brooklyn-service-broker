@@ -33,21 +33,17 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
     }
 
     @Override
-    public List<Plan> makePlans(String serviceId, String yaml) {
+    public List<Plan> makePlans(String serviceId, Object rootElement) {
         List<Plan> plans = new ArrayList<>();
-        if (yaml == null) {
+        if (rootElement == null) {
             return plans;
         }
 
-        Iterator<Object> iterator = Yamls.parseAll(yaml).iterator();
-        while (iterator.hasNext()) {
-            Object next = iterator.next();
-            if (next instanceof Map){
-                Map<String, Object> map = (Map<String, Object>) next;
-                if (map.containsKey("brooklyn.config")){
-                    Map<String, Object> brooklynConfig = (Map<String, Object>)map.get("brooklyn.config");
-                    return parseConfig(brooklynConfig, serviceId);
-                }
+        if (rootElement instanceof Map) {
+            Map<String, Object> map = (Map<String, Object>) rootElement;
+            if (map.containsKey("brooklyn.config")) {
+                Map<String, Object> brooklynConfig = (Map<String, Object>) map.get("brooklyn.config");
+                return parseConfig(brooklynConfig, serviceId);
             }
         }
         return plans;

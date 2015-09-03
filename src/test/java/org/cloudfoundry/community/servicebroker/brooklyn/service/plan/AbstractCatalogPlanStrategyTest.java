@@ -21,8 +21,10 @@ import org.springframework.scheduling.annotation.AsyncResult;
 public class AbstractCatalogPlanStrategyTest {
 
     private static final List<CatalogItemSummary> CATALOG_ITEM_SUMMARIES = Arrays.asList(
-            new CatalogItemSummary("test_name", "1.0", "test_name", "foo", "", "1.0", "", false, null),
-            new CatalogItemSummary("test_name", "1.1", "test_name", "foo", "", "1.1", "", false, null)
+            new CatalogItemSummary("test_name", "1.0", "test_name", "foo", "{}", "1.0", "", false, null),
+            new CatalogItemSummary("test_name", "1.1", "test_name", "foo", "{}", "1.1", "", false, null),
+            new CatalogItemSummary("test_name", "1.2", "test_name", "foo", "{brooklyn.config: {broker.config: {hidden: true}}}", "1.1", "", false, null),
+            new CatalogItemSummary("test_name_2", "1.2", "test_name_2", "foo", "{brooklyn.config: {broker.config: {hidden: true}}}", "1.2", "", false, null)
     );
 
     @InjectMocks
