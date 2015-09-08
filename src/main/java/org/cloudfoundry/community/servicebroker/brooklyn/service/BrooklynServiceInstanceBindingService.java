@@ -58,7 +58,7 @@ public class BrooklynServiceInstanceBindingService implements
 			throw new ServiceInstanceBindingExistsException(serviceInstanceBinding);
 		}
 		
-		ServiceInstance serviceInstance = instanceRepository.findOne(request.getServiceInstanceId());
+		ServiceInstance serviceInstance = instanceRepository.findOne(request.getServiceInstanceId(), false);
 		String entityId = serviceInstance.getServiceDefinitionId();
 		
 		LOG.info("creating service binding: [entity={}, serviceDefinitionId={}, bindingId={}, serviceInstanceId={}, appGuid={}", 

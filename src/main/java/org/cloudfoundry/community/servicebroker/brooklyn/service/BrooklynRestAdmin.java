@@ -7,7 +7,9 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
@@ -30,6 +32,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
+import com.google.api.client.util.Sets;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
@@ -135,13 +138,22 @@ public class BrooklynRestAdmin {
 	
 	private Map<String, Object> getSensors(String application, String entity, Predicate<String> filter){
 		Map<String, Object> sensors = new HashMap<>();
-		for (SensorSummary sensorSummary : restApi.getSensorApi().list(application, entity)) {
-			String sensor = sensorSummary.getName();
-            if (Predicates.and(SENSOR_GLOBAL_BLACKLIST_PREDICATE, Predicates.or(SENSOR_GLOBAL_WHITELIST_PREDICATE, filter)).apply(sensor)) {
-            	LOG.info("Using senor={} while making credentials", sensor);
-                sensors.put(sensor, restApi.getSensorApi().get(application, entity, sensor, false));
+
+        List<SensorSummary> sensorSummaries = restApi.getSensorApi().list(application, entity);
+        Set<String> sensorNames = sensorSummaries.stream().map(SensorSummary::getName).collect(Collectors.toSet());
+
+		for (String sensorName : sensorNames) {
+			if (sensorName.startsWith("mapped.")) {
+                continue;
+            }
+            if (Predicates.and(SENSOR_GLOBAL_BLACKLIST_PREDICATE, Predicates.or(SENSOR_GLOBAL_WHITELIST_PREDICATE, filter)).apply(sensorName)) {
+            	LOG.info("Using sensor={} while making credentials", sensorName);
+                Object value = sensorNames.contains("mapped." + sensorName) ?
+                    restApi.getSensorApi().get(application, entity, "mapped." + sensorName, false) :
+                        restApi.getSensorApi().get(application, entity, sensorName, false);
+                sensors.put(sensorName, value);
             } else {
-            	LOG.info("Ignoring sensor={} while making credentials", sensor);
+            	LOG.info("Ignoring sensorName={} while making credentials", sensorName);
             }
 		}
 		return sensors;

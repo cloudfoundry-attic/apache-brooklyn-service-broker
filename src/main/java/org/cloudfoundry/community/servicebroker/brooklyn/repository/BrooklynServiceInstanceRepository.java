@@ -31,11 +31,16 @@ public class BrooklynServiceInstanceRepository {
 		this.restAdmin = restApi;
 	}
 
+    public ServiceInstance findOne(String serviceInstanceId) {
+        return  findOne(serviceInstanceId, true);
+    }
+
 	@SuppressWarnings("unchecked")
-	public ServiceInstance findOne(String serviceInstanceId) {
+	public ServiceInstance findOne(String serviceInstanceId, boolean includeEverything) {
 		Future<Map<String, Object>> serviceInstanceFuture = restAdmin.getConfigAsMap(application, entity, serviceInstanceId);
 		Map<String, Object> map = ServiceUtil.getFutureValueLoggingError(serviceInstanceFuture);
 		if(map == null)  return null;
+
         String brooklynEntity = String.valueOf(map.get("serviceDefinitionId"));
         CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(
                 brooklynEntity,
@@ -44,6 +49,10 @@ public class BrooklynServiceInstanceRepository {
 				map.get("spaceGuid").toString(),
                 true
 				);
+        if(!includeEverything) {
+            return new ServiceInstance(request.withServiceInstanceId(serviceInstanceId));
+        }
+
         Map<String, Object> previousOperationMap = (Map<String, Object>)map.get("serviceInstanceLastOperation");
         
         String currentState = previousOperationMap.get("description").toString();
