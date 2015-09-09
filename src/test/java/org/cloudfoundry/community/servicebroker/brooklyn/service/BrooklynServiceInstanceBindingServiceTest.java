@@ -98,7 +98,7 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 	public void newServiceInstanceBindingCreatedSuccessfully() 
 			throws ServiceBrokerException, ServiceInstanceBindingExistsException {
 
-		when(admin.getCredentialsFromSensors(any(String.class), any(Predicate.class))).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
+		when(admin.getCredentialsFromSensors(any(String.class), any(Predicate.class), any(Predicate.class))).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
 		when(instanceRepository.findOne(any(String.class), any(Boolean.class))).thenReturn(serviceInstance);
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of());
         when(brooklynCatalogService.getServiceDefinition(Mockito.anyString())).thenReturn(serviceDefinition);
@@ -114,7 +114,7 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 
         bindingService = new BrooklynServiceInstanceBindingService(new BrooklynRestAdmin(brooklynApi, httpClient, config), bindingRepository, instanceRepository, brooklynCatalogService);
 
-        when(admin.getCredentialsFromSensors(Mockito.anyString(), Mockito.any(Predicate.class))).thenCallRealMethod();
+        when(admin.getCredentialsFromSensors(Mockito.anyString(), any(Predicate.class), any(Predicate.class))).thenCallRealMethod();
 
         when(brooklynApi.getSensorApi()).thenReturn(sensorApi);
         when(sensorApi.list(Mockito.anyString(), Mockito.anyString())).thenReturn(ImmutableList.of(

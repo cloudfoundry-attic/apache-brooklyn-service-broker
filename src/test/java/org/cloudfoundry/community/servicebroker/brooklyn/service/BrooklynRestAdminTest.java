@@ -27,20 +27,31 @@ import com.google.common.collect.ImmutableMap;
 public class BrooklynRestAdminTest {
 
     private static final List<EntitySummary> TEST_ENTITY_SUMMARIES = ImmutableList.of(
-            new EntitySummary("test_id1", "name", "test_type", "test_catalog_item_id", ImmutableMap.of())
+            new EntitySummary("test_id", "name", "test_type", "test_catalog_item_id", ImmutableMap.of())
+    );
+    
+    private static final List<EntitySummary> TEST_CHILD_ENTITY_SUMMARIES = ImmutableList.of(
+    		new EntitySummary("test_child_id", "child", "test_type", "test_catalog_item_id", ImmutableMap.of())
+    );
+    
+    private static final List<EntitySummary> TEST_QUARANTINE_ENTITY_SUMMARIES = ImmutableList.of(
+    		new EntitySummary("test_quarantine_id", "quarantine", "brooklyn.entity.group.QuarantineGroup", "test_quarantine_id", ImmutableMap.of())
     );
 
-    private static final List<SensorSummary> TEST_SENSOR_SUMMARIES_1 = ImmutableList.of(
+    private static final List<SensorSummary> TEST_SENSOR_SUMMARIES = ImmutableList.of(
             new SensorSummary("sensor.one.name", "sensor.one.type", "sensor.one.description", ImmutableMap.of()),
             new SensorSummary("sensor.two.name", "sensor.two.type", "sensor.two.description", ImmutableMap.of()),
             new SensorSummary("host.name", "sensor.two.type", "myHostName", ImmutableMap.of())
     );
 
     private static final List<String> SENSOR_WHITELIST = ImmutableList.of("foo.bar", "sensor.one.name");
+    private static final List<String> ENTITY_BLACKLIST = ImmutableList.of();
+    
 
     private static final Map<String, Object> TEST_RESULT = Maps.newHashMap();
 
     private static final Map<String, Object> EXPECTED_CREDENTIALS = Maps.newHashMap();
+    private static final Map<String, Object> EXPECTED_BLACKLIST_CREDENTIALS = Maps.newHashMap();
 
     static {
         Map<String, Object> testResultChild = Maps.newHashMap();
@@ -55,6 +66,10 @@ public class BrooklynRestAdminTest {
         expectedCredentialsChild.put("host.name", null);
 
         EXPECTED_CREDENTIALS.putAll(expectedCredentialsChild);
+        
+        EXPECTED_BLACKLIST_CREDENTIALS.putAll(expectedCredentialsChild);
+        EXPECTED_BLACKLIST_CREDENTIALS.put("children", ImmutableMap.of("child", expectedCredentialsChild));
+        
     }
 
     @Mock
@@ -78,7 +93,7 @@ public class BrooklynRestAdminTest {
     public void testGetApplicationSensors() throws ExecutionException, InterruptedException {
         when(restApi.getSensorApi()).thenReturn(sensorApi);
         when(restApi.getEntityApi()).thenReturn(entityApi);
-        when(restApi.getSensorApi().list(Mockito.anyString(), Mockito.eq("test_id1"))).thenReturn(TEST_SENSOR_SUMMARIES_1);
+        when(restApi.getSensorApi().list(Mockito.anyString(), Mockito.eq("test_id"))).thenReturn(TEST_SENSOR_SUMMARIES);
         when(restApi.getEntityApi().list(Mockito.any(String.class))).thenReturn(TEST_ENTITY_SUMMARIES);
         when(restApi.getEntityApi().getChildren(Mockito.anyString(), Mockito.anyString())).thenReturn(ImmutableList.of());
 
@@ -92,15 +107,29 @@ public class BrooklynRestAdminTest {
     public void testGetCredentialsFromSensors() throws ExecutionException, InterruptedException {
         when(restApi.getSensorApi()).thenReturn(sensorApi);
         when(restApi.getEntityApi()).thenReturn(entityApi);
-        when(restApi.getSensorApi().list(Mockito.anyString(), Mockito.eq("test_id1"))).thenReturn(TEST_SENSOR_SUMMARIES_1);
+        when(restApi.getSensorApi().list(Mockito.anyString(), Mockito.eq("test_id"))).thenReturn(TEST_SENSOR_SUMMARIES);
         when(restApi.getEntityApi().list(Mockito.any(String.class))).thenReturn(TEST_ENTITY_SUMMARIES);
         when(restApi.getEntityApi().getChildren(Mockito.anyString(), Mockito.anyString())).thenReturn(ImmutableList.of());
 
         Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application",
-                s -> SENSOR_WHITELIST.contains(s));
+                s -> SENSOR_WHITELIST.contains(s), e -> !ENTITY_BLACKLIST.contains(e));
         Map<String, Object> credentials = credentialsFuture.get();
 
         assertEquals(EXPECTED_CREDENTIALS, credentials);
+    }
+    
+    @Test
+    public void testBlacklistEntitiesWhileGettingCredentials() throws ExecutionException, InterruptedException {
+        when(restApi.getSensorApi()).thenReturn(sensorApi);
+        when(restApi.getEntityApi()).thenReturn(entityApi);
+        when(restApi.getSensorApi().list(Mockito.anyString(), Mockito.anyString())).thenReturn(TEST_SENSOR_SUMMARIES);
+        when(restApi.getEntityApi().list(Mockito.anyString())).thenReturn(TEST_ENTITY_SUMMARIES);
+        when(restApi.getEntityApi().getChildren(Mockito.anyString(), Mockito.eq("test_id"))).thenReturn(TEST_QUARANTINE_ENTITY_SUMMARIES);
+        when(restApi.getEntityApi().getChildren(Mockito.anyString(), Mockito.eq("test_quarantine_id"))).thenReturn(TEST_CHILD_ENTITY_SUMMARIES);
+
+        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", s -> SENSOR_WHITELIST.contains(s), e -> !ENTITY_BLACKLIST.contains(e));
+        Map<String, Object> credentials = credentialsFuture.get();
+        assertEquals(EXPECTED_BLACKLIST_CREDENTIALS, credentials);
     }
 
 }

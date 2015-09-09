@@ -67,23 +67,26 @@ public class BrooklynServiceInstanceBindingService implements
 
         ServiceDefinition service = catalogService.getServiceDefinition(request.getServiceDefinitionId());
         Predicate<String> sensorPredicate;
+        Predicate<String> entityPredicate;
         Object planYamlObject = service.getMetadata().get("planYaml");
         if (planYamlObject == null) {
-            sensorPredicate = Predicates.<String>alwaysTrue();
+            sensorPredicate = Predicates.alwaysTrue();
+            entityPredicate = Predicates.alwaysTrue();
         } else {
             String planYaml = String.valueOf(planYamlObject);
             sensorPredicate = getSensorPredicate(planYaml);
+            entityPredicate = getEntityPredicate(planYaml);
         }
 
-        Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, sensorPredicate);
+        Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, sensorPredicate, entityPredicate);
         Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
         serviceInstanceBinding = new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, null, request.getAppGuid());
 		bindingRepository.save(serviceInstanceBinding);
 		return new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), credentials, null, request.getAppGuid());
 	}
-
+	
     @VisibleForTesting
-    public static Predicate<String> getSensorPredicate(String planYaml) {
+    public static Predicate<String> getPredicate(String planYaml, String section) {
         return s -> {
             Iterator<Object> iterator = Yamls.parseAll(planYaml).iterator();
             while (iterator.hasNext()) {
@@ -92,14 +95,23 @@ public class BrooklynServiceInstanceBindingService implements
                     Map<String, Object> map = (Map<String, Object>) next;
                     return getAndTransform(map, "brooklyn.config", brooklynConfig ->
                         getAndTransform((Map<String, Object>) map.get("brooklyn.config"), "broker.config", brokerConfig ->
-                            getAndTransform((Map<String, Object>) brokerConfig, "sensor.whitelist", list ->
-                                list == null ? true : ((List<String>) list).contains(s))
+                            getAndTransform((Map<String, Object>) brokerConfig, section, list ->
+                            list == null ? true : ((List<String>) list).contains(s))
                         )
                     );
                 }
             }
             return true;
         };
+    }
+
+    @VisibleForTesting
+    public static Predicate<String> getSensorPredicate(String planYaml) {
+    	return getPredicate(planYaml, "sensor.whitelist");
+    }
+    
+    public static Predicate<String> getEntityPredicate(String planYaml){
+    	return Predicates.not(getPredicate(planYaml, "entity.blacklist"));
     }
 
     private static <T> T getAndTransform(Map<String, Object> map, String key, Function<Object, T> transformer) {

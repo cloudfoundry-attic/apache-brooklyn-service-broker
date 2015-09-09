@@ -32,7 +32,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
-import com.google.api.client.util.Sets;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
@@ -43,6 +42,10 @@ public class BrooklynRestAdmin {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BrooklynRestAdmin.class);
 	
+	private static final Predicate<String> ENTITY_GLOBAL_BLACKLIST_PREDICATE = s -> !ImmutableSet.of(
+			"brooklyn.entity.group.QuarantineGroup",
+			"brooklyn.networking.subnet.SubnetTier"
+	).contains(s);
 
 	private static final Predicate<String> SENSOR_GLOBAL_BLACKLIST_PREDICATE = s -> !ImmutableSet.of(
             "download.url",
@@ -103,40 +106,47 @@ public class BrooklynRestAdmin {
 
     @Async
 	public Future<Map<String, Object>> getApplicationSensors(String application){
-        Predicate<String> p = Predicates.<String>alwaysTrue();
-        return new AsyncResult<>(getApplicationSensors(application, restApi.getEntityApi().list(application), p));
+        return new AsyncResult<>(getApplicationSensors(application, restApi.getEntityApi().list(application), Predicates.alwaysTrue(), Predicates.alwaysTrue()));
 	}
 
     @Async
-    public Future<Map<String, Object>> getCredentialsFromSensors(String application, Predicate<String> filter) {
+    public Future<Map<String, Object>> getCredentialsFromSensors(String application, Predicate<? super String> sensorFilter, Predicate<? super String> entityFilter) {
         List<EntitySummary> entities = restApi.getEntityApi().list(application);
         if (entities.size() == 0) {
-            return new AsyncResult<>(getEntitySensors(application, filter, application));
+            return new AsyncResult<>(getEntitySensors(application, application, sensorFilter, entityFilter));
         } else if (entities.size() == 1) {
             String entity = entities.get(0).getId();
-            return new AsyncResult<>(getEntitySensors(application, filter, entity));
+            return new AsyncResult<>(getEntitySensors(application, entity, sensorFilter, entityFilter));
         }
-        return new AsyncResult<>(getApplicationSensors(application, entities, filter));
+        return new AsyncResult<>(getApplicationSensors(application, entities, sensorFilter, entityFilter));
     }
 	
-	private Map<String, Object> getApplicationSensors(String application, List<EntitySummary> entities, Predicate<String> filter){
+	private Map<String, Object> getApplicationSensors(String application, List<EntitySummary> entities, Predicate<? super String> sensorFilter, Predicate<? super String> entityFilter){
 		Map<String, Object> result = new HashMap<>();
 		for (EntitySummary s : entities) {
-			result.put(s.getName(), getEntitySensors(application, filter, s.getId()));
+			Map<String, Object> entitySensors = getEntitySensors(application, s.getId(), sensorFilter, entityFilter);
+			
+			if(Predicates.and(entityFilter, ENTITY_GLOBAL_BLACKLIST_PREDICATE).apply(s.getType())){
+				result.put(s.getName(), entitySensors);
+			} else {
+				if(entitySensors.containsKey("children")) {
+					result.putAll((Map<String, Object>)entitySensors.get("children"));
+				}
+			}
 		}
 		return result;
 	}
 
-	private Map<String, Object> getEntitySensors(String application, Predicate<String> filter, String entity) {
-		Map<String, Object> sensors = getSensors(application, entity, filter);
-		Map<String, Object> childSensors = getApplicationSensors(application, restApi.getEntityApi().getChildren(application, entity), filter);
+	private Map<String, Object> getEntitySensors(String application, String entity, Predicate<? super String> sensorFilter, Predicate<? super String> entityFilter) {
+		Map<String, Object> sensors = getSensors(application, entity, sensorFilter);
+		Map<String, Object> childSensors = getApplicationSensors(application, restApi.getEntityApi().getChildren(application, entity), sensorFilter, entityFilter);
 		if(childSensors.size() > 0){
 		  sensors.put("children", childSensors);
 		}
 		return sensors;
 	}
 	
-	private Map<String, Object> getSensors(String application, String entity, Predicate<String> filter){
+	private Map<String, Object> getSensors(String application, String entity, Predicate<? super String> filter){
 		Map<String, Object> sensors = new HashMap<>();
 
         List<SensorSummary> sensorSummaries = restApi.getSensorApi().list(application, entity);
