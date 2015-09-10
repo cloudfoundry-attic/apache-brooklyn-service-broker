@@ -1,6 +1,5 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -22,9 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 
 @Service
 public class BrooklynServiceInstanceBindingService implements
@@ -66,16 +65,15 @@ public class BrooklynServiceInstanceBindingService implements
         );
 
         ServiceDefinition service = catalogService.getServiceDefinition(request.getServiceDefinitionId());
-        Predicate<String> sensorPredicate;
-        Predicate<String> entityPredicate;
+        Predicate<String> sensorPredicate= Predicates.alwaysTrue();
+        Predicate<String> entityPredicate= Predicates.alwaysTrue();
         Object planYamlObject = service.getMetadata().get("planYaml");
-        if (planYamlObject == null) {
-            sensorPredicate = Predicates.alwaysTrue();
-            entityPredicate = Predicates.alwaysTrue();
-        } else {
-            String planYaml = String.valueOf(planYamlObject);
-            sensorPredicate = getSensorPredicate(planYaml);
-            entityPredicate = getEntityPredicate(planYaml);
+        if (planYamlObject != null) {
+            Object rootElement = Iterables.getOnlyElement(Yamls.parseAll(String.valueOf(planYamlObject)));
+			if (rootElement instanceof Map) {
+				sensorPredicate = getSensorPredicate(rootElement);
+				entityPredicate = getEntityPredicate(rootElement);
+			}
         }
 
         Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, sensorPredicate, entityPredicate);
@@ -86,40 +84,34 @@ public class BrooklynServiceInstanceBindingService implements
 	}
 	
     @VisibleForTesting
-    public static Predicate<String> getPredicate(String planYaml, String section) {
-        return s -> {
-            Iterator<Object> iterator = Yamls.parseAll(planYaml).iterator();
-            while (iterator.hasNext()) {
-                Object next = iterator.next();
-                if (next instanceof Map){
-                    Map<String, Object> map = (Map<String, Object>) next;
-                    return getAndTransform(map, "brooklyn.config", brooklynConfig ->
-                        getAndTransform((Map<String, Object>) map.get("brooklyn.config"), "broker.config", brokerConfig ->
-                            getAndTransform((Map<String, Object>) brokerConfig, section, list ->
-                            list == null ? true : ((List<String>) list).contains(s))
-                        )
-                    );
-                }
-            }
-            return true;
-        };
+    public static Predicate<String> getContainsItemInSectionPredicate(Object rootElement, String section) {
+        return s -> containsItemInSection(s, (Map<?, ?>) rootElement, section);
+    }
+    
+    private static Boolean containsItemInSection(Object item, Map<?, ?> map, String section){
+    	Map<?, ?> brooklynConfig = (Map<?, ?>) map.get("brooklyn.config");
+    	Map<?, ?> brokerConfig = (Map<?, ?>) getValue(brooklynConfig, "broker.config");
+		List<?> list = (List<?>) getValue(brokerConfig, section);
+		return listContains(list, item);
+    }
+    
+    private static Boolean listContains(Object list, Object s) {
+    	return list == null ? true : ((List<?>) list).contains(s);
+    }
+    
+    private static Object getValue(Map<?, ?> map, String key){
+    	return (map == null || !map.containsKey(key)) ? null : map.get(key);
     }
 
     @VisibleForTesting
-    public static Predicate<String> getSensorPredicate(String planYaml) {
-    	return getPredicate(planYaml, "sensor.whitelist");
+    public static Predicate<String> getSensorPredicate(Object rootElement) {
+    	return getContainsItemInSectionPredicate(rootElement, "sensor.whitelist");
     }
     
-    public static Predicate<String> getEntityPredicate(String planYaml){
-    	return Predicates.not(getPredicate(planYaml, "entity.blacklist"));
+    public static Predicate<String> getEntityPredicate(Object rootElement){
+    	return Predicates.not(getContainsItemInSectionPredicate(rootElement, "entity.blacklist"));
     }
 
-    private static <T> T getAndTransform(Map<String, Object> map, String key, Function<Object, T> transformer) {
-        if (map == null || !map.containsKey(key)) {
-            return transformer.apply(null);
-        }
-        return transformer.apply(map.get(key));
-    }
 
 	@Override
 	public ServiceInstanceBinding deleteServiceInstanceBinding(DeleteServiceInstanceBindingRequest request)

@@ -16,6 +16,7 @@ import org.apache.brooklyn.rest.client.BrooklynApi;
 import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.yaml.Yamls;
 import org.apache.http.client.HttpClient;
 import org.cloudfoundry.community.servicebroker.brooklyn.BrooklynConfiguration;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
@@ -43,6 +44,7 @@ import com.google.api.client.util.Maps;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {BrooklynConfiguration.class})
@@ -177,7 +179,8 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 
     @Test
     public void testGetSensorPredicate() {
-        Predicate<String> predicate = BrooklynServiceInstanceBindingService.getSensorPredicate(WHITELIST_YAML);
+    	Object rootElement = Iterables.getOnlyElement(Yamls.parseAll(WHITELIST_YAML));
+        Predicate<String> predicate = BrooklynServiceInstanceBindingService.getSensorPredicate(rootElement);
         assertNotNull(predicate);
         assertTrue(predicate.apply("foo.bar"));
         assertFalse(predicate.apply("bar.foo"));
@@ -185,7 +188,8 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 
     @Test
     public void testGetSensorPredicateNoPlans() {
-        Predicate<String> predicate = BrooklynServiceInstanceBindingService.getSensorPredicate(NO_PLANS_YAML);
+    	Object rootElement = Iterables.getOnlyElement(Yamls.parseAll(NO_PLANS_YAML));
+        Predicate<String> predicate = BrooklynServiceInstanceBindingService.getSensorPredicate(rootElement);
         assertNotNull(predicate);
         assertTrue(predicate.apply("foo.bar"));
         assertTrue(predicate.apply("bar.foo"));
@@ -193,7 +197,8 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 
     @Test
     public void testGetSensorPredicateNoWhitelist() {
-        Predicate<String> predicate = BrooklynServiceInstanceBindingService.getSensorPredicate(PLANS_YAML);
+    	Object rootElement = Iterables.getOnlyElement(Yamls.parseAll(PLANS_YAML));
+        Predicate<String> predicate = BrooklynServiceInstanceBindingService.getSensorPredicate(rootElement);
         assertNotNull(predicate);
         assertTrue(predicate.apply("foo.bar"));
         assertTrue(predicate.apply("bar.foo"));
