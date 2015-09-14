@@ -15,6 +15,7 @@ build/
 local.properties
 .settings/
 .loadpath
+brooklyn.*.log*
 
 # Eclipse Core
 .project
