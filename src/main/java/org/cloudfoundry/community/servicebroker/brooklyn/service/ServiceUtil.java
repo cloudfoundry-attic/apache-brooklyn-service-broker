@@ -8,6 +8,10 @@ import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Throwables;
+
 public class ServiceUtil {
 
     private static final Logger LOG = LoggerFactory.getLogger(ServiceUtil.class);
@@ -31,7 +35,7 @@ public class ServiceUtil {
         try {
             v = future.get();
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            LOG.error(Throwables.getStackTraceAsString(e));
             Exceptions.propagateIfFatal(e);
         }
         return v;

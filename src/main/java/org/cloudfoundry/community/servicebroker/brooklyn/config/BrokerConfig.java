@@ -59,6 +59,7 @@ public class BrokerConfig {
 	}
 	
 	@Bean
+	@ConditionalOnMissingBean(HttpClient.class)
 	public HttpClient httpClient(){
 		HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
 
