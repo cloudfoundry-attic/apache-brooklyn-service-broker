@@ -22,6 +22,7 @@ import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.util.core.http.HttpTool;
 import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.text.Strings;
 import org.apache.http.client.HttpClient;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.Repositories;
@@ -308,12 +309,13 @@ public class BrooklynRestAdmin {
 			return new AsyncResult<>(null);
 		}
 	}
-	
+
 	@Async
 	public Future<String> getIconAsBase64(String url){
+		if (Strings.isEmpty(url)) return new AsyncResult<>(null);
 		try {
 			HttpToolResponse response = HttpTool.httpGet(httpClient, new URI(config.toFullUrl(url)), Collections.<String, String>emptyMap());
-			return new AsyncResult<>("data:img/png;base64," + BaseEncoding.base64().encode(response.getContent())); 
+			return new AsyncResult<>("data:img/png;base64," + BaseEncoding.base64().encode(response.getContent()));
 		} catch (Exception e) {
 			LOG.error("unable to encode icon as base64");
 			return new AsyncResult<>(null);

@@ -12,6 +12,7 @@ import java.util.concurrent.Future;
 
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.yaml.Yamls;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
@@ -81,12 +82,15 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 				} catch(Exception e) {
 					LOG.error("unable to make plans: Unexpected blueprint format");
 				}
-				if (plans.size() == 0) {
+				if (plans.isEmpty()) {
 					continue;
 				}
 				List<String> tags = getTags();
-				Future<String> iconAsBase64Future = admin.getIconAsBase64(app.getIconUrl());
-				String iconUrl = ServiceUtil.getFutureValueLoggingError(iconAsBase64Future);
+				String iconUrl = null;
+				if (!Strings.isEmpty(app.getIconUrl())) {
+					Future<String> iconAsBase64Future = admin.getIconAsBase64(app.getIconUrl());
+					iconUrl = ServiceUtil.getFutureValueLoggingError(iconAsBase64Future);
+				}
 				Map<String, Object> metadata = getServiceDefinitionMetadata(iconUrl, app.getPlanYaml());
 				List<String> requires = getTags();
 				DashboardClient dashboardClient = null;
@@ -133,7 +137,7 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 
 	private Map<String, Object> getServiceDefinitionMetadata(String iconUrl, String planYaml) {
 		Map<String, Object> metadata = new HashMap<>();
-		metadata.put("imageUrl", iconUrl);
+        if (iconUrl != null) metadata.put("imageUrl", iconUrl);
         metadata.put("planYaml", planYaml);
 		return metadata;
 	}

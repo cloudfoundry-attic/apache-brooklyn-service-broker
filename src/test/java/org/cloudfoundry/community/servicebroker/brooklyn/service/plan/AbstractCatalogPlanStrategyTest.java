@@ -1,6 +1,9 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service.plan;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -46,6 +49,7 @@ public class AbstractCatalogPlanStrategyTest {
         List<ServiceDefinition> serviceDefinitions = catalogPlanStrategy.makeServiceDefinitions();
         assertEquals(1, serviceDefinitions.size());
         assertEquals("1.1", serviceDefinitions.get(0).getDescription());
+        verify(admin, never()).getIconAsBase64(anyString());
     }
 
     @Test
@@ -54,5 +58,6 @@ public class AbstractCatalogPlanStrategyTest {
         when(brooklynConfig.includesAllCatalogVersions()).thenReturn(true);
         List<ServiceDefinition> serviceDefinitions = catalogPlanStrategy.makeServiceDefinitions();
         assertEquals(2, serviceDefinitions.size());
+        verify(admin, never()).getIconAsBase64(anyString());
     }
 }
