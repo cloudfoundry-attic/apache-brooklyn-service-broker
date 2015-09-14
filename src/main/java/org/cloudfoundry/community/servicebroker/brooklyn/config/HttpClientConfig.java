@@ -72,7 +72,7 @@ public class HttpClientConfig {
 					.setDefaultCredentialsProvider(credentialsProvider)
 					.setDefaultRequestConfig(requestConfig).build();
 		} catch (Exception e) {
-			throw new RuntimeException("Cannot build HttpClient using self signed certificate");
+			throw new RuntimeException("Cannot build HttpClient using self signed certificate", e);
 		}
 	}
 
