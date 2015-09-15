@@ -9,7 +9,7 @@ public abstract class BlueprintPlan extends Plan{
 	
 	public BlueprintPlan(String id, String name, String description,
 			Map<String, Object> metadata) {
-		super(id, name, description, metadata);
+		super(id, name, description, metadata, true);
 	}
 
 	public abstract String toBlueprint(String location, CreateServiceInstanceRequest request);
