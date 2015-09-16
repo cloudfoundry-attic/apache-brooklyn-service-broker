@@ -44,7 +44,7 @@ public class BrooklynRestAdmin {
 	private static final Logger LOG = LoggerFactory.getLogger(BrooklynRestAdmin.class);
 	
 	private static final Predicate<String> ENTITY_GLOBAL_BLACKLIST_PREDICATE = s -> !ImmutableSet.of(
-			"brooklyn.entity.group.QuarantineGroup",
+			"org.apache.brooklyn.entity.group.QuarantineGroup",
 			"brooklyn.networking.subnet.SubnetTier"
 	).contains(s);
 
