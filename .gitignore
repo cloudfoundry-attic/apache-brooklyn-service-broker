@@ -45,3 +45,6 @@ brooklyn.*.log*
 .idea
 *.iml
 out
+
+# Allows a hand catch-all folder for non-tracked items (e.g. copies of config etc) 
+ignored

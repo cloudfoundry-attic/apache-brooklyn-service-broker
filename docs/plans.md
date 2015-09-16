@@ -5,6 +5,30 @@ two types of catalog plan strategy: `SizePlanStrategy` and `LocationPlanStrategy
 used by the broker, e.g. if you have deployed the service broker to cloud foundry, these are set in the `manifest.yaml` 
 file using the `SPRING_PROFILES_ACTIVE` variable.
 
+
+## LocationPlanStrategy
+
+The location plan strategy is activated by using the SPRING_PROFILES_ACTIVE value of `location-plan` as follows:
+
+```
+applications:
+- name: Brooklyn-Service-Broker
+  memory: 1G
+  env:
+    BROOKLYN_URI: http://my.brooklyn.server:8081
+    BROOKLYN_USERNAME: admin
+    BROOKLYN_PASSWORD: letmein
+    SECURITY_USER_NAME: user
+    SECURITY_USER_PASSWORD: password
+    SPRING_PROFILES_ACTIVE: location-plan
+```
+
+This will create a (service, plan) pair for each blueprint defined in the Brooklyn catalog for each of the locations
+defined in Brooklyn. E.g. if there are four blueprints defined, and five locations defined, a total of 20
+service plan pairs will be created.
+
+## SizePlanStrategy
+
 In this example, the size plan strategy has been selected:
 
 ```
@@ -35,13 +59,18 @@ brooklyn.catalog:
 brooklyn.config:
   broker.config:
     plans:
-      small:
+    - name: small
+      description: Single Node
+      plan.config:
         cluster.initial.size: 1
-      medium:
+    - name: medium
+      description: Three-node replica set
+      plan.config:
         cluster.initial.size: 3
-      large:
+    - name: large
+      description: Five-node replica set
+      plan.config:
         cluster.initial.size: 5
-
 services:
 
 ...
@@ -62,6 +91,48 @@ a `small` plan, the following JSON will be created to deploy the instance:
     "cluster.initial.size": 1
   }
 }
+```
+
+
+# Brooklyn catalog versions
+
+When using eith the location or size plan strategy, the Brooklyn service broker will create plans only for the most
+recent versions of blueprints. This default behaviour can be overridden by specifying the BROOKLYN_ALL_CATALOG_VERSION
+variable in the manifest as follows:
+
+```
+applications:
+- name: Brooklyn-Service-Broker
+  memory: 1G
+  env:
+    BROOKLYN_URI: http://my.brooklyn.server:8081
+    BROOKLYN_USERNAME: admin
+    BROOKLYN_PASSWORD: letmein
+    SECURITY_USER_NAME: user
+    SECURITY_USER_PASSWORD: password
+    SPRING_PROFILES_ACTIVE: location-plan
+    BROOKLYN_ALL_CATALOG_VERSION: true
+```
+
+
+# Development mode (plan)
+
+Development mode can be activated to allow the Brooklyn service broker to connect to a Brooklyn server that has
+been set up to use https with a self-signed certificate by specifying the development profile in addition to
+the location or size plan:
+
+
+```
+applications:
+- name: Brooklyn-Service-Broker
+  memory: 1G
+  env:
+    BROOKLYN_URI: https://my.brooklyn.server:8081
+    BROOKLYN_USERNAME: admin
+    BROOKLYN_PASSWORD: letmein
+    SECURITY_USER_NAME: user
+    SECURITY_USER_PASSWORD: password
+    SPRING_PROFILES_ACTIVE: location-plan,development
 ```
 
 
