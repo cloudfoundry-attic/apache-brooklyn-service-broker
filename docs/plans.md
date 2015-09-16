@@ -93,6 +93,31 @@ a `small` plan, the following JSON will be created to deploy the instance:
 }
 ```
 
+## UserDefinedPlanStrategy
+
+The user-defined plan strategy allows only a single service and plan, and requires user to specify the blueprint
+by passing the blueprint definition as json when using the create-service command. The user-defined plan strategy
+is activated by specifying the `user-defined-plan` spring profile:
+
+
+```
+applications:
+- name: Brooklyn-Service-Broker
+  memory: 1G
+  env:
+    BROOKLYN_URI: http://my.brooklyn.server:8081
+    BROOKLYN_USERNAME: admin
+    BROOKLYN_PASSWORD: letmein
+    SECURITY_USER_NAME: user
+    SECURITY_USER_PASSWORD: password
+    SPRING_PROFILES_ACTIVE: user-defined-plan
+```
+
+An example is as follows:
+
+```
+cf create-service UserDefined UserDefined my-user-defined-service -c '{"services":[{"type": "org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer"}], "location":"aws-cloudfoundry"}'
+```
 
 # Brooklyn catalog versions
 
