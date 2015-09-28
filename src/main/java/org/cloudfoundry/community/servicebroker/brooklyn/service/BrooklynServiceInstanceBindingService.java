@@ -76,19 +76,13 @@ public class BrooklynServiceInstanceBindingService implements
 			}
         }
 
-        callBindEffector(entityId);
-
         Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, sensorPredicate, entityPredicate);
         Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
         serviceInstanceBinding = new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, null, request.getAppGuid());
 		bindingRepository.save(serviceInstanceBinding);
 		return new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), credentials, null, request.getAppGuid());
 	}
-
-    private void callBindEffector(String entityId) {
-        admin.callBindEffectorIfSupported(entityId);
-    }
-
+	
     @VisibleForTesting
     public static Predicate<String> getContainsItemInSectionPredicate(Object rootElement, String section) {
         return s -> containsItemInSection(s, (Map<?, ?>) rootElement, section);

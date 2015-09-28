@@ -10,9 +10,6 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.Map;
 
-import javax.ws.rs.core.Response;
-
-import org.apache.brooklyn.rest.api.EffectorApi;
 import org.apache.brooklyn.rest.api.EntityApi;
 import org.apache.brooklyn.rest.api.SensorApi;
 import org.apache.brooklyn.rest.client.BrooklynApi;
@@ -92,10 +89,6 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
     private HttpClient httpClient;
     @Mock
     private BrooklynConfig config;
-    @Mock
-    private EffectorApi effectorApi;
-    @Mock
-    private Response bindEffectorResponse;
 
     @Before
 	public void setup() {
@@ -138,8 +131,6 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
         when(brooklynCatalogService.getServiceDefinition(Mockito.anyString())).thenReturn(serviceDefinition);
         when(serviceInstance.getServiceDefinitionId()).thenReturn("serviceDefinitionId");
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("planYaml", WHITELIST_YAML));
-        when(brooklynApi.getEffectorApi()).thenReturn(effectorApi);
-        when(effectorApi.invoke(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any(Map.class))).thenReturn(bindEffectorResponse);
         CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid");
         ServiceInstanceBinding binding = bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));
 

@@ -58,7 +58,7 @@ public class BrooklynController {
 		ServiceInstance instance = instanceRepository.findOne(application);
 		if (instance != null) {
 			String appId = instance.getServiceDefinitionId();
-			return admin.invokeEffector(appId, entity, effector, "", params);
+			return admin.invokeEffector(appId, entity, effector, params);
 		}
 		
 		return new Object();
