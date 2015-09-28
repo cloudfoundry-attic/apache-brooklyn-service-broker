@@ -40,7 +40,9 @@ public class BrooklynServiceInstanceRepository {
 		Future<Map<String, Object>> serviceInstanceFuture = restAdmin.getConfigAsMap(application, entity, serviceInstanceId);
 		Map<String, Object> map = ServiceUtil.getFutureValueLoggingError(serviceInstanceFuture);
 		if(map == null)  return null;
-
+		if (!map.containsKey("serviceDefinitionId") || map.get("serviceDefinitionId") == null) {
+			LOG.error("Unable to get serviceDefinitionId: {}", map);
+		}
         String brooklynEntity = String.valueOf(map.get("serviceDefinitionId"));
         CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(
                 brooklynEntity,

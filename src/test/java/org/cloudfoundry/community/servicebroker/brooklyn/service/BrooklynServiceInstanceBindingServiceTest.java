@@ -5,7 +5,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyBoolean;
+
+
 
 import java.util.Collections;
 import java.util.Map;
@@ -53,7 +58,8 @@ import com.google.common.collect.Iterables;
 @ContextConfiguration(classes = {BrooklynConfiguration.class})
 public class BrooklynServiceInstanceBindingServiceTest {
 
-private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
+	private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
+	private final static String SVC_DEFN_ID = "serviceDefinitionId";
     private static final String WHITELIST_YAML = ResourceUtils.create().getResourceAsString("whitelist-catalog.yaml");
     private static final String NO_PLANS_YAML = ResourceUtils.create().getResourceAsString("noplans-catalog.yaml");
     private static final String PLANS_YAML = ResourceUtils.create().getResourceAsString("plans-catalog.yaml");
@@ -107,10 +113,10 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 	public void newServiceInstanceBindingCreatedSuccessfully() 
 			throws ServiceBrokerException, ServiceInstanceBindingExistsException {
 
-		when(admin.getCredentialsFromSensors(any(String.class), any(Predicate.class), any(Predicate.class))).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
-		when(instanceRepository.findOne(any(String.class), any(Boolean.class))).thenReturn(serviceInstance);
+		when(admin.getCredentialsFromSensors(anyString(), any(Predicate.class), any(Predicate.class))).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
+		when(instanceRepository.findOne(anyString(), anyBoolean())).thenReturn(serviceInstance);
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of());
-        when(brooklynCatalogService.getServiceDefinition(Mockito.anyString())).thenReturn(serviceDefinition);
+        when(brooklynCatalogService.getServiceDefinition(anyString())).thenReturn(serviceDefinition);
 		CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid");
 		ServiceInstanceBinding binding = bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));
 		
@@ -123,23 +129,23 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 
         bindingService = new BrooklynServiceInstanceBindingService(new BrooklynRestAdmin(brooklynApi, httpClient, config), bindingRepository, instanceRepository, brooklynCatalogService);
 
-        when(admin.getCredentialsFromSensors(Mockito.anyString(), any(Predicate.class), any(Predicate.class))).thenCallRealMethod();
+        when(admin.getCredentialsFromSensors(anyString(), any(Predicate.class), any(Predicate.class))).thenCallRealMethod();
 
         when(brooklynApi.getSensorApi()).thenReturn(sensorApi);
-        when(sensorApi.list(Mockito.anyString(), Mockito.anyString())).thenReturn(ImmutableList.of(
+        when(sensorApi.list(anyString(), anyString())).thenReturn(ImmutableList.of(
                 new SensorSummary("my.sensor", "my sensor type", "my sensor description", ImmutableMap.of()),
                 new SensorSummary("sensor.one.name", "sensor one type", "sensor one description", ImmutableMap.of())
         ));
         when(brooklynApi.getEntityApi()).thenReturn(entityApi);
-        when(entityApi.list(Mockito.any())).thenReturn(ImmutableList.of(
+        when(entityApi.list(any())).thenReturn(ImmutableList.of(
                 new EntitySummary("entityId", "name", "entityType", "catalogItemId", ImmutableMap.of())
         ));
-        when(instanceRepository.findOne(any(String.class), any(Boolean.class))).thenReturn(serviceInstance);
+        when(instanceRepository.findOne(anyString(), anyBoolean())).thenReturn(serviceInstance);
         when(brooklynCatalogService.getServiceDefinition(Mockito.anyString())).thenReturn(serviceDefinition);
-        when(serviceInstance.getServiceDefinitionId()).thenReturn("serviceDefinitionId");
+        when(serviceInstance.getServiceDefinitionId()).thenReturn(SVC_DEFN_ID);
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("planYaml", WHITELIST_YAML));
         when(brooklynApi.getEffectorApi()).thenReturn(effectorApi);
-        when(effectorApi.invoke(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any(Map.class))).thenReturn(bindEffectorResponse);
+        when(effectorApi.invoke(anyString(), anyString(), anyString(), anyString(), anyMap())).thenReturn(bindEffectorResponse);
         CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid");
         ServiceInstanceBinding binding = bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));
 
@@ -156,9 +162,9 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 	public void serviceInstanceCreationFailsWithExistingInstance()  
 			throws ServiceBrokerException, ServiceInstanceBindingExistsException {
 		
-		when(bindingRepository.findOne(any(String.class)))
+		when(bindingRepository.findOne(anyString()))
 		.thenReturn(ServiceInstanceBindingFixture.getServiceInstanceBinding());	
-		when(admin.getApplicationSensors(any(String.class))).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
+		when(admin.getApplicationSensors(anyString())).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
 		CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid");
 				
 		bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));
@@ -170,7 +176,7 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 			throws ServiceBrokerException, ServiceInstanceBindingExistsException{
 
 		ServiceInstanceBinding binding = ServiceInstanceBindingFixture.getServiceInstanceBinding();
-		when(bindingRepository.findOne(any(String.class))).thenReturn(binding);
+		when(bindingRepository.findOne(anyString())).thenReturn(binding);
 		
 		assertEquals(binding.getId(), bindingService.getServiceInstanceBinding(binding.getId()).getId());
 	}
@@ -180,7 +186,10 @@ private final static String SVC_INST_BIND_ID = "serviceInstanceBindingId";
 			throws ServiceBrokerException, ServiceInstanceBindingExistsException {
 		
 		ServiceInstanceBinding binding = ServiceInstanceBindingFixture.getServiceInstanceBinding();
-		when(bindingRepository.findOne(any(String.class))).thenReturn(binding);
+		when(bindingRepository.findOne(anyString())).thenReturn(binding);
+		when(instanceRepository.findOne(anyString(), any(Boolean.class))).thenReturn(serviceInstance);
+		when(serviceInstance.getServiceDefinitionId()).thenReturn(SVC_DEFN_ID);
+		when(admin.invokeEffector(anyString(), anyString(), anyString(), anyString(), anyMap())).thenReturn(new AsyncResult<String>("effector called"));
 
 		DeleteServiceInstanceBindingRequest request = new DeleteServiceInstanceBindingRequest(binding.getId(), serviceInstance, "serviceId", "planId");
 		assertNotNull(bindingService.deleteServiceInstanceBinding(request));

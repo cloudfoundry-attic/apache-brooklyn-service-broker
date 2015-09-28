@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 @Service
@@ -76,7 +77,9 @@ public class BrooklynServiceInstanceBindingService implements
 			}
         }
 
-        callBindEffector(entityId);
+    	Future<String> effector = admin.invokeEffector(entityId, entityId, "bind", "0", ImmutableMap.of());
+		LOG.info("Calling bind effector: {}", ServiceUtil.getFutureValueLoggingError(effector));
+        
 
         Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, sensorPredicate, entityPredicate);
         Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
@@ -84,10 +87,6 @@ public class BrooklynServiceInstanceBindingService implements
 		bindingRepository.save(serviceInstanceBinding);
 		return new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), credentials, null, request.getAppGuid());
 	}
-
-    private void callBindEffector(String entityId) {
-        admin.callBindEffectorIfSupported(entityId);
-    }
 
     @VisibleForTesting
     public static Predicate<String> getContainsItemInSectionPredicate(Object rootElement, String section) {
@@ -125,7 +124,11 @@ public class BrooklynServiceInstanceBindingService implements
 		
 		String bindingId = request.getBindingId();
         ServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(bindingId);
-		if (serviceInstanceBinding != null) {
+        if (serviceInstanceBinding != null) {
+        	ServiceInstance serviceInstance = instanceRepository.findOne(serviceInstanceBinding.getServiceInstanceId(), false);
+    		String entityId = serviceInstance.getServiceDefinitionId();
+    		Future<String> effector = admin.invokeEffector(entityId, entityId, "unbind", "0", ImmutableMap.of());
+    		LOG.info("Calling unbind effector: {}", ServiceUtil.getFutureValueLoggingError(effector));
 		    LOG.info("Deleting service binding: [BindingId={}]", bindingId);
 			bindingRepository.delete(bindingId);
 		}

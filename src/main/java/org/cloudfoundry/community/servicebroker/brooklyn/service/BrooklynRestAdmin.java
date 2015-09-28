@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
@@ -23,6 +22,7 @@ import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.util.core.http.HttpTool;
 import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.http.client.HttpClient;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
@@ -185,9 +185,14 @@ public class BrooklynRestAdmin {
 
     @Async
 	public Future<String> invokeEffector(String application, String entity, String effector, String timeout, Map<String, Object> params){
-		// TODO Complete these params
-		Response response = restApi.getEffectorApi().invoke(application, entity, effector, timeout, params);
-		return new AsyncResult<>(BrooklynApi.getEntity(response, String.class));
+    	try{
+    		Response response = restApi.getEffectorApi().invoke(application, entity, effector, timeout, params);
+    		return new AsyncResult<>(BrooklynApi.getEntity(response, String.class));
+    	} catch (Exception e) {
+    		Exceptions.propagateIfFatal(e);
+    		LOG.info("unable to invoke effector={},  message={}", effector, e.getMessage());
+    		return new AsyncResult<>(null);
+    	}
 	}
 
     @Async
@@ -275,9 +280,6 @@ public class BrooklynRestAdmin {
 			return new AsyncResult<>(null);
 		}
 		Map<String, Object> map = (Map<String, Object>) object;
-		if (!map.containsKey("serviceDefinitionId") || map.get("serviceDefinitionId") == null) {
-			LOG.error("Unable to get serviceDefinitionId: {}", map);
-		}
 		return new AsyncResult<>(map);
     }
 
@@ -323,16 +325,4 @@ public class BrooklynRestAdmin {
 			return new AsyncResult<>(null);
 		}
 	}
-
-    public Future<String> callBindEffectorIfSupported(String application) {
-        Future<String> temp = invokeEffector(application, application, "bind", "0", ImmutableMap.of());
-        try {
-            LOG.info("******* " + temp.get());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
-        return temp;
-    }
 }
