@@ -35,7 +35,7 @@ public class BrooklynRestAdminTest {
     );
     
     private static final List<EntitySummary> TEST_QUARANTINE_ENTITY_SUMMARIES = ImmutableList.of(
-    		new EntitySummary("test_quarantine_id", "quarantine", "brooklyn.entity.group.QuarantineGroup", "test_quarantine_id", ImmutableMap.of())
+    		new EntitySummary("test_quarantine_id", "quarantine", "org.apache.brooklyn.entity.group.QuarantineGroup", "test_quarantine_id", ImmutableMap.of())
     );
 
     private static final List<SensorSummary> TEST_SENSOR_SUMMARIES = ImmutableList.of(
