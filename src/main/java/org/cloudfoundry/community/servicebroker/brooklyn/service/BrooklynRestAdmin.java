@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
 
@@ -182,9 +184,9 @@ public class BrooklynRestAdmin {
 	}
 
     @Async
-	public Future<String> invokeEffector(String application, String entity, String effector, Map<String, Object> params){
+	public Future<String> invokeEffector(String application, String entity, String effector, String timeout, Map<String, Object> params){
 		// TODO Complete these params
-		Response response = restApi.getEffectorApi().invoke(application, entity, effector, "", params);
+		Response response = restApi.getEffectorApi().invoke(application, entity, effector, timeout, params);
 		return new AsyncResult<>(BrooklynApi.getEntity(response, String.class));
 	}
 
@@ -322,4 +324,15 @@ public class BrooklynRestAdmin {
 		}
 	}
 
+    public Future<String> callBindEffectorIfSupported(String application) {
+        Future<String> temp = invokeEffector(application, application, "bind", "0", ImmutableMap.of());
+        try {
+            LOG.info("******* " + temp.get());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+        return temp;
+    }
 }
