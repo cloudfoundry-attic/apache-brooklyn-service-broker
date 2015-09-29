@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
@@ -23,7 +24,9 @@ import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.util.core.http.HttpTool;
 import org.apache.brooklyn.util.core.http.HttpToolResponse;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 import org.apache.http.client.HttpClient;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.Repositories;
@@ -34,6 +37,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
@@ -182,6 +186,16 @@ public class BrooklynRestAdmin {
 	public void deleteCatalogEntry(String name, String version) throws Exception {
 		restApi.getCatalogApi().deleteEntity(name, version);
 	}
+    
+    @Async
+    public Future<Boolean> hasEffector(String application, String entity, String effector){
+    	return new AsyncResult<Boolean>(restApi.getEffectorApi().list(application, entity).stream().anyMatch(new java.util.function.Predicate<EffectorSummary>() {
+			@Override
+			public boolean test(EffectorSummary effectorSummary) {
+				return effectorSummary.getName().equals(effector);
+			}
+		}));
+    }
 
     @Async
 	public Future<String> invokeEffector(String application, String entity, String effector, String timeout, Map<String, Object> params){
@@ -323,6 +337,28 @@ public class BrooklynRestAdmin {
 		} catch (Exception e) {
 			LOG.error("unable to encode icon as base64");
 			return new AsyncResult<>(null);
+		}
+	}
+	
+	public void blockUntilTaskCompletes(String id) throws PollingException {
+		blockUntilTaskCompletes(id, Duration.PRACTICALLY_FOREVER);
+	}
+
+	public void blockUntilTaskCompletes(String id, Duration timeout) throws PollingException {
+		try {
+			Repeater.create()
+				.every(Duration.ONE_SECOND)
+				.until(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						TaskSummary summary = restApi.getActivityApi().get(id);
+						return summary.isError() != true && summary.getEndTimeUtc() != null;
+					}
+				})
+				.limitTimeTo(timeout)
+				.runRequiringTrue();
+		} catch (Exception e) {
+			throw new PollingException(e);
 		}
 	}
 }
