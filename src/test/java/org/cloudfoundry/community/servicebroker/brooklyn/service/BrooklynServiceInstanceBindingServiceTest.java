@@ -5,18 +5,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
-import static org.mockito.Matchers.anyMap;
-import static org.mockito.Matchers.anyBoolean;
 
-
-import java.net.URI;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.ws.rs.core.Response;
 
@@ -26,7 +22,6 @@ import org.apache.brooklyn.rest.api.EntityApi;
 import org.apache.brooklyn.rest.api.SensorApi;
 import org.apache.brooklyn.rest.client.BrooklynApi;
 import org.apache.brooklyn.rest.domain.EntitySummary;
-import org.apache.brooklyn.rest.domain.LinkWithMetadata;
 import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.util.core.ResourceUtils;
@@ -45,7 +40,6 @@ import org.cloudfoundry.community.servicebroker.model.ServiceDefinition;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
 import org.cloudfoundry.community.servicebroker.model.ServiceInstanceBinding;
 import org.cloudfoundry.community.servicebroker.model.fixture.ServiceInstanceBindingFixture;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
