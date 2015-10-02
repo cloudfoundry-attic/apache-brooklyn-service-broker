@@ -63,7 +63,7 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
                 String name;
                 LOG.info("Brooklyn Application={}", app);
                 if(config.includesAllCatalogVersions()) {
-                    id = ServiceUtil.getUniqueName(id, new HashSet<>(definitions.keySet()));
+                    id = app.getId();
                     name = ServiceUtil.getSafeName("br_" + app.getName() + "_" + app.getVersion());
                 } else {
                     name = ServiceUtil.getUniqueName("br_" + app.getName(), names);
