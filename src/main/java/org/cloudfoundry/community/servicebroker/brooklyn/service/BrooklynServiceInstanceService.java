@@ -1,5 +1,6 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
+import java.util.Map;
 import java.util.concurrent.Future;
 
 import org.apache.brooklyn.rest.domain.TaskSummary;
@@ -93,7 +94,8 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
                 selectedPlan = p;
             }
         }
-        String blueprint = ((BlueprintPlan)selectedPlan).toBlueprint(location, request);
+        Map<String, Object> metadata = serviceDefinition.getMetadata();
+        String blueprint = ((BlueprintPlan)selectedPlan).toBlueprint((String) metadata.get("brooklynCatalogId"), location, request);
         LOG.info("launching from blueprint: [blueprint={}]", blueprint);
 		return blueprint;
     }

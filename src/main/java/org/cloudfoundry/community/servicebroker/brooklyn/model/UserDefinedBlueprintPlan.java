@@ -19,7 +19,7 @@ public class UserDefinedBlueprintPlan extends BlueprintPlan{
 	}
 	
 	@Override
-	public String toBlueprint(String location, CreateServiceInstanceRequest request) {
+	public String toBlueprint(String brooklynCatalogId, String location, CreateServiceInstanceRequest request) {
 		try {
 			ObjectMapper om = new ObjectMapper();
 			return om.writeValueAsString(request.getParameters());

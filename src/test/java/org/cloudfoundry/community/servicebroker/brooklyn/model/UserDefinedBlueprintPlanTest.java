@@ -35,7 +35,7 @@ public class UserDefinedBlueprintPlanTest {
 						ImmutableMap.of("type", "development.test.MyTestService")
 				));
 		when(request.getParameters()).thenReturn((Map)map);
-		String result = plan.toBlueprint("anyLocation", request);
+		String result = plan.toBlueprint(null, "anyLocation", request);
 		ObjectMapper om = new ObjectMapper();
 		String expected = om.writeValueAsString(map);
 		assertEquals(expected, result);

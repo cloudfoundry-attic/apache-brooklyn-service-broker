@@ -114,6 +114,7 @@ public class BrooklynServiceInstanceServiceTest {
                         )
                 ))
         ));
+        when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("brooklynCatalogId", "testService"));
         String expectedBlueprint = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
         String blueprint = service.createBlueprint(serviceDefinition, request);
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
@@ -134,6 +135,8 @@ public class BrooklynServiceInstanceServiceTest {
                         )
                 ))
         ));
+        when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("brooklynCatalogId", "testService"));
+        
         String expectedBlueprint = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
         String blueprint = service.createBlueprint(serviceDefinition, request);
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
@@ -148,6 +151,8 @@ public class BrooklynServiceInstanceServiceTest {
         when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
                 new DefaultBlueprintPlan("planId", "planName", "planDescription", ImmutableMap.of("location", "testLocation"))
         ));
+
+        when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("brooklynCatalogId", "testService"));
         String expectedBlueprint = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}", serviceDefinition.getId(), "testLocation");
         String blueprint = service.createBlueprint(serviceDefinition, request);
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules

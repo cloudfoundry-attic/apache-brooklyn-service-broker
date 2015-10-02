@@ -2,9 +2,9 @@ package org.cloudfoundry.community.servicebroker.brooklyn.service.plan;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +12,7 @@ import java.util.concurrent.Future;
 
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.NaturalOrderComparator;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.yaml.Yamls;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
@@ -54,21 +55,29 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 	public List<ServiceDefinition> makeServiceDefinitions() {
 		Future<List<CatalogItemSummary>> pageFuture = admin.getCatalogApplications(config.includesAllCatalogVersions());
 		Map<String, ServiceDefinition> definitions = new HashMap<>();
+        Set<String> ids = Sets.newHashSet();
         Set<String> names = Sets.newHashSet();
-
+        String namespace = config.getNamespace() == null ? "br" : config.getNamespace();
         List<CatalogItemSummary> page = ServiceUtil.getFutureValueLoggingError(pageFuture);
+        Collections.sort(page, new Comparator<CatalogItemSummary>() {
+
+			@Override
+			public int compare(CatalogItemSummary o1, CatalogItemSummary o2) {
+				return NaturalOrderComparator.INSTANCE.compare(o1.getVersion(), o2.getVersion());
+			}
+		});
         for (CatalogItemSummary app : page) {
 			try {
-				String id = app.getSymbolicName();
+				String id = namespace + "_" + app.getSymbolicName();
                 String name;
                 LOG.info("Brooklyn Application={}", app);
                 if(config.includesAllCatalogVersions()) {
-                    id = app.getId();
-                    name = ServiceUtil.getSafeName("br_" + app.getName() + "_" + app.getVersion());
+                	id =  ServiceUtil.getUniqueName(id, ids);
+                    name = ServiceUtil.getSafeName(namespace + "_" + app.getName() + "_" + app.getVersion());
                 } else {
-                    name = ServiceUtil.getUniqueName("br_" + app.getName(), names);
+                    name = ServiceUtil.getUniqueName(namespace + "_" + app.getName(), names);
                 }
-				
+				LOG.info("name={}", name);
 				String description = app.getDescription();
 				boolean bindable = true;
 				boolean planUpdatable = false;
@@ -91,7 +100,7 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 					Future<String> iconAsBase64Future = admin.getIconAsBase64(app.getIconUrl());
 					iconUrl = ServiceUtil.getFutureValueLoggingError(iconAsBase64Future);
 				}
-				Map<String, Object> metadata = getServiceDefinitionMetadata(iconUrl, app.getPlanYaml());
+				Map<String, Object> metadata = getServiceDefinitionMetadata(app.getId(), iconUrl, app.getPlanYaml());
 				List<String> requires = getTags();
 				DashboardClient dashboardClient = null;
                 definitions.put(id, new ServiceDefinition(id, name, description,
@@ -135,8 +144,9 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
 		return Arrays.asList();
 	}
 
-	private Map<String, Object> getServiceDefinitionMetadata(String iconUrl, String planYaml) {
+	private Map<String, Object> getServiceDefinitionMetadata(String brooklynCatalogId, String iconUrl, String planYaml) {
 		Map<String, Object> metadata = new HashMap<>();
+		metadata.put("brooklynCatalogId", brooklynCatalogId);
         if (iconUrl != null) metadata.put("imageUrl", iconUrl);
         metadata.put("planYaml", planYaml);
 		return metadata;

@@ -18,7 +18,7 @@ public class DefaultBlueprintPlan extends BlueprintPlan{
 	}
 
 	@Override
-	public String toBlueprint(String location,
+	public String toBlueprint(String brooklynCatalogId, String location,
 			CreateServiceInstanceRequest request) {
 		Map<String, Object> metadata = MutableMap.copyOf(getMetadata());
         if (metadata.containsKey("location")) {
@@ -40,12 +40,12 @@ public class DefaultBlueprintPlan extends BlueprintPlan{
             String configJson = null;
             try {
                 configJson = writer.writeValueAsString(config);
-                return String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":%s}", request.getServiceDefinitionId(), location, configJson);
+                return String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":%s}", brooklynCatalogId, location, configJson);
             } catch (JsonProcessingException e) {
                 throw Exceptions.propagate(e);
             }
         } else {
-            return String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}", request.getServiceDefinitionId(), location);
+            return String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}", brooklynCatalogId, location);
         }
 	}
 

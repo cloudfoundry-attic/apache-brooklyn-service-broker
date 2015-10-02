@@ -12,6 +12,6 @@ public abstract class BlueprintPlan extends Plan{
 		super(id, name, description, metadata, true);
 	}
 
-	public abstract String toBlueprint(String location, CreateServiceInstanceRequest request);
+	public abstract String toBlueprint(String brooklynCatalogId, String location, CreateServiceInstanceRequest request);
 
 }

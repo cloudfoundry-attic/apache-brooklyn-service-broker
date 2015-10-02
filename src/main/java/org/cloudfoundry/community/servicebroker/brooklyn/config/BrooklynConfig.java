@@ -14,6 +14,7 @@ public class BrooklynConfig {
 	private String password;
 	private String location;
     private boolean allCatalogVersions;
+    private String namespace;
 
     public boolean includesAllCatalogVersions() {
         return allCatalogVersions;
@@ -64,4 +65,12 @@ public class BrooklynConfig {
     public void setLocation(String location) {
         this.location = location;
     }
+    
+    public String getNamespace() {
+		return namespace;
+	}
+    
+    public void setNamespace(String namespace) {
+		this.namespace = namespace;
+	}
 }
