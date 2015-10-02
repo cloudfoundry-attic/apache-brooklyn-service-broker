@@ -40,7 +40,7 @@ public class BrooklynServiceInstanceBindingRepository {
 	}
 
 	public <S extends ServiceInstanceBinding> S save(S serviceInstanceBinding) {
-		Object object = ServiceUtil.getFutureValueLoggingError(restAdmin.setConfig(application, entity, serviceInstanceBinding.getServiceInstanceId(), serviceInstanceBinding));
+		Object object = ServiceUtil.getFutureValueLoggingError(restAdmin.setConfig(application, entity, serviceInstanceBinding.getId(), serviceInstanceBinding));
 		return (S)object;
 	}
 

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import org.apache.brooklyn.feed.http.JsonFunctions;
 import org.apache.brooklyn.util.yaml.Yamls;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceBindingRepository;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
@@ -21,8 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 @Service
@@ -76,13 +79,24 @@ public class BrooklynServiceInstanceBindingService implements
 			}
         }
 
+		if (ServiceUtil.getFutureValueLoggingError(admin.hasEffector(entityId, entityId, "bind"))) {
+			Future<String> effector = admin.invokeEffector(entityId, entityId, "bind", "0", ImmutableMap.of());
+			String bindResponse = ServiceUtil.getFutureValueLoggingError(effector);
+			LOG.info("Calling bind effector: {}", bindResponse);
+			String id = (String) Functions.compose(JsonFunctions.getPath("id"), JsonFunctions.asJson()).apply(bindResponse);
+			try {
+				admin.blockUntilTaskCompletes(id);
+			} catch (PollingException e) {
+				throw new ServiceBrokerException("could not bind: " + e.getMessage());
+			}
+		}
         Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, sensorPredicate, entityPredicate);
         Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
         serviceInstanceBinding = new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, null, request.getAppGuid());
 		bindingRepository.save(serviceInstanceBinding);
 		return new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), credentials, null, request.getAppGuid());
 	}
-	
+
     @VisibleForTesting
     public static Predicate<String> getContainsItemInSectionPredicate(Object rootElement, String section) {
         return s -> containsItemInSection(s, (Map<?, ?>) rootElement, section);
@@ -119,7 +133,11 @@ public class BrooklynServiceInstanceBindingService implements
 		
 		String bindingId = request.getBindingId();
         ServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(bindingId);
-		if (serviceInstanceBinding != null) {
+        if (serviceInstanceBinding != null) {
+        	ServiceInstance serviceInstance = instanceRepository.findOne(serviceInstanceBinding.getServiceInstanceId(), false);
+    		String entityId = serviceInstance.getServiceDefinitionId();
+    		Future<String> effector = admin.invokeEffector(entityId, entityId, "unbind", "0", ImmutableMap.of());
+    		LOG.info("Calling unbind effector: {}", ServiceUtil.getFutureValueLoggingError(effector));
 		    LOG.info("Deleting service binding: [BindingId={}]", bindingId);
 			bindingRepository.delete(bindingId);
 		}

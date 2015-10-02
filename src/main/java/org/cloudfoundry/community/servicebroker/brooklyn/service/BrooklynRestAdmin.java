@@ -22,7 +22,10 @@ import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.util.core.http.HttpTool;
 import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 import org.apache.http.client.HttpClient;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.Repositories;
@@ -33,6 +36,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
@@ -65,19 +69,19 @@ public class BrooklynRestAdmin {
     ).contains(s);
 
 	private HttpClient httpClient;
-	private BrooklynApi restApi;
+	private BrooklynApi brooklynApi;
 	private BrooklynConfig config;
 
     @Autowired
     public BrooklynRestAdmin(BrooklynApi restApi, HttpClient httpClient, BrooklynConfig config) {
-        this.restApi = restApi;
+        this.brooklynApi = restApi;
 		this.httpClient = httpClient;
 		this.config = config;
     }
 
 	public void createRepositoryIfNotExists(){
 		try{
-			Repositories.createRepositories(restApi);
+			Repositories.createRepositories(getRestApi());
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -85,34 +89,34 @@ public class BrooklynRestAdmin {
 
     @Async
 	public Future<List<CatalogItemSummary>> getCatalogApplications(boolean includeAllVersions){
-		return new AsyncResult<>(restApi.getCatalogApi().listApplications("", "", includeAllVersions));
+		return new AsyncResult<>(getRestApi().getCatalogApi().listApplications("", "", includeAllVersions));
 	}
 
     @Async
 	public Future<List<LocationSummary>> getLocations() {
-	    return new AsyncResult<>(restApi.getLocationApi().list());
+	    return new AsyncResult<>(getRestApi().getLocationApi().list());
 	}
 
     @Async
 	public Future<TaskSummary> createApplication(String applicationSpec){
-		Response response = restApi.getApplicationApi().createFromForm(applicationSpec);
+		Response response = getRestApi().getApplicationApi().createFromForm(applicationSpec);
         return new AsyncResult<>(BrooklynApi.getEntity(response, TaskSummary.class));
 	}
 
     @Async
 	public Future<TaskSummary> deleteApplication(String id) {
-		Response response = restApi.getEntityApi().expunge(id, id, true);
+		Response response = getRestApi().getEntityApi().expunge(id, id, true);
 		return new AsyncResult<>(BrooklynApi.getEntity(response, TaskSummary.class));
 	}
 
     @Async
 	public Future<Map<String, Object>> getApplicationSensors(String application){
-        return new AsyncResult<>(getApplicationSensors(application, restApi.getEntityApi().list(application), Predicates.alwaysTrue(), Predicates.alwaysTrue()));
+        return new AsyncResult<>(getApplicationSensors(application, getRestApi().getEntityApi().list(application), Predicates.alwaysTrue(), Predicates.alwaysTrue()));
 	}
 
     @Async
     public Future<Map<String, Object>> getCredentialsFromSensors(String application, Predicate<? super String> sensorFilter, Predicate<? super String> entityFilter) {
-        List<EntitySummary> entities = restApi.getEntityApi().list(application);
+        List<EntitySummary> entities = getRestApi().getEntityApi().list(application);
         if (entities.size() == 0) {
             return new AsyncResult<>(getEntitySensors(application, application, sensorFilter, entityFilter));
         } else if (entities.size() == 1) {
@@ -140,7 +144,7 @@ public class BrooklynRestAdmin {
 
 	private Map<String, Object> getEntitySensors(String application, String entity, Predicate<? super String> sensorFilter, Predicate<? super String> entityFilter) {
 		Map<String, Object> sensors = getSensors(application, entity, sensorFilter);
-		Map<String, Object> childSensors = getApplicationSensors(application, restApi.getEntityApi().getChildren(application, entity), sensorFilter, entityFilter);
+		Map<String, Object> childSensors = getApplicationSensors(application, getRestApi().getEntityApi().getChildren(application, entity), sensorFilter, entityFilter);
 		if(childSensors.size() > 0){
 		  sensors.put("children", childSensors);
 		}
@@ -150,7 +154,7 @@ public class BrooklynRestAdmin {
 	private Map<String, Object> getSensors(String application, String entity, Predicate<? super String> filter){
 		Map<String, Object> sensors = new HashMap<>();
 
-        List<SensorSummary> sensorSummaries = restApi.getSensorApi().list(application, entity);
+        List<SensorSummary> sensorSummaries = getRestApi().getSensorApi().list(application, entity);
         Set<String> sensorNames = sensorSummaries.stream().map(SensorSummary::getName).collect(Collectors.toSet());
 
 		for (String sensorName : sensorNames) {
@@ -160,8 +164,8 @@ public class BrooklynRestAdmin {
             if (Predicates.and(SENSOR_GLOBAL_BLACKLIST_PREDICATE, Predicates.or(SENSOR_GLOBAL_WHITELIST_PREDICATE, filter)).apply(sensorName)) {
             	LOG.info("Using sensor={} while making credentials", sensorName);
                 Object value = sensorNames.contains("mapped." + sensorName) ?
-                    restApi.getSensorApi().get(application, entity, "mapped." + sensorName, false) :
-                        restApi.getSensorApi().get(application, entity, sensorName, false);
+                        getRestApi().getSensorApi().get(application, entity, "mapped." + sensorName, false) :
+                        getRestApi().getSensorApi().get(application, entity, sensorName, false);
                 sensors.put(sensorName, value);
             } else {
             	LOG.info("Ignoring sensorName={} while making credentials", sensorName);
@@ -172,27 +176,47 @@ public class BrooklynRestAdmin {
 
     @Async
 	public Future<String> postBlueprint(String file) {
-		Response response = restApi.getCatalogApi().create(file);
+		Response response = getRestApi().getCatalogApi().create(file);
 		return new AsyncResult<>(BrooklynApi.getEntity(response, String.class));
 	}
 
     @Async
 	public void deleteCatalogEntry(String name, String version) throws Exception {
-		restApi.getCatalogApi().deleteEntity(name, version);
+        getRestApi().getCatalogApi().deleteEntity(name, version);
 	}
+    
+    @Async
+    public Future<Boolean> hasEffector(String application, String entity, String effector){
+    	return new AsyncResult<>(getRestApi().getEffectorApi().list(application, entity).stream().anyMatch(new java.util.function.Predicate<EffectorSummary>() {
+			@Override
+			public boolean test(EffectorSummary effectorSummary) {
+				return effectorSummary.getName().equals(effector);
+			}
+		}));
+    }
 
     @Async
-	public Future<String> invokeEffector(String application, String entity, String effector, Map<String, Object> params){
-		// TODO Complete these params
-		Response response = restApi.getEffectorApi().invoke(application, entity, effector, "", params);
-		return new AsyncResult<>(BrooklynApi.getEntity(response, String.class));
+    public Future<String> invokeEffector(String application, String entity, String effector, Map<String, Object> params){
+        return invokeEffector(application, entity, effector, "", params);
+    }
+
+    @Async
+	public Future<String> invokeEffector(String application, String entity, String effector, String timeout, Map<String, Object> params){
+    	try{
+    		Response response = getRestApi().getEffectorApi().invoke(application, entity, effector, timeout, params);
+    		return new AsyncResult<>(BrooklynApi.getEntity(response, String.class));
+    	} catch (Exception e) {
+    		Exceptions.propagateIfFatal(e);
+    		LOG.info("unable to invoke effector={},  message={}", effector, e.getMessage());
+    		return new AsyncResult<>(null);
+    	}
 	}
 
     @Async
 	public Future<Map<String, Object>> getApplicationEffectors(String application){
 		Map<String, Object> result = new HashMap<>();
 		Map<String, Object> effectors = getEffectors(application, application);
-		result.put("children",  getApplicationEffectors(application, restApi.getEntityApi().list(application)));
+		result.put("children",  getApplicationEffectors(application, getRestApi().getEntityApi().list(application)));
 		result.put(application, effectors);
 		return new AsyncResult<>(result);
 	}
@@ -211,7 +235,7 @@ public class BrooklynRestAdmin {
             Map<String, Object> effectors = getEffectors(application, entity);
             Map<String, Object> childEntities = _getApplicationEffectors(
                     application,
-                    restApi.getEntityApi().getChildren(application, entity));
+                    getRestApi().getEntityApi().getChildren(application, entity));
             effectors.put("children", childEntities);
             result.put(s.getName(), effectors);
         }
@@ -219,8 +243,8 @@ public class BrooklynRestAdmin {
     }
 
     private Map<String, Object> getEffectors(String application, String entity) {
-		Map<String, Object> effectors = new HashMap<String, Object>();
-		for (EffectorSummary effectorSummary : restApi.getEffectorApi().list(application, entity)) {
+		Map<String, Object> effectors = new HashMap<>();
+		for (EffectorSummary effectorSummary : getRestApi().getEffectorApi().list(application, entity)) {
 			effectors.put(entity +":"+ effectorSummary.getName(), effectorSummary);
 		}	
 		return effectors;
@@ -228,7 +252,7 @@ public class BrooklynRestAdmin {
 
     @Async
 	public Future<Boolean> isApplicationRunning(String application) {
-        Object result = restApi.getSensorApi().get(application, application, "service.state", false);
+        Object result = getRestApi().getSensorApi().get(application, application, "service.state", false);
 
 		if (result instanceof String){
 			return new AsyncResult<>(result.toString().toUpperCase().equals("RUNNING"));
@@ -239,19 +263,19 @@ public class BrooklynRestAdmin {
     @Async
 	public Future<String> getDashboardUrl(String application) {
     	// search in breadth first order for first sensor that matches
-    	List<EntitySummary> entities = restApi.getEntityApi().list(application);
+    	List<EntitySummary> entities = getRestApi().getEntityApi().list(application);
 		Deque<EntitySummary> q = new ArrayDeque<>(entities);
 		while(!q.isEmpty()) {
 			EntitySummary e = q.remove();
-			List<SensorSummary> sensors = restApi.getSensorApi().list(application, e.getId());
+			List<SensorSummary> sensors = getRestApi().getSensorApi().list(application, e.getId());
 			for(SensorSummary sensor : sensors) {
 				if(sensor.getName().equals("management.url")){
-				  String url = String.valueOf(restApi.getSensorApi().get(application, e.getId(), sensor.getName(), false));
+				  String url = String.valueOf(getRestApi().getSensorApi().get(application, e.getId(), sensor.getName(), false));
 				  LOG.info("found dashboard url={} for application={}", url, application);
 				  return new AsyncResult<>(url);
 				}
 			}
-			q.addAll(restApi.getEntityApi().getChildren(application, e.getId()));
+			q.addAll(getRestApi().getEntityApi().getChildren(application, e.getId()));
 		}
 		
 		LOG.info("no dashboard url found for application={}", application);
@@ -262,7 +286,7 @@ public class BrooklynRestAdmin {
     public Future<Map<String, Object>> getConfigAsMap(String application, String entity, String key){
     	Object object;
 		try{
-			object = restApi.getEntityConfigApi().get(application, entity, key, false);
+			object = getRestApi().getEntityConfigApi().get(application, entity, key, false);
 		}catch(Exception e){
 			LOG.error("Unable to get config with key={}", key);
 			return new AsyncResult<>(null);
@@ -273,16 +297,13 @@ public class BrooklynRestAdmin {
 			return new AsyncResult<>(null);
 		}
 		Map<String, Object> map = (Map<String, Object>) object;
-		if (!map.containsKey("serviceDefinitionId") || map.get("serviceDefinitionId") == null) {
-			LOG.error("Unable to get serviceDefinitionId: {}", map);
-		}
 		return new AsyncResult<>(map);
     }
 
     @Async
 	public Future<String> getServiceState(String application) {
     	try{
-    		Object object = restApi.getSensorApi().get(application, application, "service.state", false);
+    		Object object = getRestApi().getSensorApi().get(application, application, "service.state", false);
     		return new AsyncResult<>(object.toString());
     	} catch (Exception e) {
     		return new AsyncResult<>(null);
@@ -293,7 +314,7 @@ public class BrooklynRestAdmin {
 	@Async
 	public void deleteConfig(String application, String entity, String key) {
 		try{
-			restApi.getEntityConfigApi().set(application, entity, key, false, "");
+            getRestApi().getEntityConfigApi().set(application, entity, key, false, "");
 		} catch(Exception e){
 			LOG.error("unable to delete {} {}", key, e.getMessage());
 		}
@@ -302,7 +323,7 @@ public class BrooklynRestAdmin {
 	@Async
 	public Future<Object> setConfig(String application, String entity, String key, Object value) {
 		try{
-			restApi.getEntityConfigApi().set(application, entity, key, false, value);
+            getRestApi().getEntityConfigApi().set(application, entity, key, false, value);
 			return new AsyncResult<>(value);
 		} catch(Exception e){
 			LOG.error("unable to save {} {}", value, e.getMessage());
@@ -321,5 +342,33 @@ public class BrooklynRestAdmin {
 			return new AsyncResult<>(null);
 		}
 	}
+	
+	public void blockUntilTaskCompletes(String id) throws PollingException {
+		blockUntilTaskCompletes(id, Duration.PRACTICALLY_FOREVER);
+	}
 
+	public void blockUntilTaskCompletes(String id, Duration timeout) throws PollingException {
+		try {
+			Repeater.create()
+				.every(Duration.ONE_SECOND)
+				.until(() -> {
+                    TaskSummary summary = getRestApi().getActivityApi().get(id);
+                    if (summary.isError() || summary.isCancelled() || (summary.getSubmitTimeUtc() == null)) {
+                        throw new PollingException(new IllegalStateException("Effector call failed: " + summary));
+                    }
+                    return summary.getEndTimeUtc() != null;
+                })
+                .rethrowExceptionImmediately()
+				.limitTimeTo(timeout)
+				.runRequiringTrue();
+		} catch (Exception e) {
+            LOG.error("Failed to get task summary: " + e);
+			throw new PollingException(e);
+		}
+	}
+
+    @VisibleForTesting
+    public BrooklynApi getRestApi() {
+        return brooklynApi;
+    }
 }
