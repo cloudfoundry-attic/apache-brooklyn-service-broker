@@ -51,6 +51,10 @@ public class BrooklynRestAdmin {
 			"org.apache.brooklyn.entity.group.QuarantineGroup",
 			"brooklyn.networking.subnet.SubnetTier"
 	).contains(s);
+	
+	private static final Predicate<String> ENTITY_GLOBAL_WHITELIST_PREDICATE = s -> ImmutableSet.of(
+			
+	).contains(s);
 
 	private static final Predicate<String> SENSOR_GLOBAL_BLACKLIST_PREDICATE = s -> !ImmutableSet.of(
             "download.url",
@@ -111,27 +115,37 @@ public class BrooklynRestAdmin {
 
     @Async
 	public Future<Map<String, Object>> getApplicationSensors(String application){
-        return new AsyncResult<>(getApplicationSensors(application, getRestApi().getEntityApi().list(application), Predicates.alwaysTrue(), Predicates.alwaysTrue()));
+        return new AsyncResult<>(getApplicationSensors(application, getRestApi().getEntityApi().list(application), Predicates.alwaysTrue(), Predicates.alwaysTrue(), Predicates.alwaysTrue(), Predicates.alwaysTrue()));
 	}
-
+    
     @Async
-    public Future<Map<String, Object>> getCredentialsFromSensors(String application, Predicate<? super String> sensorFilter, Predicate<? super String> entityFilter) {
-        List<EntitySummary> entities = getRestApi().getEntityApi().list(application);
+	public Future<Map<String, Object>> getCredentialsFromSensors(String application,
+			Predicate<? super String> sensorWhitelist,
+			Predicate<? super String> sensorBlacklist,
+			Predicate<? super String> entityWhitelist,
+			Predicate<? super String> entityBlacklist) {
+
+		List<EntitySummary> entities = getRestApi().getEntityApi().list(application);
         if (entities.size() == 0) {
-            return new AsyncResult<>(getEntitySensors(application, application, sensorFilter, entityFilter));
+            return new AsyncResult<>(getEntitySensors(application, application, sensorWhitelist, sensorBlacklist, entityWhitelist, entityBlacklist));
         } else if (entities.size() == 1) {
             String entity = entities.get(0).getId();
-            return new AsyncResult<>(getEntitySensors(application, entity, sensorFilter, entityFilter));
+            return new AsyncResult<>(getEntitySensors(application, entity, sensorWhitelist, sensorBlacklist, entityWhitelist, entityBlacklist));
         }
-        return new AsyncResult<>(getApplicationSensors(application, entities, sensorFilter, entityFilter));
+        return new AsyncResult<>(getApplicationSensors(application, entities, sensorWhitelist, sensorBlacklist, entityWhitelist, entityBlacklist));
     }
 	
-	private Map<String, Object> getApplicationSensors(String application, List<EntitySummary> entities, Predicate<? super String> sensorFilter, Predicate<? super String> entityFilter){
+	private Map<String, Object> getApplicationSensors(String application, List<EntitySummary> entities, 
+			Predicate<? super String> sensorWhitelist,
+			Predicate<? super String> sensorBlacklist,
+			Predicate<? super String> entityWhitelist,
+			Predicate<? super String> entityBlacklist){
+		
 		Map<String, Object> result = new HashMap<>();
 		for (EntitySummary s : entities) {
-			Map<String, Object> entitySensors = getEntitySensors(application, s.getId(), sensorFilter, entityFilter);
+			Map<String, Object> entitySensors = getEntitySensors(application, s.getId(), sensorWhitelist, sensorBlacklist, entityWhitelist, entityBlacklist);
 			
-			if(Predicates.and(entityFilter, ENTITY_GLOBAL_BLACKLIST_PREDICATE).apply(s.getType())){
+			if(Predicates.and(Predicates.or(ENTITY_GLOBAL_WHITELIST_PREDICATE, entityWhitelist), Predicates.and(entityBlacklist, ENTITY_GLOBAL_BLACKLIST_PREDICATE)).apply(s.getType())){
 				result.put(s.getName(), entitySensors);
 			} else {
 				if(entitySensors.containsKey("children")) {
@@ -142,16 +156,21 @@ public class BrooklynRestAdmin {
 		return result;
 	}
 
-	private Map<String, Object> getEntitySensors(String application, String entity, Predicate<? super String> sensorFilter, Predicate<? super String> entityFilter) {
-		Map<String, Object> sensors = getSensors(application, entity, sensorFilter);
-		Map<String, Object> childSensors = getApplicationSensors(application, getRestApi().getEntityApi().getChildren(application, entity), sensorFilter, entityFilter);
+	private Map<String, Object> getEntitySensors(String application, String entity, 
+			Predicate<? super String> sensorWhitelist,
+			Predicate<? super String> sensorBlacklist,
+			Predicate<? super String> entityWhitelist,
+			Predicate<? super String> entityBlacklist) {
+		
+		Map<String, Object> sensors = getSensors(application, entity, sensorWhitelist, sensorBlacklist);
+		Map<String, Object> childSensors = getApplicationSensors(application, getRestApi().getEntityApi().getChildren(application, entity), sensorWhitelist, sensorBlacklist, entityWhitelist, entityBlacklist);
 		if(childSensors.size() > 0){
 		  sensors.put("children", childSensors);
 		}
 		return sensors;
 	}
 	
-	private Map<String, Object> getSensors(String application, String entity, Predicate<? super String> filter){
+	private Map<String, Object> getSensors(String application, String entity, Predicate<? super String> sensorWhitelistfilter, Predicate<? super String> sensorBlacklistFilter){
 		Map<String, Object> sensors = new HashMap<>();
 
         List<SensorSummary> sensorSummaries = getRestApi().getSensorApi().list(application, entity);
@@ -161,7 +180,7 @@ public class BrooklynRestAdmin {
 			if (sensorName.startsWith("mapped.")) {
                 continue;
             }
-            if (Predicates.and(SENSOR_GLOBAL_BLACKLIST_PREDICATE, Predicates.or(SENSOR_GLOBAL_WHITELIST_PREDICATE, filter)).apply(sensorName)) {
+            if (Predicates.and(Predicates.or(SENSOR_GLOBAL_BLACKLIST_PREDICATE, sensorBlacklistFilter), Predicates.or(SENSOR_GLOBAL_WHITELIST_PREDICATE, sensorWhitelistfilter)).apply(sensorName)) {
             	LOG.info("Using sensor={} while making credentials", sensorName);
                 Object value = sensorNames.contains("mapped." + sensorName) ?
                         getRestApi().getSensorApi().get(application, entity, "mapped." + sensorName, false) :
@@ -371,4 +390,5 @@ public class BrooklynRestAdmin {
     public BrooklynApi getRestApi() {
         return brooklynApi;
     }
+
 }

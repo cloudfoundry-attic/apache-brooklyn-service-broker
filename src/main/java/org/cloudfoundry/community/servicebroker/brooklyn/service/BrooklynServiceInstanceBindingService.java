@@ -68,14 +68,16 @@ public class BrooklynServiceInstanceBindingService implements
         );
 
         ServiceDefinition service = catalogService.getServiceDefinition(request.getServiceDefinitionId());
-        Predicate<String> sensorPredicate= Predicates.alwaysTrue();
-        Predicate<String> entityPredicate= Predicates.alwaysTrue();
+        Predicate<String> sensorwhitelistPredicate = Predicates.alwaysTrue();
+        Predicate<String> entityBlacklistPredicate = Predicates.alwaysTrue();
+        Predicate<String> sensorBlacklistPredicate= Predicates.alwaysTrue();
+        Predicate<String> entityWhitelistPredicate= Predicates.alwaysTrue();
         Object planYamlObject = service.getMetadata().get("planYaml");
         if (planYamlObject != null) {
             Object rootElement = Iterables.getOnlyElement(Yamls.parseAll(String.valueOf(planYamlObject)));
 			if (rootElement instanceof Map) {
-				sensorPredicate = getSensorPredicate(rootElement);
-				entityPredicate = getEntityPredicate(rootElement);
+				sensorwhitelistPredicate = getSensorPredicate(rootElement);
+				entityBlacklistPredicate = getEntityPredicate(rootElement);
 			}
         }
 
@@ -90,7 +92,7 @@ public class BrooklynServiceInstanceBindingService implements
 				throw new ServiceBrokerException("could not bind: " + e.getMessage());
 			}
 		}
-        Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, sensorPredicate, entityPredicate);
+        Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, sensorwhitelistPredicate, sensorBlacklistPredicate, entityWhitelistPredicate, entityBlacklistPredicate);
         Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
         serviceInstanceBinding = new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, null, request.getAppGuid());
 		bindingRepository.save(serviceInstanceBinding);

@@ -127,7 +127,7 @@ public class BrooklynServiceInstanceBindingServiceTest {
 	public void newServiceInstanceBindingCreatedSuccessfully() 
 			throws ServiceBrokerException, ServiceInstanceBindingExistsException {
 
-		when(admin.getCredentialsFromSensors(anyString(), any(Predicate.class), any(Predicate.class))).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
+		when(admin.getCredentialsFromSensors(anyString(), any(Predicate.class), any(Predicate.class), any(Predicate.class), any(Predicate.class))).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
         when(admin.hasEffector(anyString(), anyString(), anyString())).thenReturn(new AsyncResult<>(false));
         when(instanceRepository.findOne(anyString(), anyBoolean())).thenReturn(serviceInstance);
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of());
@@ -143,7 +143,13 @@ public class BrooklynServiceInstanceBindingServiceTest {
     public void newServiceInstanceBindingCreatedSuccessfullyWithBindEffector()
             throws ServiceBrokerException, ServiceInstanceBindingExistsException, PollingException {
         when(admin.getRestApi()).thenReturn(brooklynApi);
-        when(admin.getCredentialsFromSensors(anyString(), any(Predicate.class), any(Predicate.class))).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
+        when(admin.getCredentialsFromSensors(
+        		anyString(), 
+        		any(Predicate.class), 
+        		any(Predicate.class), 
+        		any(Predicate.class), 
+        		any(Predicate.class)
+        	)).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
         when(admin.hasEffector(anyString(), anyString(), anyString())).thenReturn(new AsyncResult<>(true));
         when(admin.invokeEffector(anyString(), anyString(), anyString(), anyString(), anyMap())).thenReturn(new AsyncResult<>(TASK_RESPONSE_INCOMPLETE));
         when(brooklynApi.getActivityApi()).thenReturn(activityApi);
@@ -170,7 +176,7 @@ public class BrooklynServiceInstanceBindingServiceTest {
 
         bindingService = new BrooklynServiceInstanceBindingService(new BrooklynRestAdmin(brooklynApi, httpClient, config), bindingRepository, instanceRepository, brooklynCatalogService);
 
-        when(admin.getCredentialsFromSensors(anyString(), any(Predicate.class), any(Predicate.class))).thenCallRealMethod();
+        when(admin.getCredentialsFromSensors(anyString(), any(Predicate.class), any(Predicate.class), any(Predicate.class), any(Predicate.class))).thenCallRealMethod();
 
         when(brooklynApi.getSensorApi()).thenReturn(sensorApi);
         when(sensorApi.list(anyString(), anyString())).thenReturn(ImmutableList.of(
