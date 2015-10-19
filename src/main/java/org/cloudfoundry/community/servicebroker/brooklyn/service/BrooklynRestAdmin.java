@@ -180,7 +180,7 @@ public class BrooklynRestAdmin {
 			if (sensorName.startsWith("mapped.")) {
                 continue;
             }
-            if (Predicates.and(Predicates.or(SENSOR_GLOBAL_BLACKLIST_PREDICATE, sensorBlacklistFilter), Predicates.or(SENSOR_GLOBAL_WHITELIST_PREDICATE, sensorWhitelistfilter)).apply(sensorName)) {
+            if (Predicates.and(Predicates.and(SENSOR_GLOBAL_BLACKLIST_PREDICATE, sensorBlacklistFilter), Predicates.or(SENSOR_GLOBAL_WHITELIST_PREDICATE, sensorWhitelistfilter)).apply(sensorName)) {
             	LOG.info("Using sensor={} while making credentials", sensorName);
                 Object value = sensorNames.contains("mapped." + sensorName) ?
                         getRestApi().getSensorApi().get(application, entity, "mapped." + sensorName, false) :

@@ -1,6 +1,5 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service.plan;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.cloudfoundry.community.servicebroker.model.Plan;

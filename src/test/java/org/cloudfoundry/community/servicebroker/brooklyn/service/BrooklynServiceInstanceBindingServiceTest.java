@@ -52,6 +52,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.google.api.client.util.Maps;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -246,7 +247,7 @@ public class BrooklynServiceInstanceBindingServiceTest {
     @Test
     public void testGetSensorPredicate() {
     	Object rootElement = Iterables.getOnlyElement(Yamls.parseAll(WHITELIST_YAML));
-        Predicate<String> predicate = BrooklynServiceInstanceBindingService.getSensorPredicate(rootElement);
+        Predicate<String> predicate = BrooklynServiceInstanceBindingService.getSensorWhitelistPredicate(rootElement);
         assertNotNull(predicate);
         assertTrue(predicate.apply("foo.bar"));
         assertFalse(predicate.apply("bar.foo"));
@@ -255,7 +256,7 @@ public class BrooklynServiceInstanceBindingServiceTest {
     @Test
     public void testGetSensorPredicateNoPlans() {
     	Object rootElement = Iterables.getOnlyElement(Yamls.parseAll(NO_PLANS_YAML));
-        Predicate<String> predicate = BrooklynServiceInstanceBindingService.getSensorPredicate(rootElement);
+        Predicate<String> predicate = BrooklynServiceInstanceBindingService.getSensorWhitelistPredicate(rootElement);
         assertNotNull(predicate);
         assertTrue(predicate.apply("foo.bar"));
         assertTrue(predicate.apply("bar.foo"));
@@ -264,7 +265,7 @@ public class BrooklynServiceInstanceBindingServiceTest {
     @Test
     public void testGetSensorPredicateNoWhitelist() {
     	Object rootElement = Iterables.getOnlyElement(Yamls.parseAll(PLANS_YAML));
-        Predicate<String> predicate = BrooklynServiceInstanceBindingService.getSensorPredicate(rootElement);
+        Predicate<String> predicate = BrooklynServiceInstanceBindingService.getSensorWhitelistPredicate(rootElement);
         assertNotNull(predicate);
         assertTrue(predicate.apply("foo.bar"));
         assertTrue(predicate.apply("bar.foo"));

@@ -68,16 +68,18 @@ public class BrooklynServiceInstanceBindingService implements
         );
 
         ServiceDefinition service = catalogService.getServiceDefinition(request.getServiceDefinitionId());
-        Predicate<String> sensorwhitelistPredicate = Predicates.alwaysTrue();
+        Predicate<String> sensorWhitelistPredicate = Predicates.alwaysTrue();
         Predicate<String> entityBlacklistPredicate = Predicates.alwaysTrue();
-        Predicate<String> sensorBlacklistPredicate= Predicates.alwaysTrue();
-        Predicate<String> entityWhitelistPredicate= Predicates.alwaysTrue();
+        Predicate<String> sensorBlacklistPredicate = Predicates.alwaysTrue();
+        Predicate<String> entityWhitelistPredicate = Predicates.alwaysTrue();
         Object planYamlObject = service.getMetadata().get("planYaml");
         if (planYamlObject != null) {
             Object rootElement = Iterables.getOnlyElement(Yamls.parseAll(String.valueOf(planYamlObject)));
 			if (rootElement instanceof Map) {
-				sensorwhitelistPredicate = getSensorPredicate(rootElement);
-				entityBlacklistPredicate = getEntityPredicate(rootElement);
+				sensorWhitelistPredicate = getSensorWhitelistPredicate(rootElement);
+				sensorBlacklistPredicate = getSensorBlacklistPredicate(rootElement);
+				entityWhitelistPredicate = getEntityWhitelistPredicate(rootElement);
+				entityBlacklistPredicate = getEntityBlacklistPredicate(rootElement);
 			}
         }
 
@@ -92,7 +94,7 @@ public class BrooklynServiceInstanceBindingService implements
 				throw new ServiceBrokerException("could not bind: " + e.getMessage());
 			}
 		}
-        Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, sensorwhitelistPredicate, sensorBlacklistPredicate, entityWhitelistPredicate, entityBlacklistPredicate);
+        Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, sensorWhitelistPredicate, sensorBlacklistPredicate, entityWhitelistPredicate, entityBlacklistPredicate);
         Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
         serviceInstanceBinding = new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, null, request.getAppGuid());
 		bindingRepository.save(serviceInstanceBinding);
@@ -100,19 +102,16 @@ public class BrooklynServiceInstanceBindingService implements
 	}
 
     @VisibleForTesting
-    public static Predicate<String> getContainsItemInSectionPredicate(Object rootElement, String section) {
-        return s -> containsItemInSection(s, (Map<?, ?>) rootElement, section);
+    public static Predicate<String> getContainsItemInSectionPredicate(Object rootElement, String section, boolean ifAbsent) {
+        return s -> containsItemInSection(s, (Map<?, ?>) rootElement, section, ifAbsent);
     }
     
-    private static Boolean containsItemInSection(Object item, Map<?, ?> map, String section){
+    private static Boolean containsItemInSection(Object item, Map<?, ?> map, String section, boolean ifAbsent){
     	Map<?, ?> brooklynConfig = (Map<?, ?>) map.get("brooklyn.config");
     	Map<?, ?> brokerConfig = (Map<?, ?>) getValue(brooklynConfig, "broker.config");
 		List<?> list = (List<?>) getValue(brokerConfig, section);
-		return listContains(list, item);
-    }
-    
-    private static Boolean listContains(Object list, Object s) {
-    	return list == null ? true : ((List<?>) list).contains(s);
+		if(list == null) return ifAbsent;
+		return list.contains(item);
     }
     
     private static Object getValue(Map<?, ?> map, String key){
@@ -120,12 +119,23 @@ public class BrooklynServiceInstanceBindingService implements
     }
 
     @VisibleForTesting
-    public static Predicate<String> getSensorPredicate(Object rootElement) {
-    	return getContainsItemInSectionPredicate(rootElement, "sensor.whitelist");
+    public static Predicate<String> getSensorWhitelistPredicate(Object rootElement) {
+    	return getContainsItemInSectionPredicate(rootElement, "sensor.whitelist", true);
     }
     
-    public static Predicate<String> getEntityPredicate(Object rootElement){
-    	return Predicates.not(getContainsItemInSectionPredicate(rootElement, "entity.blacklist"));
+    @VisibleForTesting
+    public static Predicate<String> getSensorBlacklistPredicate(Object rootElement) {
+    	return Predicates.not(getContainsItemInSectionPredicate(rootElement, "sensor.blacklist", false));
+    }
+
+    @VisibleForTesting
+    public static Predicate<String> getEntityWhitelistPredicate(Object rootElement){
+    	return getContainsItemInSectionPredicate(rootElement, "entity.whitelist", true);
+    }
+
+    @VisibleForTesting
+    public static Predicate<String> getEntityBlacklistPredicate(Object rootElement){
+    	return Predicates.not(getContainsItemInSectionPredicate(rootElement, "entity.blacklist", false));
     }
 
 

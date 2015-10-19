@@ -16,11 +16,9 @@ import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.python.google.common.base.Predicates;
 
 import com.google.api.client.util.Maps;
 import com.google.common.collect.ImmutableList;
@@ -36,10 +34,6 @@ public class BrooklynRestAdminTest {
     		new EntitySummary("test_child_id", "child", "test_type", "test_catalog_item_id", ImmutableMap.of()),
     		new EntitySummary("test_child_id_2", "child2", "test_type_2", "test_catalog_item_id", ImmutableMap.of())
     );
-    
-    private static final List<EntitySummary> TEST_QUARANTINE_ENTITY_SUMMARIES = ImmutableList.of(
-    		new EntitySummary("test_quarantine_id", "quarantine", "org.apache.brooklyn.entity.group.QuarantineGroup", "test_quarantine_id", ImmutableMap.of())
-    );
 
     private static final List<SensorSummary> TEST_SENSOR_SUMMARIES = ImmutableList.of(
             new SensorSummary("sensor.one.name", "sensor.one.type", "sensor.one.description", ImmutableMap.of()),
@@ -48,14 +42,13 @@ public class BrooklynRestAdminTest {
     );
 
     private static final List<String> SENSOR_WHITELIST = ImmutableList.of("foo.bar", "sensor.one.name");
-    private static final List<String> SENSOR_BLACKLIST = ImmutableList.of();
+    private static final List<String> SENSOR_BLACKLIST = ImmutableList.of("host.name");
     private static final List<String> ENTITY_WHITELIST = ImmutableList.of("test_type");
     private static final List<String> ENTITY_BLACKLIST = ImmutableList.of("test_type_2");
 
     private static final Map<String, Object> TEST_RESULT = Maps.newHashMap();
 
     private static final Map<String, Object> EXPECTED_CREDENTIALS = Maps.newHashMap();
-    private static final Map<String, Object> EXPECTED_FILTERED_ENTITY_CREDENTIALS = Maps.newHashMap();
 
 
     static {
@@ -68,13 +61,8 @@ public class BrooklynRestAdminTest {
 
         Map<String, Object> expectedCredentialsChild = Maps.newHashMap();
         expectedCredentialsChild.put("sensor.one.name", null);
-        expectedCredentialsChild.put("host.name", null);
 
         EXPECTED_CREDENTIALS.putAll(expectedCredentialsChild);
-        
-        EXPECTED_FILTERED_ENTITY_CREDENTIALS.putAll(expectedCredentialsChild);
-        EXPECTED_FILTERED_ENTITY_CREDENTIALS.put("children", ImmutableMap.of("child", expectedCredentialsChild));
-        
     }
 
     @Mock
@@ -116,7 +104,7 @@ public class BrooklynRestAdminTest {
         when(restApi.getEntityApi().list(Mockito.any(String.class))).thenReturn(TEST_ENTITY_SUMMARIES);
         when(restApi.getEntityApi().getChildren(Mockito.anyString(), Mockito.anyString())).thenReturn(ImmutableList.of());
 
-        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", s -> SENSOR_WHITELIST.contains(s), s-> SENSOR_BLACKLIST.contains(s), e-> ENTITY_WHITELIST.contains(e), e -> !ENTITY_BLACKLIST.contains(e));
+        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", s -> SENSOR_WHITELIST.contains(s), s-> !SENSOR_BLACKLIST.contains(s), e-> ENTITY_WHITELIST.contains(e), e -> !ENTITY_BLACKLIST.contains(e));
         Map<String, Object> credentials = credentialsFuture.get();
 
         assertEquals(EXPECTED_CREDENTIALS, credentials);
