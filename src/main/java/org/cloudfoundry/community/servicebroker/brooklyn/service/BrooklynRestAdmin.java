@@ -359,7 +359,8 @@ public class BrooklynRestAdmin {
 		try {
 			HttpToolResponse response = HttpTool.httpGet(httpClient, new URI(config.toFullUrl(url)), Collections.<String, String>emptyMap());
 			if (response.getResponseCode() / 100 != 2) {
-				return new AsyncResult<>(null);
+				// url is not relative, assume it is absolute
+				return new AsyncResult<>(url);
 			}
 			Map<String, List<String>> headerLists = response.getHeaderLists();
 			Optional<Entry<String, List<String>>> entry = Iterables.tryFind(headerLists.entrySet(), new Predicate<Entry<String, List<String>>>(){
