@@ -359,7 +359,7 @@ public class BrooklynRestAdmin {
 		try {
 			HttpToolResponse response = HttpTool.httpGet(httpClient, new URI(config.toFullUrl(url)), Collections.<String, String>emptyMap());
 			if (response.getResponseCode() / 100 != 2) {
-				throw new RuntimeException("image not available, server response: "+ response.getResponse());
+				return new AsyncResult<>(null);
 			}
 			Map<String, List<String>> headerLists = response.getHeaderLists();
 			Optional<Entry<String, List<String>>> entry = Iterables.tryFind(headerLists.entrySet(), new Predicate<Entry<String, List<String>>>(){
@@ -371,11 +371,12 @@ public class BrooklynRestAdmin {
 				
 			});
 			if(entry.isPresent() && !entry.get().getValue().get(0).startsWith("image")){
-				throw new RuntimeException("specified url is not an image");
+				LOG.error("expected content type to start 'image' but found: {}", entry.get().getValue().get(0));
+				return new AsyncResult<>(null);
 			}
 			return new AsyncResult<>("data:img/png;base64," + BaseEncoding.base64().encode(response.getContent()));
 		} catch (Exception e) {
-			LOG.error("unable to encode icon as base64: {}", e);
+			LOG.error("unable to encode icon as base64");
 			return new AsyncResult<>(url);
 		}
 	}
