@@ -7,6 +7,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
@@ -37,9 +38,11 @@ import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.io.BaseEncoding;
 
 @Service
@@ -355,10 +358,27 @@ public class BrooklynRestAdmin {
 		if (Strings.isEmpty(url)) return new AsyncResult<>(null);
 		try {
 			HttpToolResponse response = HttpTool.httpGet(httpClient, new URI(config.toFullUrl(url)), Collections.<String, String>emptyMap());
+			if (response.getResponseCode() / 100 != 2) {
+				// url is not relative, assume it is absolute
+				return new AsyncResult<>(url);
+			}
+			Map<String, List<String>> headerLists = response.getHeaderLists();
+			Optional<Entry<String, List<String>>> entry = Iterables.tryFind(headerLists.entrySet(), new Predicate<Entry<String, List<String>>>(){
+
+				@Override
+				public boolean apply(Entry<String, List<String>> entry) {
+					return entry.getKey().toLowerCase().equals("content-type");
+				}
+				
+			});
+			if(entry.isPresent() && !entry.get().getValue().get(0).startsWith("image")){
+				LOG.error("expected content type to start 'image' but found: {}", entry.get().getValue().get(0));
+				return new AsyncResult<>(null);
+			}
 			return new AsyncResult<>("data:img/png;base64," + BaseEncoding.base64().encode(response.getContent()));
 		} catch (Exception e) {
 			LOG.error("unable to encode icon as base64");
-			return new AsyncResult<>(null);
+			return new AsyncResult<>(url);
 		}
 	}
 	
