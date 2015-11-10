@@ -6,9 +6,18 @@ To build this project you need:
 - JDK 8
 - Gradle 2.2 or higher
 
-With these installed, build with:
+First, install the parent project to your local maven repo:
 
-    $ gradle clean build
+    $ git clone https://github.com/robertgmoss/spring-boot-cf-service-broker.git
+    $ cd spring-boot-cf-service-broker
+    $ git checkout async
+    $ ./gradlew publishToMavenLocal
+    
+Now you can build this project:
+
+    $ git clone https://github.com/cloudfoundry-incubator/brooklyn-service-broker.git
+    $ cd brooklyn-service-broker
+    $ ./gradlew clean build
 
 This will pull all needed dependencies, including the Brooklyn JARs (only the REST client project and dependencies are needed).
 
