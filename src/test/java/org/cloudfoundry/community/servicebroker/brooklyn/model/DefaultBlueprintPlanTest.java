@@ -68,4 +68,29 @@ public class DefaultBlueprintPlanTest {
 		assertEquals(expected, result);
 	}
 
+	@Test
+	public void testToBlueprintWithLocation() throws JsonProcessingException {
+		Map<String, Object> metadata = ImmutableMap.of("location", "AWS California");
+		String brooklynCatalogId = "my-service";
+		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", metadata);
+		String result = plan.toBlueprint(brooklynCatalogId, null, request);
+		String expected = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}",
+				brooklynCatalogId, "AWS California");
+		
+		assertEquals(expected, result);
+		
+		metadata = ImmutableMap.of("location", ImmutableMap.of(
+				"jclouds:aws-ec2", ImmutableMap.of("identity", "***", "credential", "***", "region", "ap-southeast-1")
+		));
+		plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", metadata);
+		
+		ObjectWriter writer = new ObjectMapper().writer();
+		String location = writer.writeValueAsString(metadata.get("location"));
+		expected = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [%s]}",
+				brooklynCatalogId, location);
+		result = plan.toBlueprint(brooklynCatalogId, null, request);
+		
+		assertEquals(expected, result);
+	}
+
 }

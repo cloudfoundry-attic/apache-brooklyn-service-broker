@@ -2,7 +2,6 @@ package org.cloudfoundry.community.servicebroker.brooklyn.service.plan;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,7 +41,7 @@ public class LocationPlanStrategy extends AbstractCatalogPlanStrategy{
                         String name = s;
                         String description = "Deploys to " + s;
                         Map<String, Object> metadata = new HashMap<>();
-                        metadata.put("location", s);
+                        metadata.put("location", location);
                         plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
                     }
                 } else if (location instanceof String) {
