@@ -25,7 +25,7 @@ public class LocationPlanStrategy extends AbstractCatalogPlanStrategy{
     }
 
     @Override
-    public List<Plan> makePlans(String serviceId, Object rootElement) {
+    public List<Plan> makePlans(String serviceId, String appName, Object rootElement) {
         List<Plan> plans = new ArrayList<>();
         // check if yaml contains a location
         // if it does extract that and use it
@@ -42,7 +42,7 @@ public class LocationPlanStrategy extends AbstractCatalogPlanStrategy{
                         String description = "Deploys to " + s;
                         Map<String, Object> metadata = new HashMap<>();
                         metadata.put("location", location);
-                        plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
+                        plans.add(new DefaultBlueprintPlan(id, name, description, appName, metadata));
                     }
                 } else if (location instanceof String) {
                     String id = serviceId + "." + location;
@@ -50,7 +50,7 @@ public class LocationPlanStrategy extends AbstractCatalogPlanStrategy{
                     String description = "Deploys to " + location;
                     Map<String, Object> metadata = new HashMap<>();
                     metadata.put("location", name);
-                    plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
+                    plans.add(new DefaultBlueprintPlan(id, name, description, appName, metadata));
                 }
                 return plans;
             }
@@ -67,7 +67,7 @@ public class LocationPlanStrategy extends AbstractCatalogPlanStrategy{
             String description = "Deploys to " + l.getName();
             Map<String, Object> metadata = new HashMap<>();
             metadata.put("location", l.getName());
-            plans.add(new DefaultBlueprintPlan(id, name, description, metadata));
+            plans.add(new DefaultBlueprintPlan(id, name, description, appName, metadata));
         }
         return plans;
     }

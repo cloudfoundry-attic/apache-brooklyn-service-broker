@@ -60,7 +60,7 @@ public class SizePlanStrategyTest {
                 "          minRam: 4");
 
         Object rootObject = Yamls.parseAll(yaml).iterator().next();
-        List<Plan> plans = strategy.makePlans("test_id", rootObject);
+        List<Plan> plans = strategy.makePlans("test_id", "Test App", rootObject);
         assertEquals(3, plans.size());
         assertEquals("small", plans.get(0).getName());
         assertEquals("medium", plans.get(1).getName());
@@ -107,7 +107,7 @@ public class SizePlanStrategyTest {
 		        "        CREATE DATABASE mydatabase OWNER sqluser;"
         		);
         Object rootObject = Yamls.parseAll(yaml).iterator().next();
-        List<Plan> plans = strategy.makePlans("test_id", rootObject);
+        List<Plan> plans = strategy.makePlans("test_id", "Test App", rootObject);
         assertEquals(3, plans.size());
         assertEquals("small", plans.get(0).getName());
         assertEquals("small plan", plans.get(0).getDescription());

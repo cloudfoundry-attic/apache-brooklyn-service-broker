@@ -9,6 +9,6 @@ public interface CatalogPlanStrategy {
 	
 	List<ServiceDefinition> makeServiceDefinitions();
     
-    List<Plan> makePlans(String serviceId, Object yaml);
+    List<Plan> makePlans(String serviceId, String appName, Object yaml);
 
 }

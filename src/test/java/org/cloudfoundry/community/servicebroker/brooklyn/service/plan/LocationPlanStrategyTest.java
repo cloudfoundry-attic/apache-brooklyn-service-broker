@@ -28,6 +28,7 @@ public class LocationPlanStrategyTest {
     );
 
     private static final String TEST_ID = "test_id";
+    private static final String TEST_APP = "Test App";
 
     @InjectMocks
     private LocationPlanStrategy locationPlanStrategy;
@@ -43,7 +44,7 @@ public class LocationPlanStrategyTest {
     @Test
     public void testMakePlansNoLocationsInYAML() {
         when(admin.getLocations()).thenReturn(new AsyncResult<>(LOCATION_SUMMARIES));
-        List<Plan> plans = locationPlanStrategy.makePlans(TEST_ID, "the_yaml");
+        List<Plan> plans = locationPlanStrategy.makePlans(TEST_ID, TEST_APP, "the_yaml");
         assertEquals(LOCATION_SUMMARIES.size(), plans.size());
         checkLocationSummariesEqualsPlan(LOCATION_SUMMARIES.get(0), plans.get(0));
         checkLocationSummariesEqualsPlan(LOCATION_SUMMARIES.get(1), plans.get(1));
@@ -56,7 +57,7 @@ public class LocationPlanStrategyTest {
                 "services:",
                 "- serviceType: brooklyn.entity.basic.BasicApplication");
         Object rootObject = Yamls.parseAll(yaml).iterator().next();
-        List<Plan> plans = locationPlanStrategy.makePlans(TEST_ID, rootObject);
+        List<Plan> plans = locationPlanStrategy.makePlans(TEST_ID, TEST_APP, rootObject);
         assertEquals(plans.size(), 1);
         assertEquals(plans.get(0).getId(), TEST_ID + "." + "aws-ec2:eu-west-1");
         assertEquals(plans.get(0).getName(), "aws-ec2:eu-west-1");
@@ -72,7 +73,7 @@ public class LocationPlanStrategyTest {
                 "services:",
                 "- serviceType: brooklyn.entity.basic.BasicApplication");
         Object rootObject = Yamls.parseAll(yaml).iterator().next();
-        List<Plan> plans = locationPlanStrategy.makePlans(TEST_ID, rootObject);
+        List<Plan> plans = locationPlanStrategy.makePlans(TEST_ID, TEST_APP, rootObject);
         assertEquals(plans.size(), 1);
         assertEquals(plans.get(0).getId(), TEST_ID + "." + "jclouds:aws-ec2");
         assertEquals(plans.get(0).getName(), "jclouds:aws-ec2");

@@ -12,7 +12,7 @@ import com.google.common.collect.ImmutableMap;
 public class UserDefinedPlanStrategy implements CatalogPlanStrategy{
 
 	@Override
-	public List<Plan> makePlans(String serviceId, Object yaml) {
+	public List<Plan> makePlans(String serviceId, String appName, Object yaml) {
 		return ImmutableList.of(
 				new UserDefinedBlueprintPlan("br_UserDefined", "UserDefined", "Allows users to specify a complete blueprint", ImmutableMap.of())
 		);
@@ -25,7 +25,7 @@ public class UserDefinedPlanStrategy implements CatalogPlanStrategy{
 				"Allows users to specify a complete blueprint",
 				true, 
 				false, 
-				makePlans("serviceId", "yaml"),
+				makePlans("serviceId", null, "yaml"),
 				ImmutableList.of(), 
 				ImmutableMap.of(), 
 				ImmutableList.of(), 

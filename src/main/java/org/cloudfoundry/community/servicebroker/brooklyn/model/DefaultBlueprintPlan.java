@@ -16,25 +16,28 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 public class DefaultBlueprintPlan extends BlueprintPlan{
 	
 	private static final Logger LOG = LoggerFactory.getLogger(DefaultBlueprintPlan.class);
+	private String appName;
 
-	public DefaultBlueprintPlan(String id, String name, String description,
+	public DefaultBlueprintPlan(String id, String name, String description, String appName,
 			Map<String, Object> metadata) {
 		super(id, name, description, metadata);
+		this.appName = appName;
 	}
 
 	@Override
-	public String toBlueprint(String brooklynCatalogId, String location,
+	public String toBlueprint(String brooklynCatalogId, String location, 
 			CreateServiceInstanceRequest request) {
 		ObjectWriter writer = new ObjectMapper().writer();
 		
 		Map<String, Object> metadata = MutableMap.copyOf(getMetadata());
-
+		String name = (appName + " (CF Service)").trim();
         try {
 			if (metadata.containsKey("location")) {
 				location = writer.writeValueAsString(metadata.remove("location"));
 			} else {
 				location = writer.writeValueAsString(location);
 			}
+			
 		} catch (JsonProcessingException e) {
         	LOG.error("unable to make location: {}",  e.getMessage());
             Exceptions.propagateIfFatal(e);
@@ -54,13 +57,13 @@ public class DefaultBlueprintPlan extends BlueprintPlan{
             String configJson = null;
             try {
                 configJson = writer.writeValueAsString(config);
-                blueprint = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [%s], \"brooklyn.config\":%s}", brooklynCatalogId, location, configJson);
+                blueprint = String.format("{\"name\":\"%s\", \"services\":[{\"type\": \"%s\"}], \"locations\": [%s], \"brooklyn.config\":%s}", name, brooklynCatalogId, location, configJson);
             } catch (JsonProcessingException e) {
             	LOG.error("unable to add config: {}",  e.getMessage());
                 Exceptions.propagateIfFatal(e);
             }
         } else {
-        	blueprint = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [%s]}", brooklynCatalogId, location);
+        	blueprint = String.format("{\"name\":\"%s\", \"services\":[{\"type\": \"%s\"}], \"locations\": [%s]}", name, brooklynCatalogId, location);
         }
         
         return blueprint;

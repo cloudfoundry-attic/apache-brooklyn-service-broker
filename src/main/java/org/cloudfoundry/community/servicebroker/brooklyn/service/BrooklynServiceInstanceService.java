@@ -94,8 +94,12 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
                 selectedPlan = p;
             }
         }
+        
+        
+        
         Map<String, Object> metadata = serviceDefinition.getMetadata();
-        String blueprint = ((BlueprintPlan)selectedPlan).toBlueprint((String) metadata.get("brooklynCatalogId"), location, request);
+        String brooklynCatalogId = (String) metadata.get("brooklynCatalogId");
+		String blueprint = ((BlueprintPlan)selectedPlan).toBlueprint(brooklynCatalogId, location, request);
         LOG.info("launching from blueprint: [blueprint={}]", blueprint);
 		return blueprint;
     }

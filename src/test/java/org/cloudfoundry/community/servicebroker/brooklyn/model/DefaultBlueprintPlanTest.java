@@ -32,11 +32,11 @@ public class DefaultBlueprintPlanTest {
 		String location = "localhost";
 		Map<String,Object> config = ImmutableMap.of("cluster.minSize", 4);
 
-		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", config);
+		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", "Test App", config);
 		ObjectWriter writer = new ObjectMapper().writer();
 		String configJson = writer.writeValueAsString(config);
 		when(request.getParameters()).thenReturn((Map)config);
-		String expected = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":%s}",
+		String expected = String.format("{\"name\":\"Test App (CF Service)\", \"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":%s}",
 				brooklynCatalogId, location, configJson);
 		String result = plan.toBlueprint(brooklynCatalogId, location, request);
 		assertEquals(expected, result);
@@ -47,9 +47,9 @@ public class DefaultBlueprintPlanTest {
 		String location = "localhost";
 		String brooklynCatalogId = "my-service";
 		Map<String,Object> config = ImmutableMap.of();
-		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", config);
+		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", "Test App", config);
 		when(request.getParameters()).thenReturn((Map)config);
-		String expected = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}",
+		String expected = String.format("{\"name\":\"Test App (CF Service)\", \"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}",
 				brooklynCatalogId, location);
 		String result = plan.toBlueprint(brooklynCatalogId, location, request);
 		assertEquals(expected, result);
@@ -60,9 +60,9 @@ public class DefaultBlueprintPlanTest {
 		String location = "localhost";
 		String brooklynCatalogId = "my-service";
 		Map<String,Object> config = null;
-		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", config);
+		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", "Test App", config);
 		when(request.getParameters()).thenReturn((Map)config);
-		String expected = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}",
+		String expected = String.format("{\"name\":\"Test App (CF Service)\", \"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}",
 				brooklynCatalogId, location);
 		String result = plan.toBlueprint(brooklynCatalogId, location, request);
 		assertEquals(expected, result);
@@ -72,9 +72,9 @@ public class DefaultBlueprintPlanTest {
 	public void testToBlueprintWithLocation() throws JsonProcessingException {
 		Map<String, Object> metadata = ImmutableMap.of("location", "AWS California");
 		String brooklynCatalogId = "my-service";
-		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", metadata);
+		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", "Test App", metadata);
 		String result = plan.toBlueprint(brooklynCatalogId, null, request);
-		String expected = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}",
+		String expected = String.format("{\"name\":\"Test App (CF Service)\", \"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}",
 				brooklynCatalogId, "AWS California");
 		
 		assertEquals(expected, result);
@@ -82,11 +82,11 @@ public class DefaultBlueprintPlanTest {
 		metadata = ImmutableMap.of("location", ImmutableMap.of(
 				"jclouds:aws-ec2", ImmutableMap.of("identity", "***", "credential", "***", "region", "ap-southeast-1")
 		));
-		plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", metadata);
+		plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", "Test App", metadata);
 		
 		ObjectWriter writer = new ObjectMapper().writer();
 		String location = writer.writeValueAsString(metadata.get("location"));
-		expected = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [%s]}",
+		expected = String.format("{\"name\":\"Test App (CF Service)\", \"services\":[{\"type\": \"%s\"}], \"locations\": [%s]}",
 				brooklynCatalogId, location);
 		result = plan.toBlueprint(brooklynCatalogId, null, request);
 		

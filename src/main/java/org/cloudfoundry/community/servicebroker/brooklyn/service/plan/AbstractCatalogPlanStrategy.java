@@ -86,7 +86,7 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
                     Iterable<Object> planYaml = Yamls.parseAll(app.getPlanYaml());
                     Object rootElement = Iterables.getOnlyElement(planYaml);
                     if (!isHidden(rootElement)) {
-                        plans = makePlans(id, rootElement);
+                        plans = makePlans(id, app.getName(), rootElement);
                     }
 				} catch(Exception e) {
 					LOG.error("unable to make plans: Unexpected blueprint format");

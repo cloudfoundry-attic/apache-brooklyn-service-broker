@@ -35,7 +35,7 @@ public class BrooklynCatalogService implements CatalogService {
 	}
 
     public List<Plan> getPlans(String id, String planYaml) {
-        return planStrategy.makePlans(id, planYaml);
+        return planStrategy.makePlans(id, "", planYaml);
     }
     
 	@Override

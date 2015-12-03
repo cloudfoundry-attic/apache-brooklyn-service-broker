@@ -62,7 +62,7 @@ public class BrooklynServiceInstanceServiceTest {
 
 		when(admin.createApplication(any(String.class))).thenReturn(new AsyncResult<>(entity));
 		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
-        when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(new DefaultBlueprintPlan("planId", "test_name", "test_description", ImmutableMap.of("location", "test_location"))));
+        when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(new DefaultBlueprintPlan("planId", "test_name", "test_description","Test App", ImmutableMap.of("location", "test_location"))));
 		when(admin.getDashboardUrl(any(String.class))).thenReturn(new AsyncResult<>(null));
         
 		CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid", true);
@@ -106,7 +106,7 @@ public class BrooklynServiceInstanceServiceTest {
         CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid", true)
                 .withServiceInstanceId(SVC_INST_ID);
         when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
-                new DefaultBlueprintPlan("planId", "planName", "planDescription", ImmutableMap.of(
+                new DefaultBlueprintPlan("planId", "planName", "planDescription","Test App", ImmutableMap.of(
                         "location", "testLocation",
                         "provisioning.properties", ImmutableMap.of(
                                 "minCores", TEST_MIN_CORES,
@@ -115,7 +115,7 @@ public class BrooklynServiceInstanceServiceTest {
                 ))
         ));
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("brooklynCatalogId", "testService"));
-        String expectedBlueprint = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
+        String expectedBlueprint = String.format("{\"name\":\"Test App (CFService)\",\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
         String blueprint = service.createBlueprint(serviceDefinition, request);
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
         assertEquals(expectedBlueprint.replace(" ", ""), blueprint.replace(" ", ""));
@@ -127,7 +127,7 @@ public class BrooklynServiceInstanceServiceTest {
         CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid", true)
                 .withServiceInstanceId(SVC_INST_ID);
         when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
-                new DefaultBlueprintPlan("planId", "planName", "planDescription", ImmutableMap.of(
+                new DefaultBlueprintPlan("planId", "planName", "planDescription", "Test App", ImmutableMap.of(
                         "location", "testLocation",
                         "provisioning.properties", ImmutableMap.of(
                                 "minCores", TEST_MIN_CORES,
@@ -137,7 +137,7 @@ public class BrooklynServiceInstanceServiceTest {
         ));
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("brooklynCatalogId", "testService"));
         
-        String expectedBlueprint = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
+        String expectedBlueprint = String.format("{\"name\":\"Test App (CFService)\",\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
         String blueprint = service.createBlueprint(serviceDefinition, request);
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
         assertEquals(expectedBlueprint.replace(" ", ""), blueprint.replace(" ", ""));
@@ -149,11 +149,11 @@ public class BrooklynServiceInstanceServiceTest {
         CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid", true)
                 .withServiceInstanceId(SVC_INST_ID);
         when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
-                new DefaultBlueprintPlan("planId", "planName", "planDescription", ImmutableMap.of("location", "testLocation"))
+                new DefaultBlueprintPlan("planId", "planName", "planDescription", "Test App", ImmutableMap.of("location", "testLocation"))
         ));
 
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("brooklynCatalogId", "testService"));
-        String expectedBlueprint = String.format("{\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}", serviceDefinition.getId(), "testLocation");
+        String expectedBlueprint = String.format("{\"name\":\"Test App (CFService)\",\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}", serviceDefinition.getId(), "testLocation");
         String blueprint = service.createBlueprint(serviceDefinition, request);
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
         assertEquals(expectedBlueprint.replace(" ", ""), blueprint.replace(" ", ""));

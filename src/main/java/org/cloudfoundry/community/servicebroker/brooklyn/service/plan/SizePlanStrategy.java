@@ -2,12 +2,10 @@ package org.cloudfoundry.community.servicebroker.brooklyn.service.plan;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.util.yaml.Yamls;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.DefaultBlueprintPlan;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
@@ -33,7 +31,7 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
     }
 
     @Override
-    public List<Plan> makePlans(String serviceId, Object rootElement) {
+    public List<Plan> makePlans(String serviceId, String appName, Object rootElement) {
         List<Plan> plans = new ArrayList<>();
         if (rootElement == null) {
             return plans;
@@ -43,30 +41,30 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
             Map<String, Object> map = (Map<String, Object>) rootElement;
             if (map.containsKey("brooklyn.config")) {
                 Map<String, Object> brooklynConfig = (Map<String, Object>) map.get("brooklyn.config");
-                return parseConfig(brooklynConfig, serviceId);
+                return parseConfig(brooklynConfig, serviceId, appName);
             }
         }
         return plans;
     }
 
-    private List<Plan> parseConfig(Map<String, Object> brooklynConfigMap, String serviceId) {
+    private List<Plan> parseConfig(Map<String, Object> brooklynConfigMap, String serviceId, String displayName) {
         Map<String, Object> brokerConfig = (Map<String, Object>)brooklynConfigMap.get("broker.config");
         brokerConfig = replacer().replaceValues(brokerConfig);
         Map<String, Object> planConfig = (Map<String, Object>)brokerConfig.get("plan.config");
         Object plans = brokerConfig.get("plans");
 		if (plans instanceof Map) {
             Map<String, Object> planDefinitions = (Map<String, Object>)plans;
-            return getPlansFromMap(planDefinitions, serviceId, planConfig);
+            return getPlansFromMap(planDefinitions, serviceId, displayName, planConfig);
         } else if (plans instanceof List) {
         	List<Object> planDefinitions = (List<Object>) plans;
-        	return getPlansfromList(planDefinitions, serviceId, planConfig);
+        	return getPlansfromList(planDefinitions, serviceId, displayName, planConfig);
         } else {
         	LOG.error("Unable to parse config {}", plans);
         	return Collections.emptyList();
         }
     }
     
-    private List<Plan> getPlansFromMap(Map<String, Object> planDefinitions, String serviceId, Map<String, Object> planConfig) {
+    private List<Plan> getPlansFromMap(Map<String, Object> planDefinitions, String serviceId, String displayName, Map<String, Object> planConfig) {
     	List<Plan> plans = new ArrayList<>();
     	Set<String> names = Sets.newHashSet();
         for (String planName : planDefinitions.keySet()) {
@@ -82,13 +80,13 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
             String id = serviceId + "." + planName;
             String name = ServiceUtil.getUniqueName(planName, names);
             String description = planName;
-            Plan plan = new DefaultBlueprintPlan(id, name, description, properties);
+            Plan plan = new DefaultBlueprintPlan(id, name, description, displayName, properties);
             plans.add(plan);
         }
         return plans;
     }
     
-    private List<Plan> getPlansfromList(List<Object> planDefinitions, String serviceId, Map<String, Object> planConfig) {
+    private List<Plan> getPlansfromList(List<Object> planDefinitions, String serviceId, String displayName, Map<String, Object> planConfig) {
     	List<Plan> plans = new ArrayList<>();
     	Set<String> names = Sets.newHashSet();
     	for(Object planDefinition : planDefinitions){
@@ -106,7 +104,7 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
 			String id = serviceId + "." + planName;
     		String name = ServiceUtil.getUniqueName(planName, names);
     		String description = String.valueOf(planMap.get("description"));
-    		Plan plan = new DefaultBlueprintPlan(id, name, description, properties);
+    		Plan plan = new DefaultBlueprintPlan(id, name, description, displayName, properties);
             plans.add(plan);
     	}
     	return plans;
