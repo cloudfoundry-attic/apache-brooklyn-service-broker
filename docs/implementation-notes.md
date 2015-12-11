@@ -20,28 +20,4 @@ used by the CLI plugin:
 * `/effectors/{application}`
 * `/invoke/{application}/{entity}/{effector}`
 * `/is-running/{application}`
-
-
-## Ideas and TODOs
-
-### More Complex Relationships
-
-It could be useful to support more complex relationships in certain cases,
-for instance creating a database in an RDBMS on `bind-service`,
-or extracting custom metadata for a particular bind.
-This could be easily done by looking for a `bind-service` effector on an application,
-and invoking it if present.
-
-The new service keys API could be useful for this.
-
-
-### Async and Parameters API
-
-The latest broker API includes support for long-running (async) tasks and parameters.
-
-We should use this to support:
-
-* `bind` being long-running if the entities in brooklyn have not yet finished starting
-* config or even arbitrary blueprints being specifiable in `create-service`
-* arguments to pass to a `bind-service` effector
  
