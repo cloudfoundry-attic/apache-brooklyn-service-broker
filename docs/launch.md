@@ -21,6 +21,7 @@ and specifying the security credentials which will be needed to use this broker:
         BROOKLYN_PASSWORD: brooklyn-password
         SECURITY_USER_NAME: broker-username
         SECURITY_USER_PASSWORD: broker-password
+        BROOKLYN_NAMESPACE: br
 
 then 
 
