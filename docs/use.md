@@ -1,6 +1,12 @@
 
 # Using the Broker
 
+## Setting up your catalog
+
+First clear the catalog of any unwanted catalog items - especially if setting up brooklyn for the first time, as the default catalog items are unsuitable for running on CF without modification.
+
+Then if using [size-plan](plans.md) mode add any `broker.config` sections to the catalog yaml to define Cloud Foundry plans before adding it.  
+
 ## Registering the Broker and Servcies
 
 First, register the service broker
