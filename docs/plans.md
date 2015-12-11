@@ -160,4 +160,21 @@ applications:
     SPRING_PROFILES_ACTIVE: location-plan,development
 ```
 
+# Namespaces
 
+Sometimes your Service names will conflict, especially when deploying two brokers that target one brooklyn or two brooklyns with the same services. To ensure service names are unique add a namespace as follows:
+
+
+```
+applications:
+- name: Brooklyn-Service-Broker
+  memory: 1G
+  env:
+    BROOKLYN_URI: https://my.brooklyn.server:8081
+    BROOKLYN_USERNAME: admin
+    BROOKLYN_PASSWORD: letmein
+    SECURITY_USER_NAME: user
+    SECURITY_USER_PASSWORD: password
+    SPRING_PROFILES_ACTIVE: location-plan,development
+    BROOKLYN_NAMESPACE: br
+```
