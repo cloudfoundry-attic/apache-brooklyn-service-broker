@@ -44,8 +44,8 @@ To unbind and delete a service:
 
 ## Adding New Services
 
-You can add new services to the Brooklyn catalog in the Brooklyn GUI.
-To make these available in the Cloud Foundry marketplace, you'll need to:
+You can add new services to the Brooklyn catalog in the Brooklyn GUI, or by submitting a `POST` request to the `/create` endpoint of the service broker.
+To make these available in the Cloud Foundry marketplace:
 
     $ cf update-service-broker <broker-name> <user> <password> <url>
 
