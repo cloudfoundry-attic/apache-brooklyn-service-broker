@@ -12,7 +12,7 @@ import java.util.List;
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
-import org.cloudfoundry.community.servicebroker.model.ServiceDefinition;
+import org.springframework.cloud.servicebroker.model.ServiceDefinition;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;

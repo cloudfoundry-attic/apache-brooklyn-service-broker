@@ -3,12 +3,10 @@ package org.cloudfoundry.community.servicebroker.brooklyn.repository;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import org.cloudfoundry.community.servicebroker.brooklyn.model.BrooklynServiceInstance;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
-import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceRequest;
-import org.cloudfoundry.community.servicebroker.model.OperationState;
-import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
-import org.cloudfoundry.community.servicebroker.model.ServiceInstanceLastOperation;
+import org.springframework.cloud.servicebroker.model.OperationState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,56 +29,42 @@ public class BrooklynServiceInstanceRepository {
 		this.restAdmin = restApi;
 	}
 
-    public ServiceInstance findOne(String serviceInstanceId) {
+    public BrooklynServiceInstance findOne(String serviceInstanceId) {
         return  findOne(serviceInstanceId, true);
     }
 
 	@SuppressWarnings("unchecked")
-	public ServiceInstance findOne(String serviceInstanceId, boolean includeEverything) {
+	public BrooklynServiceInstance findOne(String serviceInstanceId, boolean includeEverything) {
 		Future<Map<String, Object>> serviceInstanceFuture = restAdmin.getConfigAsMap(application, entity, serviceInstanceId);
 		Map<String, Object> map = ServiceUtil.getFutureValueLoggingError(serviceInstanceFuture);
 		if(map == null)  return null;
-		if (!map.containsKey("serviceDefinitionId") || map.get("serviceDefinitionId") == null) {
-			LOG.error("Unable to get serviceDefinitionId: {}", map);
+		if (!map.containsKey("entityId") || map.get("entityId") == null) {
+			LOG.error("Unable to get entityId: {}", map);
 		}
-        String brooklynEntity = String.valueOf(map.get("serviceDefinitionId"));
-        CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(
-                brooklynEntity,
-				map.get("planId").toString(),
-				map.get("organizationGuid").toString(),
-				map.get("spaceGuid").toString(),
-                true
-				);
+        String brooklynEntity = String.valueOf(map.get("entityId"));
         if(!includeEverything) {
-            return new ServiceInstance(request.withServiceInstanceId(serviceInstanceId));
+            return new BrooklynServiceInstance(serviceInstanceId, String.valueOf(map.get("serviceDefinitionId"))).withEntityId(brooklynEntity);
         }
 
-        Map<String, Object> previousOperationMap = (Map<String, Object>)map.get("serviceInstanceLastOperation");
-        
-        String currentState = previousOperationMap.get("description").toString();
-        String serviceStatus = ServiceUtil.getFutureValueLoggingError(restAdmin.getServiceState(brooklynEntity));
-        if(serviceStatus == null) {
-        	serviceStatus = "DESTROYED";
+        String lastOperation = String.valueOf(map.get("operation"));
+        String currentBrooklynStatus = ServiceUtil.getFutureValueLoggingError(restAdmin.getServiceState(brooklynEntity));
+        if(currentBrooklynStatus == null) {
+        	currentBrooklynStatus = "DESTROYED";
         }
-        OperationState state = OperationState.FAILED;
         boolean deleted = false;
-        String dashboardUrl = null;
-        state = nextState(serviceStatus, currentState);
-        
+		OperationState state = nextState(lastOperation, currentBrooklynStatus);
+
         if(state.equals(OperationState.SUCCEEDED)){
-        	if(serviceStatus.equals("DESTROYED")){
+        	if(currentBrooklynStatus.equals("DESTROYED")){
         		delete(serviceInstanceId);
         		deleted = true;
-        	} else {
-        		dashboardUrl = ServiceUtil.getFutureValueLoggingError(restAdmin.getDashboardUrl(brooklynEntity));
         	}
         }
 
-        ServiceInstanceLastOperation lastOp = new ServiceInstanceLastOperation(serviceStatus, state);
-        ServiceInstance newInstance = new ServiceInstance(request.withServiceInstanceId(serviceInstanceId))  
-        	.withDashboardUrl(dashboardUrl)
-            .withLastOperation(lastOp)
-            .isAsync(true);
+        BrooklynServiceInstance newInstance = new BrooklynServiceInstance(serviceInstanceId, String.valueOf(map.get("serviceDefinitionId")))
+                .withEntityId(brooklynEntity)
+                .withOperation(lastOperation)
+                .withOperationStatus(state);
 
         if(!deleted)
         	save(newInstance);
@@ -92,39 +76,33 @@ public class BrooklynServiceInstanceRepository {
 	}
 
 	
-	public <S extends ServiceInstance> S save(S instance) {
-		Object response = ServiceUtil.getFutureValueLoggingError(restAdmin.setConfig(application, entity, instance.getServiceInstanceId(), instance));
-		return (S) response;
+	public BrooklynServiceInstance save(BrooklynServiceInstance instance) {
+		return (BrooklynServiceInstance) ServiceUtil.getFutureValueLoggingError(restAdmin.setConfig(application, entity, instance.getServiceInstanceId(), instance));
 	}
 	
-	private OperationState nextState(String serviceStatus, String currentState) {
-		currentState = currentState.toUpperCase();
+	private OperationState nextState(String lastOperation, String currentBrooklynStatus) {
+        lastOperation = lastOperation.toUpperCase();
 		OperationState nextState = OperationState.FAILED;
-		switch(currentState){
+		switch(lastOperation){
 		case "CREATING":
-		case "CREATED:":
-		case "STARTING":
-		case "RUNNING":
-			if (ImmutableSet.of("CREATED", "STARTING").contains(serviceStatus)) {
+			if (ImmutableSet.of("CREATED", "STARTING").contains(currentBrooklynStatus)) {
 				nextState = OperationState.IN_PROGRESS;
 			}
 
-			if (serviceStatus.equals("RUNNING")) {
+			if (currentBrooklynStatus.equals("RUNNING")) {
 				nextState = OperationState.SUCCEEDED;
 			}
 			break; // all other statuses transition to fail
 		case "DELETING":
-		case "STOPPING":
-		case "STOPPED":
-			if (ImmutableSet.of("STOPPING", "STOPPED").contains(serviceStatus)) {
+			if (ImmutableSet.of("STOPPING", "STOPPED").contains(currentBrooklynStatus)) {
 				nextState = OperationState.IN_PROGRESS;
 			}
 
-			if (serviceStatus.equals("DESTROYED")) {
+			if (currentBrooklynStatus.equals("DESTROYED")) {
 				nextState = OperationState.SUCCEEDED;
 			}		
 		}
-		LOG.info("currentState={}, serviceStatus={}, nextState={}", currentState, serviceStatus, nextState);
+		LOG.info("lastOperation={}, currentBrooklynStatus={}, nextState={}", lastOperation, currentBrooklynStatus, nextState);
 		return nextState;
 	}
 }

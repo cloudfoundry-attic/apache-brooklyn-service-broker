@@ -2,7 +2,7 @@ package org.cloudfoundry.community.servicebroker.brooklyn.model;
 
 import java.util.Map;
 
-import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceRequest;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -2,8 +2,8 @@ package org.cloudfoundry.community.servicebroker.brooklyn.service.plan;
 
 import java.util.List;
 
-import org.cloudfoundry.community.servicebroker.model.Plan;
-import org.cloudfoundry.community.servicebroker.model.ServiceDefinition;
+import org.springframework.cloud.servicebroker.model.Plan;
+import org.springframework.cloud.servicebroker.model.ServiceDefinition;
 
 public interface CatalogPlanStrategy {
 	

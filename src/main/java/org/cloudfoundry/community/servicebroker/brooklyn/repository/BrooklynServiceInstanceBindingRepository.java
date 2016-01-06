@@ -3,9 +3,9 @@ package org.cloudfoundry.community.servicebroker.brooklyn.repository;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import org.cloudfoundry.community.servicebroker.brooklyn.model.BrooklynServiceInstanceBinding;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
-import org.cloudfoundry.community.servicebroker.model.ServiceInstanceBinding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,22 +26,21 @@ public class BrooklynServiceInstanceBindingRepository {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public ServiceInstanceBinding findOne(String bindingId) {
+	public BrooklynServiceInstanceBinding findOne(String bindingId) {
 		Future<Map<String, Object>> serviceBindingFuture = restAdmin.getConfigAsMap(application, entity, bindingId);
 		Map<String, Object> map = ServiceUtil.getFutureValueLoggingError(serviceBindingFuture);
 		if (map == null) return null;
 		
-		return new ServiceInstanceBinding(
+		return new BrooklynServiceInstanceBinding(
 				(String)map.get("id"),
 				(String)map.get("serviceInstanceId"),
-				(Map<String, Object>)map.get("credentials"), 
-			    (String)map.get("syslogDrainUrl"), 
+				(Map<String, Object>)map.get("credentials"),
 				(String)map.get("appGuid"));
 	}
 
-	public <S extends ServiceInstanceBinding> S save(S serviceInstanceBinding) {
-		Object object = ServiceUtil.getFutureValueLoggingError(restAdmin.setConfig(application, entity, serviceInstanceBinding.getId(), serviceInstanceBinding));
-		return (S)object;
+	public BrooklynServiceInstanceBinding save(BrooklynServiceInstanceBinding serviceInstanceBinding) {
+		return (BrooklynServiceInstanceBinding) ServiceUtil.getFutureValueLoggingError(restAdmin.setConfig(application, entity, serviceInstanceBinding.getServiceBindingId(), serviceInstanceBinding));
+
 	}
 
 	public void delete(String bindingId) {

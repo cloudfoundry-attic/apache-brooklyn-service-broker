@@ -12,7 +12,7 @@ import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.DefaultBlueprintPlan;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
-import org.cloudfoundry.community.servicebroker.model.Plan;
+import org.springframework.cloud.servicebroker.model.Plan;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.collect.Sets;

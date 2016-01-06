@@ -9,7 +9,7 @@ import java.util.List;
 import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.util.yaml.Yamls;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
-import org.cloudfoundry.community.servicebroker.model.Plan;
+import org.springframework.cloud.servicebroker.model.Plan;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;

@@ -1,32 +1,34 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Future;
-
-import org.apache.brooklyn.feed.http.JsonFunctions;
-import org.apache.brooklyn.util.yaml.Yamls;
-import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceBindingRepository;
-import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
-import org.cloudfoundry.community.servicebroker.exception.ServiceBrokerException;
-import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceBindingExistsException;
-import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceBindingRequest;
-import org.cloudfoundry.community.servicebroker.model.DeleteServiceInstanceBindingRequest;
-import org.cloudfoundry.community.servicebroker.model.ServiceDefinition;
-import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
-import org.cloudfoundry.community.servicebroker.model.ServiceInstanceBinding;
-import org.cloudfoundry.community.servicebroker.service.ServiceInstanceBindingService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import org.apache.brooklyn.feed.http.JsonFunctions;
+import org.apache.brooklyn.util.yaml.Yamls;
+import org.cloudfoundry.community.servicebroker.brooklyn.model.BrooklynServiceInstance;
+import org.cloudfoundry.community.servicebroker.brooklyn.model.BrooklynServiceInstanceBinding;
+import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceBindingRepository;
+import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingExistsException;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingResponse;
+import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindingRequest;
+import org.springframework.cloud.servicebroker.model.ServiceDefinition;
+import org.springframework.cloud.servicebroker.model.ServiceInstance;
+import org.springframework.cloud.servicebroker.model.ServiceInstanceBinding;
+import org.springframework.cloud.servicebroker.service.ServiceInstanceBindingService;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Future;
 
 @Service
 public class BrooklynServiceInstanceBindingService implements
@@ -47,21 +49,20 @@ public class BrooklynServiceInstanceBindingService implements
         this.catalogService = catalogService;
     }
 
-	protected ServiceInstanceBinding getServiceInstanceBinding(String bindingId) {
+	protected BrooklynServiceInstanceBinding getServiceInstanceBinding(String bindingId) {
 		return bindingRepository.findOne(bindingId);
 	}
 
 	@Override
-	public ServiceInstanceBinding createServiceInstanceBinding(CreateServiceInstanceBindingRequest request)
-			throws ServiceInstanceBindingExistsException, ServiceBrokerException {
+	public CreateServiceInstanceBindingResponse createServiceInstanceBinding(CreateServiceInstanceBindingRequest request) {
 		
-		ServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(request.getBindingId());
+		BrooklynServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(request.getBindingId());
 		if (serviceInstanceBinding != null) {
-			throw new ServiceInstanceBindingExistsException(serviceInstanceBinding);
+			throw new ServiceInstanceBindingExistsException(serviceInstanceBinding.getServiceInstanceId(), request.getBindingId());
 		}
-		
-		ServiceInstance serviceInstance = instanceRepository.findOne(request.getServiceInstanceId(), false);
-		String entityId = serviceInstance.getServiceDefinitionId();
+
+        BrooklynServiceInstance serviceInstance = instanceRepository.findOne(request.getServiceInstanceId(), false);
+		String entityId = serviceInstance.getEntityId();
 		
 		LOG.info("creating service binding: [entity={}, serviceDefinitionId={}, bindingId={}, serviceInstanceId={}, appGuid={}", 
 		      entityId, request.getServiceDefinitionId(), request.getBindingId(), request.getServiceInstanceId(), request.getAppGuid()
@@ -96,9 +97,9 @@ public class BrooklynServiceInstanceBindingService implements
 		}
         Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, sensorWhitelistPredicate, sensorBlacklistPredicate, entityWhitelistPredicate, entityBlacklistPredicate);
         Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
-        serviceInstanceBinding = new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, null, request.getAppGuid());
+        serviceInstanceBinding = new BrooklynServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, request.getAppGuid());
 		bindingRepository.save(serviceInstanceBinding);
-		return new ServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), credentials, null, request.getAppGuid());
+		return new CreateServiceInstanceBindingResponse(credentials);
 	}
 
     @VisibleForTesting
@@ -140,20 +141,19 @@ public class BrooklynServiceInstanceBindingService implements
 
 
 	@Override
-	public ServiceInstanceBinding deleteServiceInstanceBinding(DeleteServiceInstanceBindingRequest request)
+	public void deleteServiceInstanceBinding(DeleteServiceInstanceBindingRequest request)
 			throws ServiceBrokerException {
 		
 		String bindingId = request.getBindingId();
-        ServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(bindingId);
+        BrooklynServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(bindingId);
         if (serviceInstanceBinding != null) {
-        	ServiceInstance serviceInstance = instanceRepository.findOne(serviceInstanceBinding.getServiceInstanceId(), false);
-    		String entityId = serviceInstance.getServiceDefinitionId();
+            BrooklynServiceInstance serviceInstance = instanceRepository.findOne(serviceInstanceBinding.getServiceInstanceId(), false);
+    		String entityId = serviceInstance.getEntityId();
     		Future<String> effector = admin.invokeEffector(entityId, entityId, "unbind", "0", ImmutableMap.of());
     		LOG.info("Calling unbind effector: {}", ServiceUtil.getFutureValueLoggingError(effector));
 		    LOG.info("Deleting service binding: [BindingId={}]", bindingId);
 			bindingRepository.delete(bindingId);
 		}
-		return serviceInstanceBinding;
 	}
 
 }

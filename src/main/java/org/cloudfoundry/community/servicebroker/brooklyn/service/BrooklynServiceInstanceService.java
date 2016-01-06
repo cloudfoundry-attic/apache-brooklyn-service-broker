@@ -5,21 +5,23 @@ import java.util.concurrent.Future;
 
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.BlueprintPlan;
+import org.cloudfoundry.community.servicebroker.brooklyn.model.BrooklynServiceInstance;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.Operations;
-import org.cloudfoundry.community.servicebroker.exception.ServiceBrokerException;
-import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceDoesNotExistException;
-import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceExistsException;
-import org.cloudfoundry.community.servicebroker.exception.ServiceInstanceUpdateNotSupportedException;
-import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceRequest;
-import org.cloudfoundry.community.servicebroker.model.DeleteServiceInstanceRequest;
-import org.cloudfoundry.community.servicebroker.model.OperationState;
-import org.cloudfoundry.community.servicebroker.model.Plan;
-import org.cloudfoundry.community.servicebroker.model.ServiceDefinition;
-import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
-import org.cloudfoundry.community.servicebroker.model.ServiceInstanceLastOperation;
-import org.cloudfoundry.community.servicebroker.model.UpdateServiceInstanceRequest;
-import org.cloudfoundry.community.servicebroker.service.ServiceInstanceService;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceUpdateNotSupportedException;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceResponse;
+import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceRequest;
+import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceResponse;
+import org.springframework.cloud.servicebroker.model.GetLastServiceOperationRequest;
+import org.springframework.cloud.servicebroker.model.GetLastServiceOperationResponse;
+import org.springframework.cloud.servicebroker.model.OperationState;
+import org.springframework.cloud.servicebroker.model.Plan;
+import org.springframework.cloud.servicebroker.model.ServiceDefinition;
+import org.springframework.cloud.servicebroker.model.UpdateServiceInstanceRequest;
+import org.springframework.cloud.servicebroker.model.UpdateServiceInstanceResponse;
+import org.springframework.cloud.servicebroker.service.ServiceInstanceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,21 +45,17 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
         this.catalogService = catalogService;
 	}
 
-	@Override
-	public ServiceInstance getServiceInstance(String serviceInstanceId) {
+	public BrooklynServiceInstance getServiceInstance(String serviceInstanceId) {
 		return repository.findOne(serviceInstanceId);
 	}
 	
 	@Override
-	public ServiceInstance createServiceInstance(CreateServiceInstanceRequest request)
-			throws ServiceInstanceExistsException, ServiceBrokerException {
-		
+	public CreateServiceInstanceResponse createServiceInstance(CreateServiceInstanceRequest request) {
 		admin.createRepositoryIfNotExists();
-
 		// check if exists already
-		ServiceInstance instance = getServiceInstance(request.getServiceInstanceId());
+		BrooklynServiceInstance instance = getServiceInstance(request.getServiceInstanceId());
 		if (instance != null) {
-			throw new ServiceInstanceExistsException(instance);
+			throw new ServiceInstanceExistsException(instance.getServiceInstanceId(), instance.getServiceDefinitionId());
 		}
 		LOG.info("creating service: [serviceInstanceId={}, planID={}, organizationGuid={}, spaceGuid={}", 
 				request.getServiceInstanceId(),
@@ -72,20 +70,24 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 
         Future<TaskSummary> taskSummaryFuture = admin.createApplication(blueprint);
         TaskSummary taskSummary = ServiceUtil.getFutureValueLoggingError(taskSummaryFuture);
-        // we set the service definition id to the entity id
-        // as a handy way of associating the brooklyn entity
-        // with this particular service instance.
-        request.setServiceDefinitionId(taskSummary.getEntityId());
-        ServiceInstanceLastOperation lastOp = new ServiceInstanceLastOperation(Operations.CREATING, OperationState.IN_PROGRESS);
-        instance = new ServiceInstance(request)
-                .withLastOperation(lastOp)
-                .isAsync(true);
-        repository.save(instance);
-        return instance;
-
+		instance = new BrooklynServiceInstance(request.getServiceInstanceId(), request.getServiceDefinitionId())
+            .withEntityId(taskSummary.getEntityId());
+        repository.save(instance.withOperation(Operations.CREATING).withOperationStatus(OperationState.IN_PROGRESS));
+		return new CreateServiceInstanceResponse(true);
     }
 
-    @VisibleForTesting
+	@Override
+	public GetLastServiceOperationResponse getLastOperation(GetLastServiceOperationRequest request) {
+        try {
+            OperationState serviceInstanceLastOperation = getServiceInstance(request.getServiceInstanceId()).getOperationState();
+            return new GetLastServiceOperationResponse(serviceInstanceLastOperation);
+        } catch (Exception e) {
+            LOG.info("exception thrown getting last operation for {}: {}", request, e);
+            throw e;
+        }
+	}
+
+	@VisibleForTesting
     public String createBlueprint(ServiceDefinition serviceDefinition, CreateServiceInstanceRequest request) {
         String location = "localhost"; // default
         Plan selectedPlan = null;
@@ -94,9 +96,7 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
                 selectedPlan = p;
             }
         }
-        
-        
-        
+
         Map<String, Object> metadata = serviceDefinition.getMetadata();
         String brooklynCatalogId = (String) metadata.get("brooklynCatalogId");
 		String blueprint = ((BlueprintPlan)selectedPlan).toBlueprint(brooklynCatalogId, location, request);
@@ -105,27 +105,21 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
     }
 
 	@Override
-	public ServiceInstance deleteServiceInstance(DeleteServiceInstanceRequest request) 
-			throws ServiceBrokerException {
-		
+	public DeleteServiceInstanceResponse deleteServiceInstance(DeleteServiceInstanceRequest request) {
 		String serviceInstanceId = request.getServiceInstanceId();
-        ServiceInstanceLastOperation lastOp = new ServiceInstanceLastOperation(Operations.DELETING, OperationState.IN_PROGRESS);
-        ServiceInstance instance = getServiceInstance(serviceInstanceId);
+		BrooklynServiceInstance instance = getServiceInstance(serviceInstanceId);
         if (instance != null) {
-        	instance = instance.withLastOperation(lastOp).isAsync(true);
-            String entityId = instance.getServiceDefinitionId();
+            instance = instance.withOperation(Operations.DELETING).withOperationStatus(OperationState.IN_PROGRESS);
+            String entityId = instance.getEntityId();
             admin.deleteApplication(entityId);
-            LOG.info("Deleting service: [ServiceDefinitionId={}, ServiceInstanceId={}]", entityId, serviceInstanceId);
+            LOG.info("Deleting service: [Entity={}, ServiceInstanceId={}]", entityId, serviceInstanceId);
 		}
         repository.save(instance);
-		return instance;
+		return new DeleteServiceInstanceResponse(true);
 	}
 
 	@Override
-	public ServiceInstance updateServiceInstance(UpdateServiceInstanceRequest request)
-			throws ServiceInstanceUpdateNotSupportedException,
-			ServiceBrokerException, ServiceInstanceDoesNotExistException {
-
+	public UpdateServiceInstanceResponse updateServiceInstance(UpdateServiceInstanceRequest request) {
 		throw new ServiceInstanceUpdateNotSupportedException("Update not supported at this time");
 	}
 

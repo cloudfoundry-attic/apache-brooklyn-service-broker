@@ -1,11 +1,6 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
-
-import java.util.Arrays;
-import java.util.List;
-
+import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.util.core.ResourceUtils;
@@ -15,9 +10,9 @@ import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.CatalogPla
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.LocationPlanStrategy;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.PlaceholderReplacer;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.SizePlanStrategy;
-import org.cloudfoundry.community.servicebroker.model.Catalog;
-import org.cloudfoundry.community.servicebroker.model.Plan;
-import org.cloudfoundry.community.servicebroker.model.ServiceDefinition;
+import org.springframework.cloud.servicebroker.model.Catalog;
+import org.springframework.cloud.servicebroker.model.Plan;
+import org.springframework.cloud.servicebroker.model.ServiceDefinition;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,7 +24,11 @@ import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.google.common.collect.ImmutableMap;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 
 @RunWith(SpringJUnit4ClassRunner.class)

@@ -23,7 +23,7 @@ apply plugin: 'spring-boot'
 apply plugin: 'war'
 
 ext {
-	springBootCfServiceBrokerVersion = '2.5.0-async'
+	springCloudServiceBrokerVersion = '1.0.0.BUILD-SNAPSHOT'
 	baseName = 'spring-boot-sample-simple'
 	version =  '0.0.0'
 }
@@ -50,11 +50,11 @@ configurations {
 
 
 dependencies {
+	compile("org.springframework.cloud:spring-cloud-cloudfoundry-service-broker:${springCloudServiceBrokerVersion}")
+	testCompile(group: "org.springframework.cloud", name: "spring-cloud-cloudfoundry-service-broker", version: "${springCloudServiceBrokerVersion}", classifier: "tests")
 
 	compile("org.springframework.boot:spring-boot-starter")
 	testCompile("org.springframework.boot:spring-boot-starter-test")
-	compile("org.cloudfoundry:spring-boot-cf-service-broker:${springBootCfServiceBrokerVersion}")
-	testCompile("org.cloudfoundry:spring-boot-cf-service-broker-tests:${springBootCfServiceBrokerVersion}")
 	testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
 	compile("org.apache.brooklyn:brooklyn-rest-client:0.8.0-SNAPSHOT"){
 		exclude module: "slf4j-log4j12"

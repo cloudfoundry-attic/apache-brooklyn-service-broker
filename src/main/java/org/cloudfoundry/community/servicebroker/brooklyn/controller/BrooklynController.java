@@ -1,24 +1,24 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.controller;
 
-import java.io.InputStream;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.Future;
-
-import javax.ws.rs.core.MediaType;
-
 import org.apache.brooklyn.util.stream.Streams;
+import org.cloudfoundry.community.servicebroker.brooklyn.model.BrooklynServiceInstance;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
-import org.cloudfoundry.community.servicebroker.model.ServiceInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.servicebroker.model.ServiceInstance;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.ws.rs.core.MediaType;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.Future;
 
 @RestController
 public class BrooklynController {
@@ -55,7 +55,7 @@ public class BrooklynController {
 			@PathVariable("effector") String effector,
 			@RequestBody Map<String, Object> params) {
 		
-		ServiceInstance instance = instanceRepository.findOne(application);
+		BrooklynServiceInstance instance = instanceRepository.findOne(application);
 		if (instance != null) {
 			String appId = instance.getServiceDefinitionId();
 			return admin.invokeEffector(appId, entity, effector, params);
@@ -66,7 +66,7 @@ public class BrooklynController {
 	
 	@RequestMapping(value = "/effectors/{application}", method = RequestMethod.GET)
 	public @ResponseBody Map<String, Object> effectors(@PathVariable("application") String application){
-		ServiceInstance instance = instanceRepository.findOne(application);
+		BrooklynServiceInstance instance = instanceRepository.findOne(application);
 		if (instance != null) {
 			String appId = instance.getServiceDefinitionId();
             Future<Map<String, Object>> applicationEffectorsFuture = admin.getApplicationEffectors(appId);
@@ -78,7 +78,7 @@ public class BrooklynController {
 	
 	@RequestMapping(value = "/sensors/{application}", method = RequestMethod.GET)
 	public @ResponseBody Map<String, Object> sensors(@PathVariable("application") String application) {
-		ServiceInstance instance = instanceRepository.findOne(application);
+		BrooklynServiceInstance instance = instanceRepository.findOne(application);
 		if (instance != null) {
 			String appId = instance.getServiceDefinitionId();
             Future<Map<String, Object>> applicationSensorsFuture = admin.getApplicationSensors(appId);
@@ -90,7 +90,7 @@ public class BrooklynController {
 	
 	@RequestMapping(value = "/is-running/{application}")
 	public @ResponseBody Boolean isRunning(@PathVariable("application") String application) {
-		ServiceInstance instance = instanceRepository.findOne(application);
+		BrooklynServiceInstance instance = instanceRepository.findOne(application);
 		if (instance != null) {
 			String appId = instance.getServiceDefinitionId();
             Future<Boolean> applicationRunningFuture = admin.isApplicationRunning(appId);

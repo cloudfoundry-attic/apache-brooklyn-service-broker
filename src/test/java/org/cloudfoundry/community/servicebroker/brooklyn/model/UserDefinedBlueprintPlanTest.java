@@ -5,7 +5,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Map;
 
-import org.cloudfoundry.community.servicebroker.model.CreateServiceInstanceRequest;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
