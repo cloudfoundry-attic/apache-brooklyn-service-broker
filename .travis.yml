@@ -1,0 +1,8 @@
+language: java
+deploy:
+  provider: releases
+  api_key:
+    secure: FpOrDTS/QVNujXo7j12OnwrfEuIdAefgV8d4ZOcwxKB8XHB1Zr38Cwh6kRjB/Lqk4w8i5Y3YUVBDqfL8EBdOy4UTQ+C57Y4ifMucs1MhyzikYpzLpOSjl0CyYsArsnyRi8qk45SoDw78oK3mbuuTlFSpJ2lDFgdp/7h8MiLTSlM=
+  file: build/libs/brooklyn-service-broker.war
+  on:
+    repo: cloudfoundry-incubator/brooklyn-service-broker

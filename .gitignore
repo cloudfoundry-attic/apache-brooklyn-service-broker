@@ -47,5 +47,6 @@ brooklyn.*.log*
 out
 classes
 *.yml
+!.travis.yml
 # Allows a hand catch-all folder for non-tracked items (e.g. copies of config etc)
 ignored
