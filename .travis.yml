@@ -1,7 +1,15 @@
 language: java
 jdk:
 - oraclejdk8
+notifications:
+  email:
+    recipients:
+    - robert.moss@cloudsoftcorp.com
+    - martin.harris@cloudsoftcorp.com
+    on_success: never
+    on_failure: change
 deploy:
+  skip_cleanup: true
   provider: releases
   api_key:
     secure: FpOrDTS/QVNujXo7j12OnwrfEuIdAefgV8d4ZOcwxKB8XHB1Zr38Cwh6kRjB/Lqk4w8i5Y3YUVBDqfL8EBdOy4UTQ+C57Y4ifMucs1MhyzikYpzLpOSjl0CyYsArsnyRi8qk45SoDw78oK3mbuuTlFSpJ2lDFgdp/7h8MiLTSlM=
