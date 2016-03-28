@@ -1,11 +1,10 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Future;
+import java.util.function.Predicate;
+
 import org.apache.brooklyn.feed.http.JsonFunctions;
 import org.apache.brooklyn.util.yaml.Yamls;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.BrooklynServiceInstance;
@@ -17,18 +16,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingExistsException;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceAppBindingResponse;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingResponse;
 import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindingRequest;
 import org.springframework.cloud.servicebroker.model.ServiceDefinition;
-import org.springframework.cloud.servicebroker.model.ServiceInstance;
-import org.springframework.cloud.servicebroker.model.ServiceInstanceBinding;
 import org.springframework.cloud.servicebroker.service.ServiceInstanceBindingService;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Future;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 @Service
 public class BrooklynServiceInstanceBindingService implements
@@ -69,10 +68,10 @@ public class BrooklynServiceInstanceBindingService implements
         );
 
         ServiceDefinition service = catalogService.getServiceDefinition(request.getServiceDefinitionId());
-        Predicate<String> sensorWhitelistPredicate = Predicates.alwaysTrue();
-        Predicate<String> entityBlacklistPredicate = Predicates.alwaysTrue();
-        Predicate<String> sensorBlacklistPredicate = Predicates.alwaysTrue();
-        Predicate<String> entityWhitelistPredicate = Predicates.alwaysTrue();
+        Predicate<String> sensorWhitelistPredicate = x -> true;
+        Predicate<String> entityBlacklistPredicate = x -> true;
+        Predicate<String> sensorBlacklistPredicate = x -> true;
+        Predicate<String> entityWhitelistPredicate = x -> true;
         Object planYamlObject = service.getMetadata().get("planYaml");
         if (planYamlObject != null) {
             Object rootElement = Iterables.getOnlyElement(Yamls.parseAll(String.valueOf(planYamlObject)));
@@ -99,7 +98,7 @@ public class BrooklynServiceInstanceBindingService implements
         Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
         serviceInstanceBinding = new BrooklynServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, request.getAppGuid());
 		bindingRepository.save(serviceInstanceBinding);
-		return new CreateServiceInstanceBindingResponse(credentials);
+		return new CreateServiceInstanceAppBindingResponse().withCredentials(credentials);
 	}
 
     @VisibleForTesting
@@ -126,7 +125,7 @@ public class BrooklynServiceInstanceBindingService implements
     
     @VisibleForTesting
     public static Predicate<String> getSensorBlacklistPredicate(Object rootElement) {
-    	return Predicates.not(getContainsItemInSectionPredicate(rootElement, "sensor.blacklist", false));
+    	return getContainsItemInSectionPredicate(rootElement, "sensor.blacklist", false).negate();
     }
 
     @VisibleForTesting
@@ -136,7 +135,7 @@ public class BrooklynServiceInstanceBindingService implements
 
     @VisibleForTesting
     public static Predicate<String> getEntityBlacklistPredicate(Object rootElement){
-    	return Predicates.not(getContainsItemInSectionPredicate(rootElement, "entity.blacklist", false));
+    	return getContainsItemInSectionPredicate(rootElement, "entity.blacklist", false).negate();
     }
 
 

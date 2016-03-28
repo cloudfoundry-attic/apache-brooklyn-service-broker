@@ -1,6 +1,7 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -53,14 +54,14 @@ public class BrooklynRestAdminTest {
 
     static {
         Map<String, Object> testResultChild = Maps.newHashMap();
-        testResultChild.put("sensor.one.name", null);
-        testResultChild.put("sensor.two.name", null);
-        testResultChild.put("host.name", null);
+        testResultChild.put("sensor.one.name", "");
+        testResultChild.put("sensor.two.name", "");
+        testResultChild.put("host.name", "");
 
         TEST_RESULT.put("name", testResultChild);
 
         Map<String, Object> expectedCredentialsChild = Maps.newHashMap();
-        expectedCredentialsChild.put("sensor.one.name", null);
+        expectedCredentialsChild.put("sensor.one.name", "");
 
         EXPECTED_CREDENTIALS.putAll(expectedCredentialsChild);
     }
@@ -89,7 +90,7 @@ public class BrooklynRestAdminTest {
         when(restApi.getSensorApi().list(Mockito.anyString(), Mockito.eq("test_id"))).thenReturn(TEST_SENSOR_SUMMARIES);
         when(restApi.getEntityApi().list(Mockito.any(String.class))).thenReturn(TEST_ENTITY_SUMMARIES);
         when(restApi.getEntityApi().getChildren(Mockito.anyString(), Mockito.anyString())).thenReturn(ImmutableList.of());
-
+        when(sensorApi.get(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), anyBoolean())).thenReturn("");
         Future<Map<String, Object>> applicationSensors = brooklynRestAdmin.getApplicationSensors("test-application");
         Map<String, Object> sensors = applicationSensors.get();
 
@@ -103,6 +104,7 @@ public class BrooklynRestAdminTest {
         when(restApi.getSensorApi().list(Mockito.anyString(), Mockito.eq("test_id"))).thenReturn(TEST_SENSOR_SUMMARIES);
         when(restApi.getEntityApi().list(Mockito.any(String.class))).thenReturn(TEST_ENTITY_SUMMARIES);
         when(restApi.getEntityApi().getChildren(Mockito.anyString(), Mockito.anyString())).thenReturn(ImmutableList.of());
+        when(sensorApi.get(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), anyBoolean())).thenReturn("");
 
         Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", s -> SENSOR_WHITELIST.contains(s), s-> !SENSOR_BLACKLIST.contains(s), e-> ENTITY_WHITELIST.contains(e), e -> !ENTITY_BLACKLIST.contains(e));
         Map<String, Object> credentials = credentialsFuture.get();
@@ -117,16 +119,17 @@ public class BrooklynRestAdminTest {
         when(restApi.getSensorApi().list(Mockito.anyString(), Mockito.anyString())).thenReturn(TEST_SENSOR_SUMMARIES);
         when(restApi.getEntityApi().list(Mockito.anyString())).thenReturn(TEST_ENTITY_SUMMARIES);
         when(restApi.getEntityApi().getChildren(Mockito.anyString(), Mockito.eq("test_id"))).thenReturn(TEST_CHILD_ENTITY_SUMMARIES);
-        
+        when(sensorApi.get(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), anyBoolean())).thenReturn("");
+
         List<String> entityBlacklist = ImmutableList.of("test_type_2");
         Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", s -> true, s-> true, e-> true, e -> !entityBlacklist.contains(e));
         Map<String, Object> credentials = credentialsFuture.get();
         
         Map<String, Object> expected = Maps.newHashMap();
         Map<String, Object> expectedCredentialsChild = Maps.newHashMap();
-        expectedCredentialsChild.put("sensor.one.name", null);
-        expectedCredentialsChild.put("sensor.two.name", null);
-        expectedCredentialsChild.put("host.name", null);
+        expectedCredentialsChild.put("sensor.one.name", "");
+        expectedCredentialsChild.put("sensor.two.name", "");
+        expectedCredentialsChild.put("host.name", "");
         expected.putAll(expectedCredentialsChild);
         expected.put("children", ImmutableMap.of("child", expectedCredentialsChild));
         assertEquals(expected, credentials);
@@ -139,16 +142,17 @@ public class BrooklynRestAdminTest {
         when(restApi.getSensorApi().list(Mockito.anyString(), Mockito.anyString())).thenReturn(TEST_SENSOR_SUMMARIES);
         when(restApi.getEntityApi().list(Mockito.anyString())).thenReturn(TEST_ENTITY_SUMMARIES);
         when(restApi.getEntityApi().getChildren(Mockito.anyString(), Mockito.eq("test_id"))).thenReturn(TEST_CHILD_ENTITY_SUMMARIES);
-        
+        when(sensorApi.get(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), anyBoolean())).thenReturn("");
+
         List<String> entityWhitelist = ImmutableList.of("test_type");
         Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", s -> true, s-> true, e-> entityWhitelist.contains(e), e -> true);
         Map<String, Object> credentials = credentialsFuture.get();
         
         Map<String, Object> expected = Maps.newHashMap();
         Map<String, Object> expectedCredentialsChild = Maps.newHashMap();
-        expectedCredentialsChild.put("sensor.one.name", null);
-        expectedCredentialsChild.put("sensor.two.name", null);
-        expectedCredentialsChild.put("host.name", null);
+        expectedCredentialsChild.put("sensor.one.name", "");
+        expectedCredentialsChild.put("sensor.two.name", "");
+        expectedCredentialsChild.put("host.name", "");
         expected.putAll(expectedCredentialsChild);
         expected.put("children", ImmutableMap.of("child", expectedCredentialsChild));
         

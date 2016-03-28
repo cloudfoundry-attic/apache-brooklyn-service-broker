@@ -36,8 +36,8 @@ import static org.mockito.Mockito.when;
 public class BrooklynCatalogServiceTest {
     
     private static final List<LocationSummary> LOCATION_SUMMARIES = Arrays.asList(
-            new LocationSummary("test_id", "test_name", "spec", "", ImmutableMap.of(), ImmutableMap.of()),
-            new LocationSummary("test_id2", "test_name2", "spec2", "", ImmutableMap.of(), ImmutableMap.of())
+            new LocationSummary("test_id", "test_name", "spec", "", ImmutableMap.of(), null, ImmutableMap.of()),
+            new LocationSummary("test_id2", "test_name2", "spec2", "", ImmutableMap.of(), null, ImmutableMap.of())
             );
 
     private static final String YAML = ResourceUtils.create().getResourceAsString("plans-catalog.yaml");
