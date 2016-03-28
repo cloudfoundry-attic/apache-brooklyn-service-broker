@@ -20,7 +20,6 @@ passing a few environment variables (e.g. in your `manifest.yml`):
   
 You then [use](use.md) it by running `cf create-service-broker` and `enable-service-access` in the usual way.
 
-
 ## For More Information
 
 See the [docs](docs/) in this project. Or come talk to the authors at `#brooklyncentral` on IRC.
