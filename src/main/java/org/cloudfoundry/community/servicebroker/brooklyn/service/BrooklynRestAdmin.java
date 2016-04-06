@@ -39,6 +39,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
+import com.google.api.client.util.Maps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
@@ -176,16 +177,19 @@ public class BrooklynRestAdmin {
         Set<String> sensorNames = sensorSummaries.stream()
                 .map(SensorSummary::getName)
                 .collect(Collectors.toSet());
-
-        return sensorNames.stream()
+        Map<String, Object> result = Maps.newHashMap();
+        sensorNames.stream()
                 .filter(sensorName -> !sensorName.startsWith("mapped."))
                 .filter(SENSOR_GLOBAL_BLACKLIST_PREDICATE.and(sensorBlacklistFilter).and(SENSOR_GLOBAL_WHITELIST_PREDICATE.or(sensorWhitelistfilter)))
-                .collect(Collectors.toMap(
-                        Function.identity(),
-                        sensorName -> sensorNames.contains("mapped." + sensorName) ?
-                                getRestApi().getSensorApi().get(application, entity, "mapped." + sensorName, false) :
-                                getRestApi().getSensorApi().get(application, entity, sensorName, false)
-                ));
+                .forEach(sensorName -> {
+                    Object value = sensorNames.contains("mapped." + sensorName) ?
+                            getRestApi().getSensorApi().get(application, entity, "mapped." + sensorName, false) :
+                            getRestApi().getSensorApi().get(application, entity, sensorName, false);
+                    if (value != null) {
+                        result.put(sensorName, value);
+                    }
+                });
+        return result;
     }
 
     @Async

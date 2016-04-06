@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.NaturalOrderComparator;
 import org.apache.brooklyn.util.text.Strings;
@@ -25,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -59,58 +61,59 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
         Set<String> names = Sets.newHashSet();
         String namespace = config.getNamespace() == null ? "br" : config.getNamespace();
         List<CatalogItemSummary> page = ServiceUtil.getFutureValueLoggingError(pageFuture);
-        Collections.sort(page, new Comparator<CatalogItemSummary>() {
-
-            @Override
-            public int compare(CatalogItemSummary o1, CatalogItemSummary o2) {
-                return NaturalOrderComparator.INSTANCE.compare(o1.getVersion(), o2.getVersion());
-            }
-        });
+        Collections.sort(page, (o1, o2) -> NaturalOrderComparator.INSTANCE.compare(o1.getVersion(), o2.getVersion()));
         for (CatalogItemSummary app : page) {
             try {
-                String id = namespace + "_" + app.getSymbolicName();
-                String name;
-                LOG.info("Brooklyn Application={}", app);
-                if (config.includesAllCatalogVersions()) {
-                    id = ServiceUtil.getUniqueName(id, ids);
-                    name = ServiceUtil.getSafeName(namespace + "_" + app.getName() + "_" + app.getVersion());
-                } else {
-                    name = ServiceUtil.getUniqueName(namespace + "_" + app.getName(), names);
+                Object rootElement = getRootElement(app.getPlanYaml());
+                if (isHidden(rootElement)) {
+                    continue;
                 }
+
+                String id = makeId(namespace, app.getSymbolicName(), ids);
+                String name = makeName(namespace, app.getName(), app.getVersion(), names);
+
                 LOG.info("name={}", name);
-                String description = app.getDescription();
-                boolean bindable = true;
-                boolean planUpdatable = false;
-                List<Plan> plans = new ArrayList<>();
-                try {
-                    Iterable<Object> planYaml = Yamls.parseAll(app.getPlanYaml());
-                    Object rootElement = Iterables.getOnlyElement(planYaml);
-                    if (!isHidden(rootElement)) {
-                        plans = makePlans(id, app.getName(), rootElement);
-                    }
-                } catch (Exception e) {
-                    LOG.error("unable to make plans: Unexpected blueprint format");
-                }
+                List<Plan> plans = makePlans(id, app.getName(), rootElement);
                 if (plans.isEmpty()) {
                     continue;
                 }
-                List<String> tags = getTags();
-                String iconUrl = null;
-                if (!Strings.isEmpty(app.getIconUrl())) {
-                    Future<String> iconAsBase64Future = admin.getIconAsBase64(app.getIconUrl());
-                    iconUrl = ServiceUtil.getFutureValueLoggingError(iconAsBase64Future);
-                }
-                Map<String, Object> metadata = getServiceDefinitionMetadata(app.getId(), iconUrl, app.getPlanYaml());
-                List<String> requires = getTags();
-                DashboardClient dashboardClient = null;
-                definitions.put(id, new ServiceDefinition(id, name, description,
-                        bindable, planUpdatable, plans, tags, metadata,
-                        requires, dashboardClient));
+
+                Map<String, Object> metadata = getServiceDefinitionMetadata(app.getId(), app.getIconUrl(), app.getPlanYaml());
+                definitions.put(id, new ServiceDefinition(
+                        id, name, app.getDescription(),
+                        true, // bindable
+                        false, // planUpdatable
+                        plans, getTags(), metadata, getRequires(),
+                        null //dashboardClient
+                ));
             } catch (Exception e) {
                 LOG.error("unable to add catalog item: {}", e.getMessage());
             }
         }
         return new ArrayList<>(definitions.values());
+    }
+
+    private Object getRootElement(String planYaml) {
+        try {
+            return Iterables.getOnlyElement(Yamls.parseAll(planYaml));
+        } catch (Exception e) {
+            LOG.error("unable to parse YAML");
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    private String makeId(String namespace, String symbolicName, Set<String> ids) {
+        String id = namespace + "_" + symbolicName;
+        if (config.includesAllCatalogVersions()) {
+            id = ServiceUtil.getUniqueName(id, ids);
+        }
+        return id;
+    }
+
+    private String makeName(String namespace, String name, String version, Set<String> names) {
+        return config.includesAllCatalogVersions()
+                ? ServiceUtil.getSafeName(namespace + "_" + name + "_" + version)
+                : ServiceUtil.getUniqueName(namespace + "_" + name, names);
     }
 
     private boolean isHidden(Object rootElement) {
@@ -144,10 +147,18 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
         return Arrays.asList();
     }
 
+    private List<String> getRequires() {
+        return Arrays.asList();
+    }
+
     private Map<String, Object> getServiceDefinitionMetadata(String brooklynCatalogId, String iconUrl, String planYaml) {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("brooklynCatalogId", brooklynCatalogId);
-        if (iconUrl != null) metadata.put("imageUrl", iconUrl);
+        if (!Strings.isEmpty(iconUrl)) {
+            Future<String> iconAsBase64Future = admin.getIconAsBase64(iconUrl);
+            iconUrl = ServiceUtil.getFutureValueLoggingError(iconAsBase64Future);
+            metadata.put("imageUrl", iconUrl);
+        }
         metadata.put("planYaml", planYaml);
         return metadata;
     }
