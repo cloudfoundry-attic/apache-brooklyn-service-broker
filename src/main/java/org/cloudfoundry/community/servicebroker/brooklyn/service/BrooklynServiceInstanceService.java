@@ -73,13 +73,14 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 		instance = new BrooklynServiceInstance(request.getServiceInstanceId(), request.getServiceDefinitionId())
             .withEntityId(taskSummary.getEntityId());
         repository.save(instance.withOperation(Operations.CREATING).withOperationStatus(OperationState.IN_PROGRESS));
-		return new CreateServiceInstanceResponse().withAsync(true);
+		return new CreateServiceInstanceResponse().withAsync(request.isAsyncAccepted());
     }
 
 	@Override
 	public GetLastServiceOperationResponse getLastOperation(GetLastServiceOperationRequest request) {
         try {
             OperationState serviceInstanceLastOperation = getServiceInstance(request.getServiceInstanceId()).getOperationState();
+            LOG.info("getting last operation for {}: {}", request, serviceInstanceLastOperation);
             return new GetLastServiceOperationResponse().withOperationState(serviceInstanceLastOperation);
         } catch (Exception e) {
             LOG.info("exception thrown getting last operation for {}: {}", request, e);
@@ -115,7 +116,7 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
             LOG.info("Deleting service: [Entity={}, ServiceInstanceId={}]", entityId, serviceInstanceId);
 		}
         repository.save(instance);
-		return new DeleteServiceInstanceResponse().withAsync(true);
+		return new DeleteServiceInstanceResponse().withAsync(request.isAsyncAccepted());
 	}
 
 	@Override
