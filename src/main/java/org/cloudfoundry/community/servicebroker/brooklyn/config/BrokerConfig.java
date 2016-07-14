@@ -21,6 +21,7 @@ import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdm
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.CatalogPlanStrategy;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.LocationPlanStrategy;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.PlaceholderReplacer;
+import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.SizePlanStrategy;
 import org.springframework.cloud.servicebroker.model.BrokerApiVersion;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
 import org.slf4j.Logger;
@@ -50,7 +51,7 @@ public class BrokerConfig {
 	@Bean
 	@ConditionalOnMissingBean(CatalogPlanStrategy.class)
 	public CatalogPlanStrategy CatalogPlanStrategy(BrooklynRestAdmin admin, PlaceholderReplacer replacer, BrooklynConfig config) {
-	    return new LocationPlanStrategy(admin, replacer, config);
+	    return new SizePlanStrategy(admin, config, replacer);
 	}
 	
 	@Bean

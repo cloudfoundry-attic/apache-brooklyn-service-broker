@@ -1,5 +1,6 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.config;
 
+import org.apache.brooklyn.util.text.Strings;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -59,6 +60,7 @@ public class BrooklynConfig {
 	}
 
     public String getLocation() {
+		if (Strings.isBlank(location)) return "localhost";
         return location;
     }
 
