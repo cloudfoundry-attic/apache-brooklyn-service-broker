@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.util.text.Strings;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.DefaultBlueprintPlan;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
@@ -100,7 +101,11 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
             if(config != null){
             	properties.putAll(config);
             }
-            properties.put("location", brooklynConfig.getLocation());
+            String location = (String)planMap.get("location");
+            if (Strings.isBlank(location)) {
+                location = brooklynConfig.getLocation();
+            }
+            properties.put("location", location);
 			String id = serviceId + "." + planName;
     		String name = ServiceUtil.getUniqueName(planName, names);
     		String description = String.valueOf(planMap.get("description"));

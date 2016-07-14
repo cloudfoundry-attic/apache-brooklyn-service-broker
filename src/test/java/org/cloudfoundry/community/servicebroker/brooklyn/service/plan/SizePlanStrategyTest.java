@@ -69,7 +69,55 @@ public class SizePlanStrategyTest {
         assertEquals((Integer)1, Integer.valueOf(planMetadata.get("minCores").toString()));
         assertEquals((Integer)1, Integer.valueOf(planMetadata.get("minRam").toString()));
     }
-    
+
+    @Test
+    public void testOverrideLocation() {
+        when(brooklynConfig.getLocation()).thenReturn("aws-ec2:eu-west-1");
+        when(replacer.randomString(8)).thenReturn("password");
+        when(replacer.replaceValue(Mockito.anyString())).thenCallRealMethod();
+        when(replacer.replaceValues(Mockito.anyList())).thenCallRealMethod();
+        when(replacer.replaceValues(Mockito.anyMap())).thenCallRealMethod();
+        String yaml = Joiner.on("\n").join(
+                "services:",
+                "- serviceType: brooklyn.entity.basic.BasicApplication",
+                "brooklyn.config:",
+                "  broker.config:",
+                "    plans:",
+                "    - name: small",
+                "      description: small plan",
+                "      location: a-location",
+                "      plan.config:",
+                "        provisioning.properties:",
+                "          minCores: 1",
+                "          minRam: 1",
+                "    - name: medium",
+                "      description: medium plan",
+                "      location: b-location",
+                "      plan.config:",
+                "        provisioning.properties:",
+                "          minCores: 2",
+                "          minRam: 2",
+                "    - name: large",
+                "      description: large plan",
+                "      location: c-location",
+                "      plan.config:",
+                "        provisioning.properties:",
+                "          minCores: 4",
+                "          minRam: 4"
+        );
+
+        Object rootObject = Yamls.parseAll(yaml).iterator().next();
+        List<Plan> plans = strategy.makePlans("test_id", "Test App", rootObject);
+        assertEquals(3, plans.size());
+        assertEquals("small", plans.get(0).getName());
+        assertEquals("medium", plans.get(1).getName());
+        assertEquals("large", plans.get(2).getName());
+        assertEquals("a-location", plans.get(0).getMetadata().get("location").toString());
+        assertEquals("b-location", plans.get(1).getMetadata().get("location").toString());
+        assertEquals("c-location", plans.get(2).getMetadata().get("location").toString());
+
+    }
+
     @Test
     public void testDefaultSizesWithDescription() {
         when(brooklynConfig.getLocation()).thenReturn("aws-ec2:eu-west-1");
