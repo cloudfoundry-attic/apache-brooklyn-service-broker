@@ -205,8 +205,14 @@ public class BrooklynRestAdmin {
 
     @Async
     public Future<Boolean> hasEffector(String application, String entity, String effector) {
-        return new AsyncResult<>(getRestApi().getEffectorApi().list(application, entity).stream()
-                .anyMatch(effectorSummary -> effectorSummary.getName().equals(effector)));
+        try {
+            return new AsyncResult<>(getRestApi().getEffectorApi().list(application, entity).stream()
+                    .anyMatch(effectorSummary -> effectorSummary.getName().equals(effector)));
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            LOG.info("unable to list effectors while looking for={},  message={}", effector, e.getMessage());
+            return new AsyncResult<>(false);
+        }
     }
 
     @Async
