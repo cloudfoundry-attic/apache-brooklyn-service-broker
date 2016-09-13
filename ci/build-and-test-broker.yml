@@ -6,8 +6,12 @@ image_resource:
   source:
     repository: pierrevincent/gradle-java8
     tag: latest
+
 inputs:
 - name: brooklyn-broker
+
+outputs:
+- name: built-brooklyn-broker
 
 run:
   path: brooklyn-broker/ci/build-and-test-broker.sh
