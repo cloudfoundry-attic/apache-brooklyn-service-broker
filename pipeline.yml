@@ -1,10 +1,5 @@
 ---
 resources:
-- name: broker-parent
-  type: git
-  source:
-    uri: https://github.com/robertgmoss/spring-boot-cf-service-broker
-    branch: async
 
 - name: brooklyn-broker
   type: git
@@ -23,10 +18,8 @@ jobs:
 - name: build-broker
   public: true
   plan:
-  - aggregate:
-    - get: broker-parent
-    - get: brooklyn-broker
-      trigger: true
+  - get: brooklyn-broker
+    trigger: true
   - task: build-and-test-broker
     file: brooklyn-broker/ci/build-and-test-broker.yml
   - put: service-broker-binary
