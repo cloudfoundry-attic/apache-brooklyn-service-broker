@@ -27,5 +27,5 @@ jobs:
       name: brooklyn-broker/release/name
       tag: brooklyn-broker/release/tag
       globs:
-        - "built-brookly-broker/brooklyn-broker-*.war"
+        - "built-brooklyn-broker/brooklyn-broker-*.war"
 
