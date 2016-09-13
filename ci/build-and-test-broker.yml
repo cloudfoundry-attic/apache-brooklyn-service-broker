@@ -4,9 +4,8 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: pierrevincent
-    tag: gradle-java8
-
+    repository: pierrevincent/gradle-java8
+    tag: latest
 inputs:
 - name: brooklyn-broker
 
