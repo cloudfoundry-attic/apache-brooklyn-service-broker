@@ -1,6 +1,8 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.cloudfoundry.community.servicebroker.brooklyn.service.plan.CatalogPlanStrategy;
 import org.springframework.cloud.servicebroker.model.Catalog;
@@ -18,7 +20,11 @@ public class BrooklynCatalogService implements CatalogService {
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynCatalogService.class);
 
 	private CatalogPlanStrategy planStrategy;
-	
+
+    // Catalog cache
+    private Catalog catalogCache;
+    private Lock cacheLock = new ReentrantLock();
+
 	@Autowired
 	public BrooklynCatalogService(CatalogPlanStrategy planStrategy) {
         this.planStrategy = planStrategy;
@@ -28,10 +34,20 @@ public class BrooklynCatalogService implements CatalogService {
         this.planStrategy = planStrategy;
     }
 
+    /*
+        reserved for when the catalog is to be updated.
+        use the cache to get catalog between updates.
+     */
 	@Override
 	public Catalog getCatalog() {
 	    LOG.info("Getting catalog");
-		return new Catalog(planStrategy.makeServiceDefinitions());
+        try {
+            cacheLock.lock();
+            catalogCache = new Catalog(planStrategy.makeServiceDefinitions());
+            return catalogCache;
+        } finally {
+            cacheLock.unlock();
+        }
 	}
 
     public List<Plan> getPlans(String id, String planYaml) {
@@ -40,11 +56,18 @@ public class BrooklynCatalogService implements CatalogService {
     
 	@Override
 	public ServiceDefinition getServiceDefinition(String serviceId) {
-		for (ServiceDefinition def : getCatalog().getServiceDefinitions()) {
-			if (def.getId().equals(serviceId)) {
-				return def;
-			}
-		}
+        try {
+            cacheLock.lock();
+            if (catalogCache == null) catalogCache = getCatalog();
+            for (ServiceDefinition def : catalogCache.getServiceDefinitions()) {
+                if (def.getId().equals(serviceId)) {
+                    return def;
+                }
+            }
+        } finally {
+            cacheLock.unlock();
+        }
+
 		return null;
 	}
 
