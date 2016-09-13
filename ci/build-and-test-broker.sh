@@ -6,4 +6,4 @@ cd brooklyn-broker
 
 ./gradlew clean build
 
-mv build/libs/brooklyn-broker.war build/libs/brooklyn-broker-$(cat release/tag).war
+mv build/libs/brooklyn-service-broker.war build/libs/brooklyn-broker-$(cat release/tag).war
