@@ -2,11 +2,7 @@
 
 export TERM=dumb
 
-cd broker-parent
-
-./gradlew publishToMavenLocal
-
-cd ../brooklyn-broker
+cd brooklyn-broker
 
 ./gradlew clean build
 
