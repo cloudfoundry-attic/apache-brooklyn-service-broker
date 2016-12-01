@@ -80,7 +80,7 @@ public class BrooklynCatalogServiceTest {
         when(admin.getCatalogApplications(Mockito.anyBoolean())).thenReturn(new AsyncResult<>(CATALOG_ITEM_SUMMARIES));
         Catalog catalog = brooklynCatalogService.getCatalog();
         List<ServiceDefinition> serviceDefinitions = catalog.getServiceDefinitions();
-        assertEquals(1, serviceDefinitions.size());
+        assertEquals(2, serviceDefinitions.size());
     }
 
 }

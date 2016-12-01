@@ -47,8 +47,8 @@ public class AbstractCatalogPlanStrategyTest {
         when(admin.getCatalogApplications(Mockito.anyBoolean())).thenReturn(new AsyncResult<>(CATALOG_ITEM_SUMMARIES));
         when(brooklynConfig.includesAllCatalogVersions()).thenReturn(false);
         List<ServiceDefinition> serviceDefinitions = catalogPlanStrategy.makeServiceDefinitions();
-        assertEquals(1, serviceDefinitions.size());
-        assertEquals("1.1", serviceDefinitions.get(0).getDescription());
+        assertEquals(2, serviceDefinitions.size());
+        assertEquals("1.1", serviceDefinitions.get(1).getDescription());
         verify(admin, never()).getIconAsBase64(anyString());
     }
 
@@ -57,7 +57,7 @@ public class AbstractCatalogPlanStrategyTest {
         when(admin.getCatalogApplications(Mockito.anyBoolean())).thenReturn(new AsyncResult<>(CATALOG_ITEM_SUMMARIES));
         when(brooklynConfig.includesAllCatalogVersions()).thenReturn(true);
         List<ServiceDefinition> serviceDefinitions = catalogPlanStrategy.makeServiceDefinitions();
-        assertEquals(2, serviceDefinitions.size());
+        assertEquals(3, serviceDefinitions.size());
         verify(admin, never()).getIconAsBase64(anyString());
     }
 }

@@ -5,28 +5,6 @@ two types of catalog plan strategy: `SizePlanStrategy` and `LocationPlanStrategy
 used by the broker, e.g. if you have deployed the service broker to cloud foundry, these are set in the `manifest.yaml` 
 file using the `SPRING_PROFILES_ACTIVE` variable.
 
-
-## LocationPlanStrategy
-
-The location plan strategy is activated by using the SPRING_PROFILES_ACTIVE value of `location-plan` as follows:
-
-```
-applications:
-- name: Brooklyn-Service-Broker
-  memory: 1G
-  env:
-    BROOKLYN_URI: http://my.brooklyn.server:8081
-    BROOKLYN_USERNAME: admin
-    BROOKLYN_PASSWORD: letmein
-    SECURITY_USER_NAME: user
-    SECURITY_USER_PASSWORD: password
-    SPRING_PROFILES_ACTIVE: location-plan
-```
-
-This will create a (service, plan) pair for each blueprint defined in the Brooklyn catalog for each of the locations
-defined in Brooklyn. E.g. if there are four blueprints defined, and five locations defined, a total of 20
-service plan pairs will be created.
-
 ## SizePlanStrategy
 
 In this example, the size plan strategy has been selected:
@@ -93,12 +71,9 @@ a `small` plan, the following JSON will be created to deploy the instance:
 }
 ```
 
-## UserDefinedPlanStrategy
+## LocationPlanStrategy
 
-The user-defined plan strategy allows only a single service and plan, and requires user to specify the blueprint
-by passing the blueprint definition as json when using the create-service command. The user-defined plan strategy
-is activated by specifying the `user-defined-plan` spring profile:
-
+The location plan strategy is activated by using the SPRING_PROFILES_ACTIVE value of `location-plan` as follows:
 
 ```
 applications:
@@ -110,13 +85,22 @@ applications:
     BROOKLYN_PASSWORD: letmein
     SECURITY_USER_NAME: user
     SECURITY_USER_PASSWORD: password
-    SPRING_PROFILES_ACTIVE: user-defined-plan
+    SPRING_PROFILES_ACTIVE: location-plan
 ```
+
+This will create a (service, plan) pair for each blueprint defined in the Brooklyn catalog for each of the locations
+defined in Brooklyn. E.g. if there are four blueprints defined, and five locations defined, a total of 20
+service plan pairs will be created.
+
+# Apache Brooklyn Blueprint Service
+The default service included with the Brooklyn Service Broker allows users to create new service instances without 
+adding to the Apache Brooklyn Catalog; the blueprint is supplied as a parameter to the `create-service` command as a
+JSON object.
 
 An example is as follows:
 
 ```
-cf create-service UserDefined UserDefined my-user-defined-service -c '{"services":[{"type": "org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer"}], "location":"aws-cloudfoundry"}'
+cf create-service br_apache_brooklyn_blueprint default my-user-defined-service -c '{"services":[{"type": "org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer"}], "location":"aws-cloudfoundry"}'
 ```
 
 # Brooklyn catalog versions

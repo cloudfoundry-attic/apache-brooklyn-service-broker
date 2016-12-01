@@ -17,6 +17,7 @@ import org.apache.brooklyn.util.text.NaturalOrderComparator;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.yaml.Yamls;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
+import org.cloudfoundry.community.servicebroker.brooklyn.model.UserDefinedBlueprintPlan;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.BrooklynRestAdmin;
 import org.cloudfoundry.community.servicebroker.brooklyn.service.ServiceUtil;
 import org.springframework.cloud.servicebroker.model.DashboardClient;
@@ -27,6 +28,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -57,9 +60,24 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
     public List<ServiceDefinition> makeServiceDefinitions() {
         Future<List<CatalogItemSummary>> pageFuture = admin.getCatalogApplications(config.includesAllCatalogVersions());
         Map<String, ServiceDefinition> definitions = new HashMap<>();
+
         Set<String> ids = Sets.newHashSet();
         Set<String> names = Sets.newHashSet();
         String namespace = config.getNamespace() == null ? "br" : config.getNamespace();
+        String userDefinedId = makeId(namespace, "ApacheBrooklynBlueprint", ids);
+        String userDefinedName = makeName(namespace, "Apache Brooklyn Blueprint", "1.0", names);
+        UserDefinedBlueprintPlan userDefinedPlan = new UserDefinedBlueprintPlan(userDefinedId, "default", "Users specify a complete Apache Brooklyn blueprint passed in as parameters", ImmutableMap.of());
+        definitions.put(userDefinedId, new ServiceDefinition(userDefinedId,
+                userDefinedName,
+                "Users to specify a complete Apache Brooklyn blueprint",
+                true,
+                false,
+                ImmutableList.of(userDefinedPlan),
+                ImmutableList.of(),
+                ImmutableMap.of(),
+                ImmutableList.of(),
+                null)
+        );
         List<CatalogItemSummary> page = ServiceUtil.getFutureValueLoggingError(pageFuture);
         Collections.sort(page, (o1, o2) -> NaturalOrderComparator.INSTANCE.compare(o1.getVersion(), o2.getVersion()));
         for (CatalogItemSummary app : page) {
