@@ -1,6 +1,7 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service.plan;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.cloudfoundry.community.servicebroker.brooklyn.config.BrooklynConfig;
@@ -29,6 +31,9 @@ public class AbstractCatalogPlanStrategyTest {
             new CatalogItemSummary("test_name", "1.2", "test_name", "foo", "{brooklyn.config: {broker.config: {hidden: true}}}", "1.1", "", null, false, null),
             new CatalogItemSummary("test_name_2", "1.2", "test_name_2", "foo", "{brooklyn.config: {broker.config: {hidden: true}}}", "1.2", "", null, false, null)
     );
+
+    private static final CatalogItemSummary TEST_SUMMARY_WITH_METADATA = new CatalogItemSummary("test_name", "1.2", "test_name", "foo", "{brooklyn.config: {broker.config: {metadata: {test: \"test value\", brooklynCatalogId: \"test\"}}}}", "1.2", "", null, false, null);
+
 
     @InjectMocks
     private TestAbstractCatalogPlanStrategyImpl catalogPlanStrategy;
@@ -59,5 +64,22 @@ public class AbstractCatalogPlanStrategyTest {
         List<ServiceDefinition> serviceDefinitions = catalogPlanStrategy.makeServiceDefinitions();
         assertEquals(3, serviceDefinitions.size());
         verify(admin, never()).getIconAsBase64(anyString());
+    }
+
+    @Test
+    public void testMetadataFromBlueprint() {
+        when(admin.getCatalogApplications(Mockito.anyBoolean())).thenReturn(new AsyncResult<>(Arrays.asList(TEST_SUMMARY_WITH_METADATA)));
+        when(brooklynConfig.includesAllCatalogVersions()).thenReturn(false);
+        List<ServiceDefinition> serviceDefinitions = catalogPlanStrategy.makeServiceDefinitions();
+        String expectedKey = "test";
+        String expectedValue = "test value";
+        Map<String, Object> metadata = serviceDefinitions.get(1).getMetadata();
+        assertTrue(metadata.containsKey(expectedKey));
+        assertEquals(expectedValue, metadata.get(expectedKey));
+
+        expectedKey = "brooklynCatalogId";
+        expectedValue = TEST_SUMMARY_WITH_METADATA.getId();
+        assertTrue(metadata.containsKey(expectedKey));
+        assertEquals(expectedValue, metadata.get(expectedKey));
     }
 }

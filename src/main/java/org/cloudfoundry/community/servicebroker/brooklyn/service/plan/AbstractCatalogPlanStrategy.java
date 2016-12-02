@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.api.client.util.Maps;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -96,7 +97,15 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
                     continue;
                 }
 
-                Map<String, Object> metadata = getServiceDefinitionMetadata(app.getId(), app.getIconUrl(), app.getPlanYaml());
+                Map<String, Object> metadata = Maps.newLinkedHashMap();
+                Maybe<Map<String, Object>> brokerConfig = getBrokerConfig(rootElement);
+                if(brokerConfig.isPresent()){
+                    Map<String, Object> brokerConfingMap = brokerConfig.get();
+                    if(brokerConfingMap.containsKey("metadata")) {
+                        metadata.putAll((Map<String, Object>)brokerConfingMap.get("metadata"));
+                    }
+                }
+                metadata.putAll(getServiceDefinitionMetadata(app.getId(), app.getIconUrl(), app.getPlanYaml()));
                 definitions.put(id, new ServiceDefinition(
                         id, name, app.getDescription(),
                         true, // bindable
