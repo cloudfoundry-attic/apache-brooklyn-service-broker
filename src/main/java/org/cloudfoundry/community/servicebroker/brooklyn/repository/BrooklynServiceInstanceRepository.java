@@ -42,8 +42,14 @@ public class BrooklynServiceInstanceRepository {
 			LOG.error("Unable to get entityId: {}", map);
 		}
         String brooklynEntity = String.valueOf(map.get("entityId"));
+		if (!map.containsKey("planId") || map.get("planId") == null) {
+			LOG.error("Unable to get planId: {}", map);
+		}
+		String planId = String.valueOf(map.get("planId"));
         if(!includeEverything) {
-            return new BrooklynServiceInstance(serviceInstanceId, String.valueOf(map.get("serviceDefinitionId"))).withEntityId(brooklynEntity);
+            return new BrooklynServiceInstance(serviceInstanceId, String.valueOf(map.get("serviceDefinitionId")))
+					.withPlanId(planId)
+					.withEntityId(brooklynEntity);
         }
 
         String lastOperation = String.valueOf(map.get("operation"));
@@ -62,6 +68,7 @@ public class BrooklynServiceInstanceRepository {
         }
 
         BrooklynServiceInstance newInstance = new BrooklynServiceInstance(serviceInstanceId, String.valueOf(map.get("serviceDefinitionId")))
+				.withPlanId(planId)
                 .withEntityId(brooklynEntity)
                 .withOperation(lastOperation)
                 .withOperationStatus(state);
@@ -77,6 +84,7 @@ public class BrooklynServiceInstanceRepository {
 
 	
 	public BrooklynServiceInstance save(BrooklynServiceInstance instance) {
+		LOG.info("Saving instance={}", instance);
 		return (BrooklynServiceInstance) ServiceUtil.getFutureValueLoggingError(restAdmin.setConfig(application, entity, instance.getServiceInstanceId(), instance));
 	}
 	

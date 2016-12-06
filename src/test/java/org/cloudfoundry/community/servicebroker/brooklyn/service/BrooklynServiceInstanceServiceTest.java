@@ -10,22 +10,18 @@ import org.cloudfoundry.community.servicebroker.brooklyn.BrooklynConfiguration;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.BrooklynServiceInstance;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.DefaultBlueprintPlan;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
-import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
-import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
-import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
-import org.springframework.cloud.servicebroker.model.CreateServiceInstanceResponse;
-import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceRequest;
-import org.springframework.cloud.servicebroker.model.ServiceDefinition;
-import org.springframework.cloud.servicebroker.model.ServiceInstance;
-import org.springframework.cloud.servicebroker.model.fixture.DataFixture;
-import org.springframework.cloud.servicebroker.model.fixture.ParametersFixture;
-import org.springframework.cloud.servicebroker.model.fixture.ServiceInstanceFixture;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceResponse;
+import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceRequest;
+import org.springframework.cloud.servicebroker.model.ServiceDefinition;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -107,7 +103,6 @@ public class BrooklynServiceInstanceServiceTest {
 		String instanceId = TEST_SERVICE_INSTANCE.getServiceInstanceId();
 		DeleteServiceInstanceRequest request = new DeleteServiceInstanceRequest(instanceId, "serviceId", "planId", null);
 		assertNotNull(service.deleteServiceInstance(request));
-		
 	}
 
     @Test

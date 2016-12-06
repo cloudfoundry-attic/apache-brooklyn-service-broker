@@ -71,7 +71,8 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
         Future<TaskSummary> taskSummaryFuture = admin.createApplication(blueprint);
         TaskSummary taskSummary = ServiceUtil.getFutureValueLoggingError(taskSummaryFuture);
 		instance = new BrooklynServiceInstance(request.getServiceInstanceId(), request.getServiceDefinitionId())
-            .withEntityId(taskSummary.getEntityId());
+				.withPlanId(request.getPlanId())
+            	.withEntityId(taskSummary.getEntityId());
         repository.save(instance.withOperation(Operations.CREATING).withOperationStatus(OperationState.IN_PROGRESS));
 		return new CreateServiceInstanceResponse().withAsync(request.isAsyncAccepted());
     }
