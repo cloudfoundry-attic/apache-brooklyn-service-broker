@@ -18,10 +18,13 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceUpdateNotSupportedException;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceResponse;
 import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceRequest;
 import org.springframework.cloud.servicebroker.model.ServiceDefinition;
+import org.springframework.cloud.servicebroker.model.UpdateServiceInstanceRequest;
+import org.springframework.cloud.servicebroker.model.UpdateServiceInstanceResponse;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -163,4 +166,48 @@ public class BrooklynServiceInstanceServiceTest {
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
         assertEquals(expectedBlueprint.replace(" ", ""), blueprint.replace(" ", ""));
     }
+
+    @Test
+	public void testUpdateServiceInstance()
+		throws ServiceInstanceExistsException, ServiceBrokerException {
+
+			when(repository.findOne(any(String.class))).thenReturn(TEST_SERVICE_INSTANCE);
+			String instanceId = TEST_SERVICE_INSTANCE.getServiceInstanceId();
+			UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), "planID");
+
+			UpdateServiceInstanceResponse response = service.updateServiceInstance(request);
+			assertNotNull(response);
+
+	}
+
+	@Test(expected=ServiceInstanceUpdateNotSupportedException.class)
+	public void testUpdateServiceInstanceWithOutBlueprintMetaData()
+		throws ServiceInstanceUpdateNotSupportedException {
+
+		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
+		when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
+				new DefaultBlueprintPlan("planId", "planName", "planDescription", "Test App", null)
+		));
+
+		UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), "planID");
+
+		UpdateServiceInstanceResponse response = service.updateServiceInstance(request);
+
+	}
+
+	@Test(expected=ServiceInstanceUpdateNotSupportedException.class)
+	public void testUpdateServiceInstanceWithOutUpgradeMetaData()
+			throws ServiceInstanceUpdateNotSupportedException {
+
+		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
+		when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
+				new DefaultBlueprintPlan("planId", "planName", "planDescription", "Test App", ImmutableMap.of("displayName", "hari"))
+		));
+
+		UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), "planID");
+
+		UpdateServiceInstanceResponse response = service.updateServiceInstance(request);
+
+	}
+
 }

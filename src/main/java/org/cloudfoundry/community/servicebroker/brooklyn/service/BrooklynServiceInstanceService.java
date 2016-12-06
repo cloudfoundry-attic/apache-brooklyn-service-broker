@@ -1,6 +1,8 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Future;
 
 import org.apache.brooklyn.rest.domain.TaskSummary;
@@ -21,6 +23,7 @@ import org.springframework.cloud.servicebroker.model.Plan;
 import org.springframework.cloud.servicebroker.model.ServiceDefinition;
 import org.springframework.cloud.servicebroker.model.UpdateServiceInstanceRequest;
 import org.springframework.cloud.servicebroker.model.UpdateServiceInstanceResponse;
+import org.springframework.cloud.servicebroker.service.CatalogService;
 import org.springframework.cloud.servicebroker.service.ServiceInstanceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,7 +125,51 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 
 	@Override
 	public UpdateServiceInstanceResponse updateServiceInstance(UpdateServiceInstanceRequest request) {
-		throw new ServiceInstanceUpdateNotSupportedException("Update not supported at this time");
+		String serviceInstanceId = request.getServiceInstanceId();
+
+		BrooklynServiceInstance instance = getServiceInstance(serviceInstanceId);
+		if (instance == null) {
+			throw new RuntimeException("No instance found with instance ID "+serviceInstanceId);
+		}
+
+		ServiceDefinition serviceDefinition = catalogService.getServiceDefinition(request.getServiceDefinitionId());
+
+		Plan findPlan = null;
+		serviceDefinition.getMetadata();
+		for(Plan plan : serviceDefinition.getPlans()) {
+			if(plan.getId().equals(request.getPlanId())) { //todo get planID of existing plan
+				findPlan = plan;
+				break;
+			}
+		}
+
+
+		if(findPlan == null || findPlan.getMetadata() == null || !findPlan.getMetadata().containsKey("upgrade")) {
+			throw new ServiceInstanceUpdateNotSupportedException("Update not supported at this time");
+		}
+
+		List<Map<String, Object>> upgradePaths = (List<Map<String, Object>>)findPlan.getMetadata().get("upgrade");
+
+		Map<String, Object> findpath = null;
+		for(Map<String, Object> path : upgradePaths) {
+			if(path.containsKey("to") && path.get("to").equals(request.getPlanId())) {
+				findpath = path;
+				break;
+			}
+		}
+
+		if(findpath == null) {
+			throw new ServiceInstanceUpdateNotSupportedException("Current plan cannot be updated to plan "+request.getPlanId());
+		}
+
+		String entityId = instance.getEntityId();
+		Map<String, Object> effector = (Map<String, Object>)findpath.get("effector");
+
+		admin.invokeEffector(entityId, entityId, (String) effector.get("name"), (Map<String, Object>) effector.get("params"));
+
+		LOG.info("Updating plan: [Entity={}, ServiceInstanceId={}, PlanId={}]", entityId, serviceInstanceId, request.getPlanId());
+
+		return null;
 	}
 
 }

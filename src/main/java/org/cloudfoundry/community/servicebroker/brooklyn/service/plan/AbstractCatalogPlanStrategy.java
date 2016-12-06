@@ -106,6 +106,7 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
                     }
                 }
                 metadata.putAll(getServiceDefinitionMetadata(app.getId(), app.getIconUrl(), app.getPlanYaml()));
+
                 definitions.put(id, new ServiceDefinition(
                         id, name, app.getDescription(),
                         true, // bindable
