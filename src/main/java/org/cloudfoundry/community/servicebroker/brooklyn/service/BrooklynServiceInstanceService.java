@@ -135,41 +135,52 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 		ServiceDefinition serviceDefinition = catalogService.getServiceDefinition(request.getServiceDefinitionId());
 
 		Plan findPlan = null;
-		serviceDefinition.getMetadata();
 		for(Plan plan : serviceDefinition.getPlans()) {
-			if(plan.getId().equals(request.getPlanId())) { //todo get planID of existing plan
+
+			if(plan.getId().equals(instance.getPlanId())) {
 				findPlan = plan;
 				break;
 			}
 		}
 
-
-		if(findPlan == null || findPlan.getMetadata() == null || !findPlan.getMetadata().containsKey("upgrade")) {
-			throw new ServiceInstanceUpdateNotSupportedException("Update not supported at this time");
-		}
-
-		List<Map<String, Object>> upgradePaths = (List<Map<String, Object>>)findPlan.getMetadata().get("upgrade");
-
-		Map<String, Object> findpath = null;
-		for(Map<String, Object> path : upgradePaths) {
-			if(path.containsKey("to") && path.get("to").equals(request.getPlanId())) {
-				findpath = path;
-				break;
+		try {
+			if (findPlan == null || findPlan.getMetadata() == null || !findPlan.getMetadata().containsKey("update")) {
+				throw new ServiceInstanceUpdateNotSupportedException("Update not supported at this time");
 			}
+
+
+			List<Map<String, Object>> upgradePaths = (List<Map<String, Object>>) findPlan.getMetadata().get("update");
+			String upgradePlanName = null;
+			for (Plan plan : serviceDefinition.getPlans()) {
+
+				if (plan.getId().equals(request.getPlanId())) {
+					upgradePlanName = plan.getName();
+					break;
+				}
+			}
+			Map<String, Object> findpath = null;
+			for (Map<String, Object> path : upgradePaths) {
+				if (path.containsKey("to") && path.get("to").equals(upgradePlanName)) {
+					findpath = path;
+					break;
+				}
+			}
+
+			if (findpath == null) {
+				throw new ServiceInstanceUpdateNotSupportedException("Current plan cannot be updated to plan " + request.getPlanId());
+			}
+
+			String entityId = instance.getEntityId();
+			Map<String, Object> effector = (Map<String, Object>) findpath.get("effector");
+
+			admin.invokeEffector(entityId, entityId, (String) effector.get("name"), (Map<String, Object>) effector.get("params"));
+
+			LOG.info("Updating plan: [Entity={}, ServiceInstanceId={}, PlanId={}]", entityId, serviceInstanceId, request.getPlanId());
+			repository.save(instance.withPlanId(request.getPlanId()).withOperation(Operations.UPDATING).withOperationStatus(OperationState.IN_PROGRESS));
+			return new UpdateServiceInstanceResponse().withAsync(true);
+		} catch (ClassCastException cs) {
+			throw new ServiceInstanceUpdateNotSupportedException("update format not valid");
 		}
-
-		if(findpath == null) {
-			throw new ServiceInstanceUpdateNotSupportedException("Current plan cannot be updated to plan "+request.getPlanId());
-		}
-
-		String entityId = instance.getEntityId();
-		Map<String, Object> effector = (Map<String, Object>)findpath.get("effector");
-
-		admin.invokeEffector(entityId, entityId, (String) effector.get("name"), (Map<String, Object>) effector.get("params"));
-
-		LOG.info("Updating plan: [Entity={}, ServiceInstanceId={}, PlanId={}]", entityId, serviceInstanceId, request.getPlanId());
-
-		return null;
 	}
 
 }

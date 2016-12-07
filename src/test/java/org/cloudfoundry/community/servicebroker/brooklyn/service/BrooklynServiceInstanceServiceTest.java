@@ -2,10 +2,14 @@ package org.cloudfoundry.community.servicebroker.brooklyn.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+
 import org.apache.brooklyn.rest.domain.TaskSummary;
+import org.apache.brooklyn.util.collections.MutableList;
 import org.cloudfoundry.community.servicebroker.brooklyn.BrooklynConfiguration;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.BrooklynServiceInstance;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.DefaultBlueprintPlan;
@@ -22,6 +26,7 @@ import org.springframework.cloud.servicebroker.exception.ServiceInstanceUpdateNo
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceResponse;
 import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceRequest;
+import org.springframework.cloud.servicebroker.model.Plan;
 import org.springframework.cloud.servicebroker.model.ServiceDefinition;
 import org.springframework.cloud.servicebroker.model.UpdateServiceInstanceRequest;
 import org.springframework.cloud.servicebroker.model.UpdateServiceInstanceResponse;
@@ -41,7 +46,8 @@ public class BrooklynServiceInstanceServiceTest {
     private final static int TEST_MIN_CORES = 4;
     private final static int TEST_MIN_RAM = 4096;
 
-    private final static BrooklynServiceInstance TEST_SERVICE_INSTANCE = new BrooklynServiceInstance(SVC_INST_ID, SVC_DEFINITION_ID);
+	private static final String SVC_PLAN_ID = "planId";
+	private final static BrooklynServiceInstance TEST_SERVICE_INSTANCE = new BrooklynServiceInstance(SVC_INST_ID, SVC_DEFINITION_ID).withPlanId(SVC_PLAN_ID);
 
 
 	@Mock
@@ -170,13 +176,84 @@ public class BrooklynServiceInstanceServiceTest {
     @Test
 	public void testUpdateServiceInstance()
 		throws ServiceInstanceExistsException, ServiceBrokerException {
-
 			when(repository.findOne(any(String.class))).thenReturn(TEST_SERVICE_INSTANCE);
+			when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
+			when(serviceDefinition.getPlans())
+					.thenReturn(ImmutableList.of(
+							new DefaultBlueprintPlan("planId",
+									"testPlan",
+									"test plan description",
+									"testplanApp",
+									ImmutableMap.of("update",ImmutableList.of(ImmutableMap.of("to","testPlan2","effector",ImmutableMap.of("name","resize", "params",ImmutableMap.of()))))
+
+							),
+							new DefaultBlueprintPlan("planId2",
+									"testPlan2",
+									"test plan description2",
+									"testplanApp2",
+									ImmutableMap.of("update",ImmutableList.of(ImmutableMap.of("to","testPlan","effector",ImmutableMap.of("name","resize", "params",ImmutableMap.of()))))
+							)));
+
 			String instanceId = TEST_SERVICE_INSTANCE.getServiceInstanceId();
-			UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), "planID");
+			UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), "planId2");
 
 			UpdateServiceInstanceResponse response = service.updateServiceInstance(request);
 			assertNotNull(response);
+
+	}
+
+	@Test
+	public void testUpdateServiceInstanceFailedGracefully()
+			throws ServiceInstanceExistsException, ServiceBrokerException {
+		List<Plan> plans= ImmutableList.of(
+				new DefaultBlueprintPlan("planId2",
+						"testPlan2",
+						"test plan description",
+						"testplanApp",
+						ImmutableMap.of("update",ImmutableMap.of("to","testPlan","effector",ImmutableMap.of("name","resize", "params",ImmutableMap.of())))
+
+				),
+				new DefaultBlueprintPlan("planId2",
+						"testPlan2",
+						"test plan description3",
+						"testplanApp3",
+						ImmutableMap.of("update",ImmutableList.of(ImmutableMap.of("to","testPlan","effector",ImmutableMap.of("params",ImmutableMap.of()))))
+				),
+				new DefaultBlueprintPlan("planId2",
+						"testPlan2",
+						"test plan description4",
+						"testplanApp4",
+						ImmutableMap.of("update",ImmutableList.of(ImmutableMap.of("effector",ImmutableMap.of("name","resize", "params",ImmutableMap.of()))))
+				));
+		for(Plan plan : plans) {
+			try {
+				testDefaultBluePrintPlan(ImmutableList.of(plan),plan.getId());
+				fail();
+			} catch (ServiceInstanceUpdateNotSupportedException cs) {
+				assertEquals("update format not valid", cs.getMessage());
+			}
+		}
+
+	}
+
+	@Test
+	public void testUpdateServiceInstanceFailedWithEmptyUpdate()
+			throws ServiceInstanceExistsException, ServiceBrokerException {
+		List<Plan> plans= ImmutableList.of(
+				new DefaultBlueprintPlan("planId2",
+						"testPlan2",
+						"test plan description2",
+						"testplanApp2",
+						ImmutableMap.of("update",ImmutableList.of())
+				));
+		for(Plan plan : plans) {
+			try {
+				testDefaultBluePrintPlan(ImmutableList.of(plan),plan.getId());
+				fail();
+			} catch (ServiceInstanceUpdateNotSupportedException cs) {
+				assertEquals("Update not supported at this time", cs.getMessage());
+			}
+		}
 
 	}
 
@@ -209,5 +286,24 @@ public class BrooklynServiceInstanceServiceTest {
 		UpdateServiceInstanceResponse response = service.updateServiceInstance(request);
 
 	}
+
+	private void testDefaultBluePrintPlan(List<Plan> plans, String planId){
+		when(repository.findOne(any(String.class))).thenReturn(TEST_SERVICE_INSTANCE);
+		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
+		when(serviceDefinition.getPlans())
+				.thenReturn(MutableList.<Plan>builder().add(new DefaultBlueprintPlan("planId",
+						"testPlan",
+						"test plan description",
+						"testplanApp",
+						ImmutableMap.of("update",ImmutableList.of(ImmutableMap.of("to","testPlan2","effector",ImmutableMap.of("name","resize", "params",ImmutableMap.of()))))
+
+				)).addAll(plans).build());
+		UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), planId);
+		UpdateServiceInstanceResponse response = service.updateServiceInstance(request);
+
+
+	}
+
+
 
 }
