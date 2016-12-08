@@ -6,10 +6,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
-
 import org.apache.brooklyn.rest.domain.TaskSummary;
-import org.apache.brooklyn.util.collections.MutableList;
 import org.cloudfoundry.community.servicebroker.brooklyn.BrooklynConfiguration;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.BrooklynServiceInstance;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.DefaultBlueprintPlan;
@@ -47,7 +44,6 @@ public class BrooklynServiceInstanceServiceTest {
     private final static int TEST_MIN_RAM = 4096;
 
 	private static final String SVC_PLAN_ID = "planId";
-	private final static BrooklynServiceInstance TEST_SERVICE_INSTANCE = new BrooklynServiceInstance(SVC_INST_ID, SVC_DEFINITION_ID).withPlanId(SVC_PLAN_ID);
 
 
 	@Mock
@@ -63,9 +59,11 @@ public class BrooklynServiceInstanceServiceTest {
 	private BrooklynServiceInstanceRepository repository;
 	@Mock
 	private BrooklynCatalogService catalogService;
+	private BrooklynServiceInstance testServiceInstance;
 
 	@Before
 	public void setup() {
+		testServiceInstance = new BrooklynServiceInstance(SVC_INST_ID, SVC_DEFINITION_ID).withPlanId(SVC_PLAN_ID);
 		MockitoAnnotations.initMocks(this);
 	}
 	
@@ -90,7 +88,7 @@ public class BrooklynServiceInstanceServiceTest {
 	@Test(expected=ServiceInstanceExistsException.class)
 	public void serviceInstanceCreationFailsWithExistingInstance()  
 			throws ServiceInstanceExistsException, ServiceBrokerException {
-		when(repository.findOne(any(String.class))).thenReturn(TEST_SERVICE_INSTANCE);
+		when(repository.findOne(any(String.class))).thenReturn(testServiceInstance);
 		CreateServiceInstanceRequest request = new CreateServiceInstanceRequest(serviceDefinition.getId(), "planId", "organizationGuid", "spaceGuid");
 		service.createServiceInstance(request.withServiceInstanceId(SVC_INST_ID));
 	}
@@ -99,8 +97,8 @@ public class BrooklynServiceInstanceServiceTest {
 	public void serviceInstanceRetrievedSuccessfully() 
 			throws ServiceInstanceExistsException, ServiceBrokerException{
 		
-		when(repository.findOne(any(String.class))).thenReturn(TEST_SERVICE_INSTANCE);
-		String serviceInstanceId = TEST_SERVICE_INSTANCE.getServiceInstanceId();
+		when(repository.findOne(any(String.class))).thenReturn(testServiceInstance);
+		String serviceInstanceId = testServiceInstance.getServiceInstanceId();
 		assertEquals(serviceInstanceId, service.getServiceInstance(serviceInstanceId).getServiceInstanceId());
 	}
 	
@@ -108,8 +106,8 @@ public class BrooklynServiceInstanceServiceTest {
 	public void serviceInstanceDeletedSuccessfully() 
 			throws ServiceInstanceExistsException, ServiceBrokerException {
 
-		when(repository.findOne(any(String.class))).thenReturn(TEST_SERVICE_INSTANCE);
-		String instanceId = TEST_SERVICE_INSTANCE.getServiceInstanceId();
+		when(repository.findOne(any(String.class))).thenReturn(testServiceInstance);
+		String instanceId = testServiceInstance.getServiceInstanceId();
 		DeleteServiceInstanceRequest request = new DeleteServiceInstanceRequest(instanceId, "serviceId", "planId", null);
 		assertNotNull(service.deleteServiceInstance(request));
 	}
@@ -176,7 +174,7 @@ public class BrooklynServiceInstanceServiceTest {
     @Test
 	public void testUpdateServiceInstance()
 		throws ServiceInstanceExistsException, ServiceBrokerException {
-			when(repository.findOne(any(String.class))).thenReturn(TEST_SERVICE_INSTANCE);
+			when(repository.findOne(any(String.class))).thenReturn(testServiceInstance);
 			when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
 			when(serviceDefinition.getPlans())
 					.thenReturn(ImmutableList.of(
@@ -194,7 +192,6 @@ public class BrooklynServiceInstanceServiceTest {
 									ImmutableMap.of("update",ImmutableList.of(ImmutableMap.of("to","testPlan","effector",ImmutableMap.of("name","resize", "params",ImmutableMap.of()))))
 							)));
 
-			String instanceId = TEST_SERVICE_INSTANCE.getServiceInstanceId();
 			UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), "planId2");
 
 			UpdateServiceInstanceResponse response = service.updateServiceInstance(request);
@@ -203,64 +200,134 @@ public class BrooklynServiceInstanceServiceTest {
 	}
 
 	@Test
-	public void testUpdateServiceInstanceFailedGracefully()
-			throws ServiceInstanceExistsException, ServiceBrokerException {
-		List<Plan> plans= ImmutableList.of(
-				new DefaultBlueprintPlan("planId2",
-						"testPlan2",
-						"test plan description",
-						"testplanApp",
-						ImmutableMap.of("update",ImmutableMap.of("to","testPlan","effector",ImmutableMap.of("name","resize", "params",ImmutableMap.of())))
-
-				),
-				new DefaultBlueprintPlan("planId2",
-						"testPlan2",
-						"test plan description3",
-						"testplanApp3",
-						ImmutableMap.of("update",ImmutableList.of(ImmutableMap.of("to","testPlan","effector",ImmutableMap.of("params",ImmutableMap.of()))))
-				),
-				new DefaultBlueprintPlan("planId2",
-						"testPlan2",
-						"test plan description4",
-						"testplanApp4",
-						ImmutableMap.of("update",ImmutableList.of(ImmutableMap.of("effector",ImmutableMap.of("name","resize", "params",ImmutableMap.of()))))
-				));
-		for(Plan plan : plans) {
-			try {
-				testDefaultBluePrintPlan(ImmutableList.of(plan),plan.getId());
-				fail();
-			} catch (ServiceInstanceUpdateNotSupportedException cs) {
-				assertEquals("update format not valid", cs.getMessage());
-			}
+	public void testUpdateServiceInstanceFailsWithMap() {
+		Plan fromPlan = new DefaultBlueprintPlan("planId",
+				"testPlan",
+				"test plan description",
+				"testplanApp",
+				ImmutableMap.of("update",ImmutableMap.of(
+						"to","testPlan2",
+						"effector",
+						ImmutableMap.of(
+								"name","resize",
+								"params",ImmutableMap.of())))
+		);
+		Plan toPlan = new DefaultBlueprintPlan("planId2",
+				"testPlan2",
+				"test plan description",
+				"testplanApp",
+				ImmutableMap.of("update", ImmutableList.of(
+						ImmutableMap.of(
+								"to", "testPlan",
+								"effector", ImmutableMap.of(
+										"name", "resize",
+										"params", ImmutableMap.of())))));
+		try {
+			testDefaultBlueprintPlan(fromPlan, toPlan);
+			fail();
+		} catch (ServiceInstanceUpdateNotSupportedException cs) {
+			assertEquals("update format not valid", cs.getMessage());
 		}
-
 	}
 
 	@Test
-	public void testUpdateServiceInstanceFailedWithEmptyUpdate()
-			throws ServiceInstanceExistsException, ServiceBrokerException {
-		List<Plan> plans= ImmutableList.of(
-				new DefaultBlueprintPlan("planId2",
-						"testPlan2",
-						"test plan description2",
-						"testplanApp2",
-						ImmutableMap.of("update",ImmutableList.of())
-				));
-		for(Plan plan : plans) {
-			try {
-				testDefaultBluePrintPlan(ImmutableList.of(plan),plan.getId());
-				fail();
-			} catch (ServiceInstanceUpdateNotSupportedException cs) {
-				assertEquals("Update not supported at this time", cs.getMessage());
-			}
-		}
+	public void testUpdateServiceInstanceFailsWithoutToKey() {
+		Plan fromPlan = new DefaultBlueprintPlan("planId",
+				"testPlan",
+				"test plan description",
+				"testplanApp",
+				ImmutableMap.of("update",ImmutableList.of(
+						ImmutableMap.of("effector",ImmutableMap.of(
+								"name","resize",
+								"params",ImmutableMap.of()))))
+		);
 
+		Plan toPlan = new DefaultBlueprintPlan("planId2",
+				"testPlan2",
+				"test plan description",
+				"testplanApp",
+				ImmutableMap.of("update", ImmutableList.of(
+						ImmutableMap.of(
+								"to", "testPlan",
+								"effector", ImmutableMap.of(
+										"name", "resize",
+										"params", ImmutableMap.of())))));
+
+		try {
+			testDefaultBlueprintPlan(fromPlan, toPlan);
+			fail();
+		} catch (ServiceInstanceUpdateNotSupportedException cs) {
+			assertEquals("Current plan cannot be updated to plan " + toPlan.getId(), cs.getMessage());
+		}
+	}
+
+	@Test
+	public void testUpdateServiceInstanceFailsWithEmptyUpdate()
+			throws ServiceInstanceExistsException, ServiceBrokerException {
+
+		Plan fromPlan = new DefaultBlueprintPlan("planId",
+				"testPlan",
+				"test plan description",
+				"testplanApp",
+				ImmutableMap.of("update", ImmutableList.of())
+		);
+
+		Plan toPlan = new DefaultBlueprintPlan("planId2",
+				"testPlan2",
+				"test plan description",
+				"testplanApp",
+				ImmutableMap.of("update", ImmutableList.of(
+						ImmutableMap.of(
+								"to", "testPlan",
+								"effector", ImmutableMap.of(
+										"name", "resize",
+										"params", ImmutableMap.of())))));
+		try {
+			testDefaultBlueprintPlan(fromPlan, toPlan);
+			fail();
+		} catch (ServiceInstanceUpdateNotSupportedException cs) {
+			assertEquals("Current plan cannot be updated to plan " + toPlan.getId(), cs.getMessage());
+		}
+	}
+
+	@Test
+	public void testUpdateServiceInstanceFailsWithUpdateToNonExistentPlan()
+			throws ServiceInstanceExistsException, ServiceBrokerException {
+
+		Plan fromPlan = new DefaultBlueprintPlan("planId",
+				"testPlan",
+				"test plan description",
+				"testplanApp",
+				ImmutableMap.of("update", ImmutableList.of(
+						ImmutableMap.of(
+								"to", "noSuchPlan",
+								"effector", ImmutableMap.of(
+										"name", "resize",
+										"params", ImmutableMap.of())))));
+
+		Plan toPlan = new DefaultBlueprintPlan("planId2",
+				"testPlan2",
+				"test plan description",
+				"testplanApp",
+				ImmutableMap.of("update", ImmutableList.of(
+						ImmutableMap.of(
+								"to", "testPlan",
+								"effector", ImmutableMap.of(
+										"name", "resize",
+										"params", ImmutableMap.of())))));
+		try {
+			testDefaultBlueprintPlan(fromPlan, toPlan);
+			fail();
+		} catch (ServiceInstanceUpdateNotSupportedException cs) {
+			assertEquals("Current plan cannot be updated to plan " + toPlan.getId(), cs.getMessage());
+		}
 	}
 
 	@Test(expected=ServiceInstanceUpdateNotSupportedException.class)
-	public void testUpdateServiceInstanceWithOutBlueprintMetaData()
+	public void testUpdateServiceInstanceWithOutBlueprintMetadata()
 		throws ServiceInstanceUpdateNotSupportedException {
 
+		when(repository.findOne(any(String.class))).thenReturn(testServiceInstance);
 		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
 		when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
 				new DefaultBlueprintPlan("planId", "planName", "planDescription", "Test App", null)
@@ -273,12 +340,13 @@ public class BrooklynServiceInstanceServiceTest {
 	}
 
 	@Test(expected=ServiceInstanceUpdateNotSupportedException.class)
-	public void testUpdateServiceInstanceWithOutUpgradeMetaData()
+	public void testUpdateServiceInstanceWithOutUpgradeMetadata()
 			throws ServiceInstanceUpdateNotSupportedException {
 
+		when(repository.findOne(any(String.class))).thenReturn(testServiceInstance);
 		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
 		when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
-				new DefaultBlueprintPlan("planId", "planName", "planDescription", "Test App", ImmutableMap.of("displayName", "hari"))
+				new DefaultBlueprintPlan("planId", "planName", "planDescription", "Test App", ImmutableMap.of("displayName", "Test App"))
 		));
 
 		UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), "planID");
@@ -287,21 +355,12 @@ public class BrooklynServiceInstanceServiceTest {
 
 	}
 
-	private void testDefaultBluePrintPlan(List<Plan> plans, String planId){
-		when(repository.findOne(any(String.class))).thenReturn(TEST_SERVICE_INSTANCE);
+	private void testDefaultBlueprintPlan(Plan fromPlan, Plan toPlan){
+		when(repository.findOne(any(String.class))).thenReturn(testServiceInstance);
 		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
-		when(serviceDefinition.getPlans())
-				.thenReturn(MutableList.<Plan>builder().add(new DefaultBlueprintPlan("planId",
-						"testPlan",
-						"test plan description",
-						"testplanApp",
-						ImmutableMap.of("update",ImmutableList.of(ImmutableMap.of("to","testPlan2","effector",ImmutableMap.of("name","resize", "params",ImmutableMap.of()))))
-
-				)).addAll(plans).build());
-		UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), planId);
+		when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(fromPlan, toPlan));
+		UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), toPlan.getId());
 		UpdateServiceInstanceResponse response = service.updateServiceInstance(request);
-
-
 	}
 
 
