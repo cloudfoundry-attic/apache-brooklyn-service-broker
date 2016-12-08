@@ -145,6 +145,7 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 
 		try {
 			if (findPlan == null || findPlan.getMetadata() == null || !findPlan.getMetadata().containsKey("update")) {
+                LOG.error("Metadata does not contain the correct value [plan={}]", findPlan);
 				throw new ServiceInstanceUpdateNotSupportedException("Update not supported at this time");
 			}
 
@@ -152,7 +153,6 @@ public class BrooklynServiceInstanceService implements ServiceInstanceService {
 			List<Map<String, Object>> upgradePaths = (List<Map<String, Object>>) findPlan.getMetadata().get("update");
 			String upgradePlanName = null;
 			for (Plan plan : serviceDefinition.getPlans()) {
-
 				if (plan.getId().equals(request.getPlanId())) {
 					upgradePlanName = plan.getName();
 					break;
