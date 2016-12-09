@@ -25,10 +25,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.servicebroker.model.Plan;
 import org.springframework.cloud.servicebroker.model.ServiceDefinition;
 
-import com.google.api.client.util.Maps;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy {
@@ -107,7 +107,7 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
                 definitions.put(id, new ServiceDefinition(
                         id, name, app.getDescription(),
                         true, // bindable
-                        false, // planUpdatable
+                        true, // planUpdatable TODO: check to see whether there are any plans with update sections
                         plans, getTags(), metadata, getRequires(),
                         null //dashboardClient
                 ));

@@ -106,6 +106,10 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
                 location = brooklynConfig.getLocation();
             }
             properties.put("location", location);
+            List<Object> update = (List<Object>) planMap.get("update");
+            if (update != null) {
+                properties.put("update", update);
+            }
 			String id = serviceId + "." + planName;
     		String name = ServiceUtil.getUniqueName(planName, names);
     		String description = String.valueOf(planMap.get("description"));

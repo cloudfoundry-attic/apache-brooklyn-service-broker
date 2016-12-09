@@ -8,6 +8,7 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.style.ToStringCreator;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,4 +70,14 @@ public class DefaultBlueprintPlan extends BlueprintPlan{
         return blueprint;
 	}
 
+	@Override
+	public String toString() {
+		return new ToStringCreator(this)
+				.append("id", getId())
+				.append("name", getName())
+				.append("description", getDescription())
+				.append("appName", appName)
+				.append("metadata", getMetadata())
+				.toString();
+	}
 }
