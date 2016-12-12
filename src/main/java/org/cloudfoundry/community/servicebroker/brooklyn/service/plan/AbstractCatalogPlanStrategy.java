@@ -75,7 +75,7 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
                 false,
                 ImmutableList.of(userDefinedPlan),
                 ImmutableList.of(),
-                ImmutableMap.of(),
+                ImmutableMap.of("brooklynCatalogId", "no catalog id"),
                 ImmutableList.of(),
                 null)
         );
