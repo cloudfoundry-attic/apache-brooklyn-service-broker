@@ -6,6 +6,9 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+
+import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.cloudfoundry.community.servicebroker.brooklyn.BrooklynConfiguration;
 import org.cloudfoundry.community.servicebroker.brooklyn.model.BrooklynServiceInstance;
@@ -59,11 +62,13 @@ public class BrooklynServiceInstanceServiceTest {
 	private BrooklynServiceInstanceRepository repository;
 	@Mock
 	private BrooklynCatalogService catalogService;
+	@Mock
+	private EntitySummary entitySummary;
 	private BrooklynServiceInstance testServiceInstance;
 
 	@Before
 	public void setup() {
-		testServiceInstance = new BrooklynServiceInstance(SVC_INST_ID, SVC_DEFINITION_ID).withPlanId(SVC_PLAN_ID);
+		testServiceInstance = new BrooklynServiceInstance(SVC_INST_ID, SVC_DEFINITION_ID).withPlanId(SVC_PLAN_ID).withEntityId("test");
 		MockitoAnnotations.initMocks(this);
 	}
 	
@@ -127,7 +132,7 @@ public class BrooklynServiceInstanceServiceTest {
                 ))
         ));
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("brooklynCatalogId", "testService"));
-        String expectedBlueprint = String.format("{\"name\":\"Test App (CFService)\",\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
+        String expectedBlueprint = String.format("{\"name\":\"Test App (CFService)\",\"services\":[{\"type\": \"%s\", \"id\": \"broker.entity\"}], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
         String blueprint = service.createBlueprint(serviceDefinition, request);
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
         assertEquals(expectedBlueprint.replace(" ", ""), blueprint.replace(" ", ""));
@@ -149,7 +154,7 @@ public class BrooklynServiceInstanceServiceTest {
         ));
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("brooklynCatalogId", "testService"));
         
-        String expectedBlueprint = String.format("{\"name\":\"Test App (CFService)\",\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
+        String expectedBlueprint = String.format("{\"name\":\"Test App (CFService)\",\"services\":[{\"type\": \"%s\", \"id\": \"broker.entity\"}], \"locations\": [\"%s\"], \"brooklyn.config\":{\"provisioning.properties\":{\"minCores\":%d,\"minRam\":%d}}}", serviceDefinition.getId(), "testLocation", TEST_MIN_CORES, TEST_MIN_RAM);
         String blueprint = service.createBlueprint(serviceDefinition, request);
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
         assertEquals(expectedBlueprint.replace(" ", ""), blueprint.replace(" ", ""));
@@ -165,7 +170,7 @@ public class BrooklynServiceInstanceServiceTest {
         ));
 
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("brooklynCatalogId", "testService"));
-        String expectedBlueprint = String.format("{\"name\":\"Test App (CFService)\",\"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}", serviceDefinition.getId(), "testLocation");
+        String expectedBlueprint = String.format("{\"name\":\"Test App (CFService)\",\"services\":[{\"type\": \"%s\", \"id\": \"broker.entity\"}], \"locations\": [\"%s\"]}", serviceDefinition.getId(), "testLocation");
         String blueprint = service.createBlueprint(serviceDefinition, request);
         // Remove whitespace for assertion so we're not tied to the implementation's whitespace rules
         assertEquals(expectedBlueprint.replace(" ", ""), blueprint.replace(" ", ""));
@@ -174,28 +179,33 @@ public class BrooklynServiceInstanceServiceTest {
     @Test
 	public void testUpdateServiceInstance()
 		throws ServiceInstanceExistsException, ServiceBrokerException {
-			when(repository.findOne(any(String.class))).thenReturn(testServiceInstance);
-			when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
-			when(serviceDefinition.getPlans())
-					.thenReturn(ImmutableList.of(
-							new DefaultBlueprintPlan("planId",
-									"testPlan",
-									"test plan description",
-									"testplanApp",
-									ImmutableMap.of("update",ImmutableList.of(ImmutableMap.of("to","testPlan2","effector",ImmutableMap.of("name","resize", "params",ImmutableMap.of()))))
+		when(admin.getApplicationDescendents(any(String.class), any(String.class))).thenReturn(new AsyncResult<>(ImmutableList.of(entitySummary)));
+		when(admin.hasEffector(any(String.class), any(String.class), any(String.class))).thenReturn(new AsyncResult<Boolean>(true));
+		when(repository.findOne(any(String.class))).thenReturn(testServiceInstance);
+		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
+		when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("brooklynServices", ImmutableList.of(ImmutableMap.of("type", "testType"))));
+		when(serviceDefinition.getPlans())
+				.thenReturn(ImmutableList.of(
+						new DefaultBlueprintPlan("planId",
+								"testPlan",
+								"test plan description",
+								"testplanApp",
+								ImmutableMap.of(
+										"update", ImmutableList.of(ImmutableMap.of("to", "testPlan2", "effector", ImmutableMap.of("name", "resize", "params", ImmutableMap.of()))))
 
-							),
-							new DefaultBlueprintPlan("planId2",
-									"testPlan2",
-									"test plan description2",
-									"testplanApp2",
-									ImmutableMap.of("update",ImmutableList.of(ImmutableMap.of("to","testPlan","effector",ImmutableMap.of("name","resize", "params",ImmutableMap.of()))))
-							)));
+						),
+						new DefaultBlueprintPlan("planId2",
+								"testPlan2",
+								"test plan description2",
+								"testplanApp2",
+								ImmutableMap.of(
+										"update", ImmutableList.of(ImmutableMap.of("to", "testPlan", "effector", ImmutableMap.of("name", "resize", "params", ImmutableMap.of()))))
+						)));
 
-			UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), "planId2");
+		UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), "planId2");
 
-			UpdateServiceInstanceResponse response = service.updateServiceInstance(request);
-			assertNotNull(response);
+		UpdateServiceInstanceResponse response = service.updateServiceInstance(request);
+		assertNotNull(response);
 
 	}
 
@@ -205,7 +215,8 @@ public class BrooklynServiceInstanceServiceTest {
 				"testPlan",
 				"test plan description",
 				"testplanApp",
-				ImmutableMap.of("update",ImmutableMap.of(
+				ImmutableMap.of(
+						"update",ImmutableMap.of(
 						"to","testPlan2",
 						"effector",
 						ImmutableMap.of(
@@ -216,7 +227,8 @@ public class BrooklynServiceInstanceServiceTest {
 				"testPlan2",
 				"test plan description",
 				"testplanApp",
-				ImmutableMap.of("update", ImmutableList.of(
+				ImmutableMap.of(
+						"update", ImmutableList.of(
 						ImmutableMap.of(
 								"to", "testPlan",
 								"effector", ImmutableMap.of(
@@ -236,7 +248,8 @@ public class BrooklynServiceInstanceServiceTest {
 				"testPlan",
 				"test plan description",
 				"testplanApp",
-				ImmutableMap.of("update",ImmutableList.of(
+				ImmutableMap.of(
+						"update",ImmutableList.of(
 						ImmutableMap.of("effector",ImmutableMap.of(
 								"name","resize",
 								"params",ImmutableMap.of()))))
@@ -246,7 +259,8 @@ public class BrooklynServiceInstanceServiceTest {
 				"testPlan2",
 				"test plan description",
 				"testplanApp",
-				ImmutableMap.of("update", ImmutableList.of(
+				ImmutableMap.of(
+						"update", ImmutableList.of(
 						ImmutableMap.of(
 								"to", "testPlan",
 								"effector", ImmutableMap.of(
@@ -298,7 +312,8 @@ public class BrooklynServiceInstanceServiceTest {
 				"testPlan",
 				"test plan description",
 				"testplanApp",
-				ImmutableMap.of("update", ImmutableList.of(
+				ImmutableMap.of(
+						"update", ImmutableList.of(
 						ImmutableMap.of(
 								"to", "noSuchPlan",
 								"effector", ImmutableMap.of(
@@ -309,7 +324,8 @@ public class BrooklynServiceInstanceServiceTest {
 				"testPlan2",
 				"test plan description",
 				"testplanApp",
-				ImmutableMap.of("update", ImmutableList.of(
+				ImmutableMap.of(
+						"update", ImmutableList.of(
 						ImmutableMap.of(
 								"to", "testPlan",
 								"effector", ImmutableMap.of(
@@ -329,8 +345,9 @@ public class BrooklynServiceInstanceServiceTest {
 
 		when(repository.findOne(any(String.class))).thenReturn(testServiceInstance);
 		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
+		when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("brooklynServices", ImmutableList.of(ImmutableMap.of("type", "testType"))));
 		when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
-				new DefaultBlueprintPlan("planId", "planName", "planDescription", "Test App", null)
+				new DefaultBlueprintPlan("planId", "planName", "planDescription", "Test App", ImmutableMap.of("brooklynServices", ImmutableList.of(ImmutableMap.of("type", "testType"))))
 		));
 
 		UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), "planID");
@@ -345,8 +362,11 @@ public class BrooklynServiceInstanceServiceTest {
 
 		when(repository.findOne(any(String.class))).thenReturn(testServiceInstance);
 		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
+		when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("brooklynServices", ImmutableList.of(ImmutableMap.of("type", "testType"))));
 		when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(
-				new DefaultBlueprintPlan("planId", "planName", "planDescription", "Test App", ImmutableMap.of("displayName", "Test App"))
+				new DefaultBlueprintPlan("planId", "planName", "planDescription", "Test App", ImmutableMap.of(
+						"brooklynServices", ImmutableList.of(ImmutableMap.of("type", "testType")),
+						"displayName", "Test App"))
 		));
 
 		UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), "planID");
@@ -358,6 +378,7 @@ public class BrooklynServiceInstanceServiceTest {
 	private void testDefaultBlueprintPlan(Plan fromPlan, Plan toPlan){
 		when(repository.findOne(any(String.class))).thenReturn(testServiceInstance);
 		when(catalogService.getServiceDefinition(any(String.class))).thenReturn(serviceDefinition);
+		when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of("brooklynServices", ImmutableList.of(ImmutableMap.of("type", "testType"))));
 		when(serviceDefinition.getPlans()).thenReturn(ImmutableList.of(fromPlan, toPlan));
 		UpdateServiceInstanceRequest request = new UpdateServiceInstanceRequest(serviceDefinition.getId(), toPlan.getId());
 		UpdateServiceInstanceResponse response = service.updateServiceInstance(request);
