@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
@@ -82,21 +83,22 @@ public class BrooklynServiceInstanceBindingService implements
 				entityBlacklistPredicate = getEntityBlacklistPredicate(rootElement);
 			}
         }
-
+        
+		String childEntityId = null;
 		if (ServiceUtil.getFutureValueLoggingError(admin.hasEffector(entityId, entityId, "bind"))) {
 			Future<String> effector = admin.invokeEffector(entityId, entityId, "bind", "0", ImmutableMap.of());
 			String bindResponse = ServiceUtil.getFutureValueLoggingError(effector);
 			LOG.info("Calling bind effector: {}", bindResponse);
 			String id = (String) Functions.compose(JsonFunctions.getPath("id"), JsonFunctions.asJson()).apply(bindResponse);
 			try {
-				admin.blockUntilTaskCompletes(id);
-			} catch (PollingException e) {
+				childEntityId = (String) admin.blockUntilTaskCompletes(id);
+			} catch (Exception e) {
 				throw new ServiceBrokerException("could not bind: " + e.getMessage());
 			}
 		}
-        Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, sensorWhitelistPredicate, sensorBlacklistPredicate, entityWhitelistPredicate, entityBlacklistPredicate);
+        Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, Objects.firstNonNull(childEntityId, entityId), sensorWhitelistPredicate, sensorBlacklistPredicate, entityWhitelistPredicate, entityBlacklistPredicate);
         Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
-        serviceInstanceBinding = new BrooklynServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, request.getAppGuid());
+        serviceInstanceBinding = new BrooklynServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, request.getAppGuid(), childEntityId);
 		bindingRepository.save(serviceInstanceBinding);
 		return new CreateServiceInstanceAppBindingResponse().withCredentials(credentials);
 	}
@@ -138,7 +140,6 @@ public class BrooklynServiceInstanceBindingService implements
     	return getContainsItemInSectionPredicate(rootElement, "entity.blacklist", false).negate();
     }
 
-
 	@Override
 	public void deleteServiceInstanceBinding(DeleteServiceInstanceBindingRequest request)
 			throws ServiceBrokerException {
@@ -147,8 +148,12 @@ public class BrooklynServiceInstanceBindingService implements
         BrooklynServiceInstanceBinding serviceInstanceBinding = getServiceInstanceBinding(bindingId);
         if (serviceInstanceBinding != null) {
             BrooklynServiceInstance serviceInstance = instanceRepository.findOne(serviceInstanceBinding.getServiceInstanceId(), false);
-    		String entityId = serviceInstance.getEntityId();
-    		Future<String> effector = admin.invokeEffector(entityId, entityId, "unbind", "0", ImmutableMap.of());
+			String appId = serviceInstance.getEntityId();
+			String entityId = serviceInstanceBinding.getEntityId();
+			if (entityId==null) entityId = appId;
+			Future<String> effector = admin.invokeEffector(appId, entityId, "unbind", "0", ImmutableMap.<String, Object>of(
+					"app_guid", serviceInstanceBinding.getAppGuid()
+			));
     		LOG.info("Calling unbind effector: {}", ServiceUtil.getFutureValueLoggingError(effector));
 		    LOG.info("Deleting service binding: [BindingId={}]", bindingId);
 			bindingRepository.delete(bindingId);

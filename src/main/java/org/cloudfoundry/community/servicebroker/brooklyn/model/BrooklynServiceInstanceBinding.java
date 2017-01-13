@@ -7,12 +7,14 @@ public class BrooklynServiceInstanceBinding {
     private final String serviceInstanceId;
     private final Map<String, Object> credentials;
     private final String appGuid;
+    private final String entityId;
 
-    public BrooklynServiceInstanceBinding(String serviceBindingId, String serviceInstanceId, Map<String, Object> credentials, String appGuid) {
+    public BrooklynServiceInstanceBinding(String serviceBindingId, String serviceInstanceId, Map<String, Object> credentials, String appGuid, String entityId) {
         this.serviceBindingId = serviceBindingId;
         this.serviceInstanceId = serviceInstanceId;
         this.credentials = credentials;
         this.appGuid = appGuid;
+        this.entityId = entityId;
     }
 
     public String getAppGuid() {
@@ -29,5 +31,9 @@ public class BrooklynServiceInstanceBinding {
 
     public String getServiceInstanceId() {
         return serviceInstanceId;
+    }
+
+    public String getEntityId() {
+        return entityId;
     }
 }

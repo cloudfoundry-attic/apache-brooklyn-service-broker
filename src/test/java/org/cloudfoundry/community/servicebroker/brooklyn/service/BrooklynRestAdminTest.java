@@ -21,7 +21,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import com.google.api.client.util.Maps;
+import com.google.common.collect.Maps;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -106,7 +106,7 @@ public class BrooklynRestAdminTest {
         when(restApi.getEntityApi().getChildren(Mockito.anyString(), Mockito.anyString())).thenReturn(ImmutableList.of());
         when(sensorApi.get(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), anyBoolean())).thenReturn("");
 
-        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", s -> SENSOR_WHITELIST.contains(s), s-> !SENSOR_BLACKLIST.contains(s), e-> ENTITY_WHITELIST.contains(e), e -> !ENTITY_BLACKLIST.contains(e));
+        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", "test-entity", s -> SENSOR_WHITELIST.contains(s), s-> !SENSOR_BLACKLIST.contains(s), e-> ENTITY_WHITELIST.contains(e), e -> !ENTITY_BLACKLIST.contains(e));
         Map<String, Object> credentials = credentialsFuture.get();
 
         assertEquals(EXPECTED_CREDENTIALS, credentials);
@@ -122,7 +122,7 @@ public class BrooklynRestAdminTest {
         when(sensorApi.get(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), anyBoolean())).thenReturn("");
 
         List<String> entityBlacklist = ImmutableList.of("test_type_2");
-        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", s -> true, s-> true, e-> true, e -> !entityBlacklist.contains(e));
+        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", "test-entity", s -> true, s-> true, e-> true, e -> !entityBlacklist.contains(e));
         Map<String, Object> credentials = credentialsFuture.get();
         
         Map<String, Object> expected = Maps.newHashMap();
@@ -145,7 +145,7 @@ public class BrooklynRestAdminTest {
         when(sensorApi.get(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), anyBoolean())).thenReturn("");
 
         List<String> entityWhitelist = ImmutableList.of("test_type");
-        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", s -> true, s-> true, e-> entityWhitelist.contains(e), e -> true);
+        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", "test-entity", s -> true, s-> true, e-> entityWhitelist.contains(e), e -> true);
         Map<String, Object> credentials = credentialsFuture.get();
         
         Map<String, Object> expected = Maps.newHashMap();

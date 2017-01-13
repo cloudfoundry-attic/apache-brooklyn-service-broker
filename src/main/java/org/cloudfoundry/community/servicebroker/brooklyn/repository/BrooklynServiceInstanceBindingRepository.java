@@ -35,7 +35,8 @@ public class BrooklynServiceInstanceBindingRepository {
 				(String)map.get("id"),
 				(String)map.get("serviceInstanceId"),
 				(Map<String, Object>)map.get("credentials"),
-				(String)map.get("appGuid"));
+				(String)map.get("appGuid"),
+				(String)map.get("entityId"));
 	}
 
 	public BrooklynServiceInstanceBinding save(BrooklynServiceInstanceBinding serviceInstanceBinding) {

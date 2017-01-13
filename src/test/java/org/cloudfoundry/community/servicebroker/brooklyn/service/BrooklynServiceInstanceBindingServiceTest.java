@@ -9,6 +9,8 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
@@ -35,27 +37,27 @@ import org.cloudfoundry.community.servicebroker.brooklyn.model.BrooklynServiceIn
 import org.cloudfoundry.community.servicebroker.brooklyn.model.BrooklynServiceInstanceBinding;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceBindingRepository;
 import org.cloudfoundry.community.servicebroker.brooklyn.repository.BrooklynServiceInstanceRepository;
-import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
-import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingExistsException;
-import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
-import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingResponse;
-import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindingRequest;
-import org.springframework.cloud.servicebroker.model.ServiceDefinition;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingExistsException;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingResponse;
+import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindingRequest;
+import org.springframework.cloud.servicebroker.model.ServiceDefinition;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.google.api.client.util.Maps;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {BrooklynConfiguration.class})
@@ -79,13 +81,13 @@ public class BrooklynServiceInstanceBindingServiceTest {
     private final String TASK_ID = "NrBavIWX";
     private final String TASK_RESPONSE_INCOMPLETE = "{id:\"" + TASK_ID + "\",displayName:\"pre-install\",description:\"\",entityId:\"Mo6NM5Qt\",entityDisplayName:\"MongoDBServer:Mo6N\",tags:[{wrappingType:\"contextEntity\",entity:{type:\"org.apache.brooklyn.api.entity.Entity\",id:\"Mo6NM5Qt\"}},{entitlementContext:{user:\"admin\",sourceIp:\"0:0:0:0:0:0:0:1\",requestUri:\"/v1/applications\",requestUniqueIdentifier:\"XbbETK\"}},\"SUB-TASK\"],submitTimeUtc:1443530180701,startTimeUtc:1443530180701,endTimeUtc:1443530180724,currentStatus:\"Completed\",result:null,isError:false,isCancelled:false,children:[],submittedByTask:{link:\"/v1/activities/TBCqTO6X\",metadata:{id:\"TBCqTO6X\",taskName:\"start (processes)\",entityId:\"Mo6NM5Qt\",entityDisplayName:\"MongoDBServer:Mo6N\"}},detailedStatus:\"Completed after 23ms No return value (null)\",streams:{},links:{self:\"/v1/activities/UfyAm4ul\",children:\"/v1/activities/UfyAm4ul/children\",entity:\"/v1/applications/TijtVDIn/entities/Mo6NM5Qt\"}}";
     private final TaskSummary TASK_SUMMARY_INCOMPLETE = new TaskSummary(TASK_ID, "displayName", "description", "entityId", "entityDisplayName",
-            ImmutableSet.of(), 0l, 0l, null, "currentStatus", "result", false, false,
+            ImmutableSet.of(), 0l, 0l, null, "currentStatus", "childEntityId", false, false,
             ImmutableList.of(), null, null, "blockingDetails", "detailedStatus", ImmutableMap.of(), ImmutableMap.of());
     private final TaskSummary TASK_SUMMARY_COMPLETE = new TaskSummary(TASK_ID, "displayName", "description", "entityId", "entityDisplayName",
-            ImmutableSet.of(), 0l, 0l, 1l, "currentStatus", "result", false, false,
+            ImmutableSet.of(), 0l, 0l, 1l, "currentStatus", "childEntityId", false, false,
             ImmutableList.of(), null, null, "blockingDetails", "detailedStatus", ImmutableMap.of(), ImmutableMap.of());
 
-    private static final BrooklynServiceInstanceBinding TEST_SERVICE_INSTANCE_BINDING = new BrooklynServiceInstanceBinding("service_instance_binding_id", "service-one-id", ImmutableMap.of(), "app_guid");
+    private static final BrooklynServiceInstanceBinding TEST_SERVICE_INSTANCE_BINDING = new BrooklynServiceInstanceBinding("service_instance_binding_id", "service-one-id", ImmutableMap.of(), "app_guid", "childEntityId");
 
     @Mock
 	private BrooklynRestAdmin admin;
@@ -129,7 +131,7 @@ public class BrooklynServiceInstanceBindingServiceTest {
 	public void newServiceInstanceBindingCreatedSuccessfully() 
 			throws ServiceBrokerException, ServiceInstanceBindingExistsException {
 
-		when(admin.getCredentialsFromSensors(anyString(), any(Predicate.class), any(Predicate.class), any(Predicate.class), any(Predicate.class))).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
+		when(admin.getCredentialsFromSensors(anyString(), anyString(), any(Predicate.class), any(Predicate.class), any(Predicate.class), any(Predicate.class))).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
         when(admin.hasEffector(anyString(), anyString(), anyString())).thenReturn(new AsyncResult<>(false));
         when(instanceRepository.findOne(anyString(), anyBoolean())).thenReturn(serviceInstance);
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of());
@@ -147,8 +149,9 @@ public class BrooklynServiceInstanceBindingServiceTest {
             throws ServiceBrokerException, ServiceInstanceBindingExistsException, PollingException {
         when(admin.getRestApi()).thenReturn(brooklynApi);
         when(admin.getCredentialsFromSensors(
-        		anyString(), 
-        		any(Predicate.class), 
+        		anyString(),
+                anyString(),
+                any(Predicate.class), 
         		any(Predicate.class), 
         		any(Predicate.class), 
         		any(Predicate.class)
@@ -163,12 +166,14 @@ public class BrooklynServiceInstanceBindingServiceTest {
                 .thenReturn(TASK_SUMMARY_INCOMPLETE)
                 .thenReturn(TASK_SUMMARY_COMPLETE);
         doCallRealMethod().when(admin).blockUntilTaskCompletes(anyString());
-        doCallRealMethod().when(admin).blockUntilTaskCompletes(anyString(), any(Duration.class));
+        doCallRealMethod().when(admin).blockUntilTaskCompletes(anyString(), any(Duration.class), any(Object[].class));
         when(instanceRepository.findOne(anyString(), anyBoolean())).thenReturn(serviceInstance);
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of());
         when(brooklynCatalogService.getServiceDefinition(anyString())).thenReturn(serviceDefinition);
         CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid", null);
         CreateServiceInstanceBindingResponse binding = bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));
+
+        verify(admin, times(1)).blockUntilTaskCompletes(anyString(), any(Duration.class), any(Object[].class));
 
         // TODO assert binding was completed successfully
         //assertEquals(SVC_INST_BIND_ID, binding.getServiceBindingId());
@@ -179,7 +184,7 @@ public class BrooklynServiceInstanceBindingServiceTest {
 
         bindingService = new BrooklynServiceInstanceBindingService(new BrooklynRestAdmin(brooklynApi, httpClient, config), bindingRepository, instanceRepository, brooklynCatalogService);
 
-        when(admin.getCredentialsFromSensors(anyString(), any(Predicate.class), any(Predicate.class), any(Predicate.class), any(Predicate.class))).thenCallRealMethod();
+        when(admin.getCredentialsFromSensors(anyString(), anyString(), any(Predicate.class), any(Predicate.class), any(Predicate.class), any(Predicate.class))).thenCallRealMethod();
 
         when(brooklynApi.getSensorApi()).thenReturn(sensorApi);
         when(sensorApi.list(anyString(), anyString())).thenReturn(ImmutableList.of(
@@ -201,7 +206,7 @@ public class BrooklynServiceInstanceBindingServiceTest {
         CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid", null);
         CreateServiceInstanceBindingResponse binding = bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));
 
-        BrooklynServiceInstanceBinding expectedBinding = new BrooklynServiceInstanceBinding(SVC_INST_BIND_ID, serviceInstance.getServiceInstanceId(), EXPECTED_CREDENTIALS, "appGuid");
+        BrooklynServiceInstanceBinding expectedBinding = new BrooklynServiceInstanceBinding(SVC_INST_BIND_ID, serviceInstance.getServiceInstanceId(), EXPECTED_CREDENTIALS, "appGuid", "childEntityId");
 
         // TODO: test binding properly
         //assertEquals(expectedBinding.getAppGuid(), binding.getAppGuid());
