@@ -136,7 +136,8 @@ public class BrooklynServiceInstanceBindingServiceTest {
         when(instanceRepository.findOne(anyString(), anyBoolean())).thenReturn(serviceInstance);
         when(serviceDefinition.getMetadata()).thenReturn(ImmutableMap.of());
         when(brooklynCatalogService.getServiceDefinition(anyString())).thenReturn(serviceDefinition);
-		CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid", null);
+        when(serviceInstance.getEntityId()).thenReturn("entityId");
+        CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid", null);
         CreateServiceInstanceBindingResponse binding = bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));
 		
 		assertNotNull(binding);
@@ -202,6 +203,7 @@ public class BrooklynServiceInstanceBindingServiceTest {
         when(brooklynApi.getEffectorApi()).thenReturn(effectorApi);
         when(effectorApi.invoke(anyString(), anyString(), anyString(), anyString(), anyMap())).thenReturn(bindEffectorResponse);
         when(sensorApi.get(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), anyBoolean())).thenReturn("");
+        when(serviceInstance.getEntityId()).thenReturn("entityId");
 
         CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid", null);
         CreateServiceInstanceBindingResponse binding = bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));

@@ -26,7 +26,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
@@ -96,7 +96,7 @@ public class BrooklynServiceInstanceBindingService implements
 				throw new ServiceBrokerException("could not bind: " + e.getMessage());
 			}
 		}
-        Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, Objects.firstNonNull(childEntityId, entityId), sensorWhitelistPredicate, sensorBlacklistPredicate, entityWhitelistPredicate, entityBlacklistPredicate);
+        Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, MoreObjects.firstNonNull(childEntityId, entityId), sensorWhitelistPredicate, sensorBlacklistPredicate, entityWhitelistPredicate, entityBlacklistPredicate);
         Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
         serviceInstanceBinding = new BrooklynServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, request.getAppGuid(), childEntityId);
 		bindingRepository.save(serviceInstanceBinding);
