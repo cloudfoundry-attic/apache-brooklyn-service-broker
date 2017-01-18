@@ -121,18 +121,18 @@ public class BrooklynRestAdmin {
     }
 
     @Async
-    public Future<Map<String, Object>> getCredentialsFromSensors(String application,
+    public Future<Map<String, Object>> getCredentialsFromSensors(String application, String entity,
             Predicate<? super String> sensorWhitelist,
             Predicate<? super String> sensorBlacklist,
             Predicate<? super String> entityWhitelist,
             Predicate<? super String> entityBlacklist) {
 
-        List<EntitySummary> entities = getRestApi().getEntityApi().list(application);
+        List<EntitySummary> entities = getRestApi().getEntityApi().getChildren(application, entity);
         if (entities.size() == 0) {
-            return new AsyncResult<>(getEntitySensors(application, application, sensorWhitelist, sensorBlacklist, entityWhitelist, entityBlacklist));
-        } else if (entities.size() == 1) {
-            String entity = entities.get(0).getId();
             return new AsyncResult<>(getEntitySensors(application, entity, sensorWhitelist, sensorBlacklist, entityWhitelist, entityBlacklist));
+        } else if (entities.size() == 1) {
+            String entityId = entities.get(0).getId();
+            return new AsyncResult<>(getEntitySensors(application, entityId, sensorWhitelist, sensorBlacklist, entityWhitelist, entityBlacklist));
         }
         return new AsyncResult<>(getApplicationSensors(application, entities, sensorWhitelist, sensorBlacklist, entityWhitelist, entityBlacklist));
     }
@@ -369,11 +369,13 @@ public class BrooklynRestAdmin {
         }
     }
 
-    public void blockUntilTaskCompletes(String id) throws PollingException {
-        blockUntilTaskCompletes(id, Duration.PRACTICALLY_FOREVER);
+    public Object blockUntilTaskCompletes(String id) throws PollingException {
+        Object[] results = new Object[1];
+        blockUntilTaskCompletes(id, Duration.PRACTICALLY_FOREVER, results);
+        return results[0];
     }
 
-    public void blockUntilTaskCompletes(String id, Duration timeout) throws PollingException {
+    public void blockUntilTaskCompletes(String id, Duration timeout, Object[] results) throws PollingException {
         try {
             Repeater.create()
                     .every(Duration.ONE_SECOND)
@@ -382,7 +384,11 @@ public class BrooklynRestAdmin {
                         if (summary.isError() || summary.isCancelled() || (summary.getSubmitTimeUtc() == null)) {
                             throw new PollingException(new IllegalStateException("Effector call failed: " + summary));
                         }
-                        return summary.getEndTimeUtc() != null;
+                        if (summary.getEndTimeUtc() != null) {
+                            results[0] = summary.getResult();
+                            return true;
+                        }
+                        return false;
                     })
                     .rethrowExceptionImmediately()
                     .limitTimeTo(timeout)

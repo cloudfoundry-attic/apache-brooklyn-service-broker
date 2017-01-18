@@ -52,9 +52,13 @@ public class PlaceholderReplacer {
 	}
 	
 	public String randomString(int length){
+
+		char[] chars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
 		StringBuilder sb = new StringBuilder();
-		for(int i = 0; i < length; i++){
-			sb.append((char) (random.nextInt('z' - '!') + '!'));
+		Random random = new Random();
+		for (int i = 0; i < length; i++) {
+			char c = chars[random.nextInt(chars.length)];
+			sb.append(c);
 		}
 		return sb.toString();
 	}

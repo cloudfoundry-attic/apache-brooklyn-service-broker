@@ -1,8 +1,9 @@
 buildscript {
 	ext {
 		springBootVersion = '1.2.2.RELEASE'
-
+		brooklynVersion = '0.11.0-SNAPSHOT'
 	}
+	
 	repositories {
 		// NOTE: You should declare only repositories that you need here
 		mavenLocal()
@@ -56,11 +57,12 @@ dependencies {
 	compile("org.springframework.boot:spring-boot-starter")
 	testCompile("org.springframework.boot:spring-boot-starter-test")
 	testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
-	compile("org.apache.brooklyn:brooklyn-rest-client:0.10.0"){
+  
+	compile("org.apache.brooklyn:brooklyn-rest-client:${brooklynVersion}"){
 		exclude module: "slf4j-log4j12"
 		exclude module: "jetty-server"
 	}
-    compile("org.apache.brooklyn:brooklyn-core:0.10.0"){
+    compile("org.apache.brooklyn:brooklyn-core:${brooklynVersion}"){
         exclude module: "slf4j-log4j12"
         exclude module: "jetty-server"
     }
