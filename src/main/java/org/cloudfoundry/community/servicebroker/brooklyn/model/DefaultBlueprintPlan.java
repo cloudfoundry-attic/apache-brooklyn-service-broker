@@ -58,13 +58,13 @@ public class DefaultBlueprintPlan extends BlueprintPlan{
             String configJson = null;
             try {
                 configJson = writer.writeValueAsString(config);
-                blueprint = String.format("{\"name\":\"%s\", \"services\":[{\"type\": \"%s\", \"id\": \"broker.entity\"}], \"locations\": [%s], \"brooklyn.config\":%s}", name, brooklynCatalogId, location, configJson);
+                blueprint = String.format("{\"name\":\"%s\", \"services\":[{\"type\": \"%s\"}], \"locations\": [%s], \"brooklyn.config\":%s}", name, brooklynCatalogId, location, configJson);
             } catch (JsonProcessingException e) {
             	LOG.error("unable to add config: {}",  e.getMessage());
                 Exceptions.propagateIfFatal(e);
             }
         } else {
-        	blueprint = String.format("{\"name\":\"%s\", \"services\":[{\"type\": \"%s\", \"id\": \"broker.entity\"}], \"locations\": [%s]}", name, brooklynCatalogId, location);
+        	blueprint = String.format("{\"name\":\"%s\", \"services\":[{\"type\": \"%s\"}], \"locations\": [%s]}", name, brooklynCatalogId, location);
         }
         
         return blueprint;
