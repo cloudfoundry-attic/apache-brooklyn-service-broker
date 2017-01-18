@@ -9,8 +9,6 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
@@ -80,6 +78,7 @@ public class BrooklynServiceInstanceBindingServiceTest {
 
     private final String TASK_ID = "NrBavIWX";
     private final String TASK_RESPONSE_INCOMPLETE = "{id:\"" + TASK_ID + "\",displayName:\"pre-install\",description:\"\",entityId:\"Mo6NM5Qt\",entityDisplayName:\"MongoDBServer:Mo6N\",tags:[{wrappingType:\"contextEntity\",entity:{type:\"org.apache.brooklyn.api.entity.Entity\",id:\"Mo6NM5Qt\"}},{entitlementContext:{user:\"admin\",sourceIp:\"0:0:0:0:0:0:0:1\",requestUri:\"/v1/applications\",requestUniqueIdentifier:\"XbbETK\"}},\"SUB-TASK\"],submitTimeUtc:1443530180701,startTimeUtc:1443530180701,endTimeUtc:1443530180724,currentStatus:\"Completed\",result:null,isError:false,isCancelled:false,children:[],submittedByTask:{link:\"/v1/activities/TBCqTO6X\",metadata:{id:\"TBCqTO6X\",taskName:\"start (processes)\",entityId:\"Mo6NM5Qt\",entityDisplayName:\"MongoDBServer:Mo6N\"}},detailedStatus:\"Completed after 23ms No return value (null)\",streams:{},links:{self:\"/v1/activities/UfyAm4ul\",children:\"/v1/activities/UfyAm4ul/children\",entity:\"/v1/applications/TijtVDIn/entities/Mo6NM5Qt\"}}";
+    private final String TASK_RESPONSE_COMPLETE = "[\"rv6ylqjg6u\"]";
     private final TaskSummary TASK_SUMMARY_INCOMPLETE = new TaskSummary(TASK_ID, "displayName", "description", "entityId", "entityDisplayName",
             ImmutableSet.of(), 0l, 0l, null, "currentStatus", "childEntityId", false, false,
             ImmutableList.of(), null, null, "blockingDetails", "detailedStatus", ImmutableMap.of(), ImmutableMap.of());
@@ -158,7 +157,7 @@ public class BrooklynServiceInstanceBindingServiceTest {
         		any(Predicate.class)
         	)).thenReturn(new AsyncResult<>(Collections.<String, Object>emptyMap()));
         when(admin.hasEffector(anyString(), anyString(), anyString())).thenReturn(new AsyncResult<>(true));
-        when(admin.invokeEffector(anyString(), anyString(), anyString(), anyString(), anyMap())).thenReturn(new AsyncResult<>(TASK_RESPONSE_INCOMPLETE));
+        when(admin.invokeEffector(anyString(), anyString(), anyString(), anyString(), anyMap())).thenReturn(new AsyncResult<>(TASK_RESPONSE_COMPLETE));
         when(brooklynApi.getActivityApi()).thenReturn(activityApi);
         when(activityApi.get(anyString()))
                 .thenReturn(TASK_SUMMARY_INCOMPLETE)
@@ -173,8 +172,6 @@ public class BrooklynServiceInstanceBindingServiceTest {
         when(brooklynCatalogService.getServiceDefinition(anyString())).thenReturn(serviceDefinition);
         CreateServiceInstanceBindingRequest request = new CreateServiceInstanceBindingRequest(serviceInstance.getServiceDefinitionId(), "planId", "appGuid", null);
         CreateServiceInstanceBindingResponse binding = bindingService.createServiceInstanceBinding(request.withBindingId(SVC_INST_BIND_ID));
-
-        verify(admin, times(1)).blockUntilTaskCompletes(anyString(), any(Duration.class), any(Object[].class));
 
         // TODO assert binding was completed successfully
         //assertEquals(SVC_INST_BIND_ID, binding.getServiceBindingId());

@@ -23,9 +23,9 @@ public class Repositories {
 			Response response = brooklynApi.getApplicationApi().createFromForm(
 				String.format("{ \"name\": \"%s\","
 						+ "\"services\": [{"
-						+ "\"type\": \"brooklyn.entity.basic.BasicApplication\","
-						+ "\"brooklyn.children\":[{\"name\": \"%s\", \"type\": \"brooklyn.entity.basic.BasicEntity\"},"
-						+ "{\"name\": \"%s\", \"type\": \"brooklyn.entity.basic.BasicEntity\"}]"
+						+ "\"type\": \"org.apache.brooklyn.entity.stock.BasicApplication\","
+						+ "\"brooklyn.children\":[{\"name\": \"%s\", \"type\": \"org.apache.brooklyn.entity.stock.BasicEntity\"},"
+						+ "{\"name\": \"%s\", \"type\": \"org.apache.brooklyn.entity.stock.BasicEntity\"}]"
 						+ "}]"
 						+ "}", name, bindingRepoName, instanceRepoName));
 			TaskSummary entity = BrooklynApi.getEntity(response, TaskSummary.class);

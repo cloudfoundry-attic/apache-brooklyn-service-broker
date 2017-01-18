@@ -25,10 +25,11 @@ import org.springframework.cloud.servicebroker.service.ServiceInstanceBindingSer
 import org.springframework.stereotype.Service;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 
 @Service
 public class BrooklynServiceInstanceBindingService implements
@@ -86,18 +87,25 @@ public class BrooklynServiceInstanceBindingService implements
         
 		String childEntityId = null;
 		if (ServiceUtil.getFutureValueLoggingError(admin.hasEffector(entityId, entityId, "bind"))) {
-			Future<String> effector = admin.invokeEffector(entityId, entityId, "bind", "0", ImmutableMap.of());
+			Future<String> effector = admin.invokeEffector(entityId, entityId, "bind", "never", ImmutableMap.of());
 			String bindResponse = ServiceUtil.getFutureValueLoggingError(effector);
 			LOG.info("Calling bind effector: {}", bindResponse);
-			String id = (String) Functions.compose(JsonFunctions.getPath("id"), JsonFunctions.asJson()).apply(bindResponse);
-			try {
-				childEntityId = (String) admin.blockUntilTaskCompletes(id);
-			} catch (Exception e) {
-				throw new ServiceBrokerException("could not bind: " + e.getMessage());
+			JsonElement jsonElement = JsonFunctions.asJson().apply(bindResponse);
+			if (jsonElement instanceof JsonArray) {
+				childEntityId = ((JsonArray) jsonElement).get(0).getAsString();
+				//childEntityId = (String) Functions.compose(JsonFunctions.cast(String.class), JsonFunctions.asJson()).apply(bindResponse);
+			} else {
+				childEntityId = jsonElement.getAsString();
 			}
+//			try {
+//				childEntityId = (String) admin.blockUntilTaskCompletes(id);
+//			} catch (Exception e) {
+//				throw new ServiceBrokerException("could not bind: " + e.getMessage());
+//			}
 		}
         Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, MoreObjects.firstNonNull(childEntityId, entityId), sensorWhitelistPredicate, sensorBlacklistPredicate, entityWhitelistPredicate, entityBlacklistPredicate);
         Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
+		LOG.info("credentials: {}", Iterables.toString(credentials.entrySet()));
         serviceInstanceBinding = new BrooklynServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, request.getAppGuid(), childEntityId);
 		bindingRepository.save(serviceInstanceBinding);
 		return new CreateServiceInstanceAppBindingResponse().withCredentials(credentials);
