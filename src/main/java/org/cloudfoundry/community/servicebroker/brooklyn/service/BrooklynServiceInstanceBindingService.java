@@ -93,23 +93,17 @@ public class BrooklynServiceInstanceBindingService implements
 			JsonElement jsonElement = JsonFunctions.asJson().apply(bindResponse);
 			if (jsonElement instanceof JsonArray) {
 				childEntityId = ((JsonArray) jsonElement).get(0).getAsString();
-				//childEntityId = (String) Functions.compose(JsonFunctions.cast(String.class), JsonFunctions.asJson()).apply(bindResponse);
 			} else {
 				childEntityId = jsonElement.getAsString();
 			}
-//			try {
-//				childEntityId = (String) admin.blockUntilTaskCompletes(id);
-//			} catch (Exception e) {
-//				throw new ServiceBrokerException("could not bind: " + e.getMessage());
-//			}
 		}
-        Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, MoreObjects.firstNonNull(childEntityId, entityId), sensorWhitelistPredicate, sensorBlacklistPredicate, entityWhitelistPredicate, entityBlacklistPredicate);
-        Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
+      Future<Map<String, Object>> credentialsFuture = admin.getCredentialsFromSensors(entityId, MoreObjects.firstNonNull(childEntityId, entityId), sensorWhitelistPredicate, sensorBlacklistPredicate, entityWhitelistPredicate, entityBlacklistPredicate);
+      Map<String, Object> credentials = ServiceUtil.getFutureValueLoggingError(credentialsFuture);
 		LOG.info("credentials: {}", Iterables.toString(credentials.entrySet()));
-        serviceInstanceBinding = new BrooklynServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, request.getAppGuid(), childEntityId);
+      serviceInstanceBinding = new BrooklynServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, request.getAppGuid(), childEntityId);
 		bindingRepository.save(serviceInstanceBinding);
 		return new CreateServiceInstanceAppBindingResponse().withCredentials(credentials);
-	}
+	}P
 
     @VisibleForTesting
     public static Predicate<String> getContainsItemInSectionPredicate(Object rootElement, String section, boolean ifAbsent) {

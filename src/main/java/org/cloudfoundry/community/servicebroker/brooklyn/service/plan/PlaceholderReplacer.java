@@ -61,12 +61,6 @@ public class PlaceholderReplacer {
 			sb.append(c);
 		}
 		return sb.toString();
-		
-//		StringBuilder sb = new StringBuilder();
-//		for(int i = 0; i < length; i++){
-//			sb.append((char) (random.nextInt('z' - '!') + '!'));
-//		}
-//		return sb.toString();
 	}
 
 }
