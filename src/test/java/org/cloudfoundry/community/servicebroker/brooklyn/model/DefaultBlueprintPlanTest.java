@@ -92,7 +92,7 @@ public class DefaultBlueprintPlanTest {
 		String brooklynCatalogId = "my-service";
 		DefaultBlueprintPlan plan = new DefaultBlueprintPlan("testId", "testName", "testDescription", "Test App", metadata);
 		String result = plan.toBlueprint(brooklynCatalogId, null, request);
-		String expected = String.format("{\"name\":\"Test App (CF Service)\", \"services\":[{\"type\": \"%s\", \"id\": \"broker.entity\"}], \"locations\": [\"%s\"]}",
+		String expected = String.format("{\"name\":\"Test App (CF Service)\", \"services\":[{\"type\": \"%s\"}], \"locations\": [\"%s\"]}",
 				brooklynCatalogId, "AWS California");
 		
 		assertEquals(expected, result);
@@ -104,7 +104,7 @@ public class DefaultBlueprintPlanTest {
 		
 		ObjectWriter writer = new ObjectMapper().writer();
 		String location = writer.writeValueAsString(metadata.get("location"));
-		expected = String.format("{\"name\":\"Test App (CF Service)\", \"services\":[{\"type\": \"%s\", \"id\": \"broker.entity\"}], \"locations\": [%s]}",
+		expected = String.format("{\"name\":\"Test App (CF Service)\", \"services\":[{\"type\": \"%s\"}], \"locations\": [%s]}",
 				brooklynCatalogId, location);
 		result = plan.toBlueprint(brooklynCatalogId, null, request);
 		
