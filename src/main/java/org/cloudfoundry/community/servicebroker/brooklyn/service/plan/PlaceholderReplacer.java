@@ -1,6 +1,7 @@
 package org.cloudfoundry.community.servicebroker.brooklyn.service.plan;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -15,16 +16,19 @@ public class PlaceholderReplacer {
 	}
 	
 	public Map<String, Object> replaceValues(Map<String, Object> map) {
+		Map<String, Object> replacements = new HashMap<>(map);
 		for(Entry<String, Object> e : map.entrySet()){
 			if(e.getValue() instanceof Map){
-				map.put(e.getKey(), replaceValues((Map<String, Object>)e.getValue()));
+				replacements.put(e.getKey(), replaceValues((Map<String, Object>)e.getValue()));
 			} else if (e.getValue() instanceof String) {
-				map.put(e.getKey(), replaceValue((String)e.getValue()));
+				replacements.put(e.getKey(), replaceValue((String)e.getValue()));
 			} else if (e.getValue() instanceof List) {
-				map.put(e.getKey(), replaceValues((List<Object>)e.getValue()));
+				replacements.put(e.getKey(), replaceValues((List<Object>)e.getValue()));
+			} else {
+				replacements.put(e.getKey(), e.getValue());
 			}
 		}
-		return map;
+		return replacements;
 	}
 	
 	public List<Object> replaceValues(List<Object> list) {
@@ -36,11 +40,11 @@ public class PlaceholderReplacer {
 				replacements.add(replaceValue((String)o));
 			} else if (o instanceof List) {
 				replacements.add(replaceValues((List<Object>)o));
+			} else {
+				replacements.add(o);
 			}
 		}
-		list.clear();
-		list.addAll(replacements);
-		return list;
+		return replacements;
 	}
 
 	public String replaceValue(String value) {
@@ -48,9 +52,13 @@ public class PlaceholderReplacer {
 	}
 	
 	public String randomString(int length){
+
+		char[] chars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
 		StringBuilder sb = new StringBuilder();
-		for(int i = 0; i < length; i++){
-			sb.append(random.nextInt('z' - '!') + '!');
+		Random random = new Random();
+		for (int i = 0; i < length; i++) {
+			char c = chars[random.nextInt(chars.length)];
+			sb.append(c);
 		}
 		return sb.toString();
 	}

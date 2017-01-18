@@ -101,30 +101,31 @@ public class BrooklynRestAdminTest {
     public void testGetCredentialsFromSensors() throws ExecutionException, InterruptedException {
         when(restApi.getSensorApi()).thenReturn(sensorApi);
         when(restApi.getEntityApi()).thenReturn(entityApi);
-        when(restApi.getSensorApi().list(Mockito.anyString(), Mockito.eq("test_id"))).thenReturn(TEST_SENSOR_SUMMARIES);
+        when(restApi.getSensorApi().list(Mockito.anyString(), Mockito.eq("test-application"))).thenReturn(TEST_SENSOR_SUMMARIES);
         when(restApi.getEntityApi().list(Mockito.any(String.class))).thenReturn(TEST_ENTITY_SUMMARIES);
         when(restApi.getEntityApi().getChildren(Mockito.anyString(), Mockito.anyString())).thenReturn(ImmutableList.of());
         when(sensorApi.get(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), anyBoolean())).thenReturn("");
 
-        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", s -> SENSOR_WHITELIST.contains(s), s-> !SENSOR_BLACKLIST.contains(s), e-> ENTITY_WHITELIST.contains(e), e -> !ENTITY_BLACKLIST.contains(e));
+        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", "test-application", s -> SENSOR_WHITELIST.contains(s), s-> !SENSOR_BLACKLIST.contains(s), e-> ENTITY_WHITELIST.contains(e), e -> !ENTITY_BLACKLIST.contains(e));
         Map<String, Object> credentials = credentialsFuture.get();
 
         assertEquals(EXPECTED_CREDENTIALS, credentials);
     }
-    
+
     @Test
     public void testBlacklistEntitiesWhileGettingCredentials() throws ExecutionException, InterruptedException {
         when(restApi.getSensorApi()).thenReturn(sensorApi);
         when(restApi.getEntityApi()).thenReturn(entityApi);
         when(restApi.getSensorApi().list(Mockito.anyString(), Mockito.anyString())).thenReturn(TEST_SENSOR_SUMMARIES);
         when(restApi.getEntityApi().list(Mockito.anyString())).thenReturn(TEST_ENTITY_SUMMARIES);
+        when(restApi.getEntityApi().getChildren(Mockito.eq("test-application"), Mockito.eq("test-application"))).thenReturn(TEST_ENTITY_SUMMARIES);
         when(restApi.getEntityApi().getChildren(Mockito.anyString(), Mockito.eq("test_id"))).thenReturn(TEST_CHILD_ENTITY_SUMMARIES);
         when(sensorApi.get(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), anyBoolean())).thenReturn("");
 
         List<String> entityBlacklist = ImmutableList.of("test_type_2");
-        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", s -> true, s-> true, e-> true, e -> !entityBlacklist.contains(e));
+        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", "test-application", s -> true, s-> true, e-> true, e -> !entityBlacklist.contains(e));
         Map<String, Object> credentials = credentialsFuture.get();
-        
+
         Map<String, Object> expected = Maps.newHashMap();
         Map<String, Object> expectedCredentialsChild = Maps.newHashMap();
         expectedCredentialsChild.put("sensor.one.name", "");
@@ -141,11 +142,12 @@ public class BrooklynRestAdminTest {
         when(restApi.getEntityApi()).thenReturn(entityApi);
         when(restApi.getSensorApi().list(Mockito.anyString(), Mockito.anyString())).thenReturn(TEST_SENSOR_SUMMARIES);
         when(restApi.getEntityApi().list(Mockito.anyString())).thenReturn(TEST_ENTITY_SUMMARIES);
+        when(restApi.getEntityApi().getChildren(Mockito.eq("test-application"), Mockito.eq("test-application"))).thenReturn(TEST_ENTITY_SUMMARIES);
         when(restApi.getEntityApi().getChildren(Mockito.anyString(), Mockito.eq("test_id"))).thenReturn(TEST_CHILD_ENTITY_SUMMARIES);
         when(sensorApi.get(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), anyBoolean())).thenReturn("");
 
         List<String> entityWhitelist = ImmutableList.of("test_type");
-        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", s -> true, s-> true, e-> entityWhitelist.contains(e), e -> true);
+        Future<Map<String, Object>> credentialsFuture = brooklynRestAdmin.getCredentialsFromSensors("test-application", "test-application", s -> true, s-> true, e-> entityWhitelist.contains(e), e -> true);
         Map<String, Object> credentials = credentialsFuture.get();
         
         Map<String, Object> expected = Maps.newHashMap();

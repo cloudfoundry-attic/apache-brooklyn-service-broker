@@ -25,6 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.servicebroker.model.Plan;
 import org.springframework.cloud.servicebroker.model.ServiceDefinition;
 
+
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -72,7 +74,7 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
                 false,
                 ImmutableList.of(userDefinedPlan),
                 ImmutableList.of(),
-                ImmutableMap.of(),
+                ImmutableMap.of("brooklynCatalogId", "no catalog id"),
                 ImmutableList.of(),
                 null)
         );

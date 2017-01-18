@@ -1,8 +1,9 @@
 buildscript {
 	ext {
 		springBootVersion = '1.2.2.RELEASE'
-
+		brooklynVersion = '0.11.0-SNAPSHOT'
 	}
+	
 	repositories {
 		// NOTE: You should declare only repositories that you need here
 		mavenLocal()
@@ -24,7 +25,6 @@ apply plugin: 'war'
 
 ext {
 	springCloudServiceBrokerVersion = '1.0.0.BUILD-SNAPSHOT'
-	brooklynVersion = '0.10.0-SNAPSHOT'
 	baseName = 'spring-boot-sample-simple'
 	version =  '0.0.0'
 }
@@ -57,6 +57,7 @@ dependencies {
 	compile("org.springframework.boot:spring-boot-starter")
 	testCompile("org.springframework.boot:spring-boot-starter-test")
 	testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+
 	compile("org.apache.brooklyn:brooklyn-rest-client:${brooklynVersion}"){
 		exclude module: "slf4j-log4j12"
 		exclude module: "jetty-server"
