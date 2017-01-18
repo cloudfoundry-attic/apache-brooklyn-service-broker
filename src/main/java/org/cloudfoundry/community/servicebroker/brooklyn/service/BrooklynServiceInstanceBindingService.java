@@ -103,7 +103,7 @@ public class BrooklynServiceInstanceBindingService implements
       serviceInstanceBinding = new BrooklynServiceInstanceBinding(request.getBindingId(), request.getServiceInstanceId(), null, request.getAppGuid(), childEntityId);
 		bindingRepository.save(serviceInstanceBinding);
 		return new CreateServiceInstanceAppBindingResponse().withCredentials(credentials);
-	}P
+	}
 
     @VisibleForTesting
     public static Predicate<String> getContainsItemInSectionPredicate(Object rootElement, String section, boolean ifAbsent) {
