@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.servicebroker.model.Plan;
 import org.springframework.cloud.servicebroker.model.ServiceDefinition;
 
+
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -96,18 +97,26 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
                 }
 
                 Map<String, Object> metadata = Maps.newLinkedHashMap();
+                Maybe<List<Map<String, Object>>> services = getServicesMap(rootElement);
+                if(services.isPresent()) {
+                    List<Map<String, Object>> servicesList = services.get();
+                    if (!servicesList.isEmpty()) {
+                        metadata.put("brooklynServices", servicesList);
+                    }
+                }
                 Maybe<Map<String, Object>> brokerConfig = getBrokerConfig(rootElement);
                 if(brokerConfig.isPresent()){
-                    Map<String, Object> brokerConfingMap = brokerConfig.get();
-                    if(brokerConfingMap.containsKey("metadata")) {
-                        metadata.putAll((Map<String, Object>)brokerConfingMap.get("metadata"));
+                    Map<String, Object> brokerConfigMap = brokerConfig.get();
+                    if(brokerConfigMap.containsKey("metadata")) {
+                        metadata.putAll((Map<String, Object>)brokerConfigMap.get("metadata"));
                     }
                 }
                 metadata.putAll(getServiceDefinitionMetadata(app.getId(), app.getIconUrl(), app.getPlanYaml()));
+
                 definitions.put(id, new ServiceDefinition(
                         id, name, app.getDescription(),
                         true, // bindable
-                        false, // planUpdatable
+                        true, // planUpdatable TODO: check to see whether there are any plans with update sections
                         plans, getTags(), metadata, getRequires(),
                         null //dashboardClient
                 ));
@@ -147,6 +156,19 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
             return false;
         }
         return Boolean.TRUE.equals(maybeBrokerConfig.get().get("hidden"));
+    }
+
+    protected Maybe<List<Map<String, Object>>> getServicesMap(Object rootElement) {
+        if (rootElement == null) {
+            return Maybe.absent();
+        }
+        if (rootElement instanceof Map) {
+            Map<String, Object> map = (Map<String, Object>) rootElement;
+            if (map.containsKey("services")) {
+                return Maybe.of((List<Map<String, Object>>)map.get("services"));
+            }
+        }
+        return Maybe.absent();
     }
 
     protected Maybe<Map<String, Object>> getBrokerConfig(Object rootElement) {

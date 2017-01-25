@@ -108,7 +108,16 @@ public class BrooklynServiceInstanceRepository {
 
 			if (currentBrooklynStatus.equals("DESTROYED")) {
 				nextState = OperationState.SUCCEEDED;
-			}		
+			}
+			break;
+		case "UPDATING":
+			if (ImmutableSet.of("STARTING").contains(currentBrooklynStatus)) {
+				nextState = OperationState.IN_PROGRESS;
+			}
+
+			if (currentBrooklynStatus.equals("RUNNING")) {
+				nextState = OperationState.SUCCEEDED;
+			}
 		}
 		LOG.info("lastOperation={}, currentBrooklynStatus={}, nextState={}", lastOperation, currentBrooklynStatus, nextState);
 		return nextState;

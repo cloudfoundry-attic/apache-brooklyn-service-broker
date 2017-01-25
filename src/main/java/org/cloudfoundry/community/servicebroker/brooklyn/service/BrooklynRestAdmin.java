@@ -233,6 +233,11 @@ public class BrooklynRestAdmin {
     }
 
     @Async
+    public Future<List<EntitySummary>> getApplicationDescendents(String application, String regex) {
+        return new AsyncResult<>(getRestApi().getApplicationApi().getDescendants(application, regex));
+    }
+
+    @Async
     public Future<Map<String, Object>> getApplicationEffectors(String application) {
         Map<String, Object> result = new HashMap<>();
         result.put("children", getApplicationEffectors(application, getRestApi().getEntityApi().list(application)));
