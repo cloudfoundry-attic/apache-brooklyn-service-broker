@@ -18,7 +18,7 @@ passing a few environment variables (e.g. in your `manifest.yml`):
         SECURITY_USER_NAME: broker-username
         SECURITY_USER_PASSWORD: broker-password
   
-You then [use](use.md) it by running `cf create-service-broker` and `enable-service-access` in the usual way.
+You then [use](docs/use.md) it by running `cf create-service-broker` and `enable-service-access` in the usual way.
 
 ## For More Information
 
