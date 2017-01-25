@@ -61,8 +61,8 @@ public class BrooklynServiceInstanceBindingService implements
 		if (serviceInstanceBinding != null) {
 			throw new ServiceInstanceBindingExistsException(serviceInstanceBinding.getServiceInstanceId(), request.getBindingId());
 		}
-
-        BrooklynServiceInstance serviceInstance = instanceRepository.findOne(request.getServiceInstanceId(), false);
+		
+      BrooklynServiceInstance serviceInstance = instanceRepository.findOne(request.getServiceInstanceId(), false);
 		String entityId = serviceInstance.getEntityId();
 		
 		LOG.info("creating service binding: [entity={}, serviceDefinitionId={}, bindingId={}, serviceInstanceId={}, appGuid={}", 
@@ -87,7 +87,7 @@ public class BrooklynServiceInstanceBindingService implements
         
 		String childEntityId = null;
 		if (ServiceUtil.getFutureValueLoggingError(admin.hasEffector(entityId, entityId, "bind"))) {
-			Future<String> effector = admin.invokeEffector(entityId, entityId, "bind", "never", ImmutableMap.of());
+			Future<String> effector = admin.invokeEffector(entityId, entityId, "bind", "never", request.getParameters() != null ? request.getParameters() : ImmutableMap.of());
 			String bindResponse = ServiceUtil.getFutureValueLoggingError(effector);
 			LOG.info("Calling bind effector: {}", bindResponse);
 			JsonElement jsonElement = JsonFunctions.asJson().apply(bindResponse);
