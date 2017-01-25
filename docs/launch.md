@@ -10,7 +10,8 @@ and the security credentials which will be needed to access the broker.
 
 ## Deploying with Cloud Foundry
 
-Create an application manifest, including environment variables pointing at the Brooklyn endpoint
+Create an application manifest, e.g. `application.yml`, 
+including environment variables pointing at the Brooklyn endpoint
 and specifying the security credentials which will be needed to use this broker:
 
     applications:
@@ -25,9 +26,13 @@ and specifying the security credentials which will be needed to use this broker:
 
 then 
 
-    $ cf push -p path/to/brooklyn-service-broker.war -b https://github.com/cloudfoundry/java-buildpack.git
+    $ cf push -f application.yml \
+              -p build/libs/brooklyn-service-broker.war \
+              -b https://github.com/cloudfoundry/java-buildpack.git
 
-(If you've built the project locally, the WAR will be in `build/libs/`.)
+(Adjust the paths above for your environment.)
+
+Next see [use](use.md) for information on using it, including registering it as a service broker in Cloud Foundry.
 
 
 ## Deploying on Brooklyn
