@@ -36,7 +36,7 @@ public class ServiceUtil {
             v = future.get();
         } catch (Exception e) {
             LOG.error(Throwables.getStackTraceAsString(e));
-            Exceptions.propagateIfFatal(e);
+            throw Exceptions.propagate(e);
         }
         return v;
     }
