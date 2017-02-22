@@ -106,6 +106,10 @@ public class BrooklynRestAdmin {
     @Async
     public Future<TaskSummary> createApplication(String applicationSpec) {
         Response response = getRestApi().getApplicationApi().createFromForm(applicationSpec);
+        if (response.getStatus()>=400) {
+            LOG.error("Unable to create application: "+response+"\n"+applicationSpec);
+            throw new IllegalStateException("Could not create application: "+response);
+        }
         return new AsyncResult<>(BrooklynApi.getEntity(response, TaskSummary.class));
     }
 
