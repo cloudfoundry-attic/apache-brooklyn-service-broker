@@ -44,8 +44,8 @@ public class BrooklynCatalogServiceTest {
     private static final String YAML_2 = ResourceUtils.create().getResourceAsString("noplans-catalog.yaml");
 
     private static final List<CatalogItemSummary> CATALOG_ITEM_SUMMARIES = Arrays.asList(
-            new CatalogItemSummary("test_name", "1.0", "test_name", "foo", YAML, "", "", null, false, null),
-            new CatalogItemSummary("test_name", "1.0", "test_name", "foo", YAML_2, "", "", null, false, null)
+            new CatalogItemSummary("test_name", "1.0", "test_name", "foo", "", YAML, "", "", null, false, null),
+            new CatalogItemSummary("test_name", "1.0", "test_name", "foo", "", YAML_2, "", "", null, false, null)
     );
 
     @InjectMocks
