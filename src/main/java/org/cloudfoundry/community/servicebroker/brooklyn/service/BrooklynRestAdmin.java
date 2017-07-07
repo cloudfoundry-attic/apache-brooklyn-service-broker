@@ -198,7 +198,7 @@ public class BrooklynRestAdmin {
 
     @Async
     public Future<String> postBlueprint(String file) {
-        Response response = getRestApi().getCatalogApi().create(file);
+        Response response = getRestApi().getCatalogApi().createFromYaml(file, false);
         return new AsyncResult<>(BrooklynApi.getEntity(response, String.class));
     }
 
