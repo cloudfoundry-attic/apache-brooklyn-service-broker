@@ -34,7 +34,6 @@ public class AbstractCatalogPlanStrategyTest {
 
     private static final CatalogItemSummary TEST_SUMMARY_WITH_METADATA = new CatalogItemSummary("test_name", "1.2", "","test_name", "foo",  "","{brooklyn.config: {broker.config: {metadata: {test: \"test value\", brooklynCatalogId: \"test\"}}}}", "1.2", "", null, false, null);
 
-
     @InjectMocks
     private TestAbstractCatalogPlanStrategyImpl catalogPlanStrategy;
     @Mock

@@ -366,7 +366,7 @@ public class BrooklynRestAdmin {
                 LOG.error("expected content type to start 'image' but found: {}", entry.get().getValue().get(0));
                 return new AsyncResult<>(null);
             }
-            return new AsyncResult<>("data:img/png;base64," + BaseEncoding.base64().encode(response.getContent()));
+            return new AsyncResult<>("data:image/png;base64," + BaseEncoding.base64().encode(response.getContent()));
         } catch (Exception e) {
             LOG.error("unable to encode icon as base64");
             return new AsyncResult<>(url);

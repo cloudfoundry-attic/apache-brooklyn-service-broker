@@ -128,17 +128,17 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
     }
 
     private String makeId(String namespace, String symbolicName, Set<String> ids) {
-        String id = namespace + "_" + symbolicName;
+        String id = namespace + "-" + symbolicName;
         if (config.includesAllCatalogVersions()) {
             id = ServiceUtil.getUniqueName(id, ids);
         }
-        return id;
+        return id.replaceAll("\\.", "-");
     }
 
     private String makeName(String namespace, String name, String version, Set<String> names) {
         return config.includesAllCatalogVersions()
-                ? ServiceUtil.getSafeName(namespace + "_" + name + "_" + version)
-                : ServiceUtil.getUniqueName(namespace + "_" + name, names);
+                ? ServiceUtil.getSafeName(namespace + "-" + name + "-" + version)
+                : ServiceUtil.getUniqueName(namespace + "-" + name, names);
     }
 
     private boolean isHidden(Object rootElement) {
