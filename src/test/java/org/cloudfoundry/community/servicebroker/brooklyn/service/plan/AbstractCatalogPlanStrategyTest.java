@@ -32,7 +32,9 @@ public class AbstractCatalogPlanStrategyTest {
             new CatalogItemSummary("test_name_2", "1.2", "","test_name_2", "foo", "", "{brooklyn.config: {broker.config: {hidden: true}}}", "1.2", "", null, false, null)
     );
 
-    private static final CatalogItemSummary TEST_SUMMARY_WITH_METADATA = new CatalogItemSummary("test_name", "1.2", "","test_name", "foo",  "","{brooklyn.config: {broker.config: {metadata: {test: \"test value\", brooklynCatalogId: \"test\"}}}}", "1.2", "", null, false, null);
+
+    private static final CatalogItemSummary TEST_SUMMARY_WITH_METADATA = new CatalogItemSummary("test_name", "1.2", "","test_name", "foo", "","{brooklyn.config: {broker.config: {metadata: {test: \"test value\", brooklynCatalogId: \"test\"}}}}", "1.2", "", null, false, null);
+    private static final CatalogItemSummary TEST_SUMMARY_WITH_TAGS = new CatalogItemSummary("test_name", "1.2", "","test_name", "foo", "","{brooklyn.config: {broker.config: {tags: [tag1]}}}", "1.2", "", null, false, null);
 
     @InjectMocks
     private TestAbstractCatalogPlanStrategyImpl catalogPlanStrategy;
@@ -80,5 +82,15 @@ public class AbstractCatalogPlanStrategyTest {
         expectedValue = TEST_SUMMARY_WITH_METADATA.getId();
         assertTrue(metadata.containsKey(expectedKey));
         assertEquals(expectedValue, metadata.get(expectedKey));
+    }
+
+    @Test
+    public void testTagsFromBlueprint() {
+        when(admin.getCatalogApplications(Mockito.anyBoolean())).thenReturn(new AsyncResult<>(Arrays.asList(TEST_SUMMARY_WITH_TAGS)));
+        when(brooklynConfig.includesAllCatalogVersions()).thenReturn(false);
+        List<ServiceDefinition> serviceDefinitions = catalogPlanStrategy.makeServiceDefinitions();
+        String expectedTag = "tag1";
+        List<String> tags = serviceDefinitions.get(1).getTags();
+        assertTrue(tags.contains(expectedTag));
     }
 }
