@@ -26,13 +26,13 @@ import org.springframework.scheduling.annotation.AsyncResult;
 public class AbstractCatalogPlanStrategyTest {
 
     private static final List<CatalogItemSummary> CATALOG_ITEM_SUMMARIES = Arrays.asList(
-            new CatalogItemSummary("test_name", "1.0", "test_name", "foo", "", "{}", "1.0", "", null, false, null),
-            new CatalogItemSummary("test_name", "1.1", "test_name", "foo", "", "{}", "1.1", "", null, false, null),
-            new CatalogItemSummary("test_name", "1.2", "test_name", "foo", "", "{brooklyn.config: {broker.config: {hidden: true}}}", "1.1", "", null, false, null),
-            new CatalogItemSummary("test_name_2", "1.2", "test_name_2", "foo", "", "{brooklyn.config: {broker.config: {hidden: true}}}", "1.2", "", null, false, null)
+            new CatalogItemSummary("test_name", "1.0", "","test_name", "foo",  "", "{}", "1.0", "", null, false, null),
+            new CatalogItemSummary("test_name", "1.1", "","test_name", "foo",  "", "{}","1.1", "", null, false, null),
+            new CatalogItemSummary("test_name", "1.2", "","test_name", "foo",  "","{brooklyn.config: {broker.config: {hidden: true}}}", "1.1", "", null, false, null),
+            new CatalogItemSummary("test_name_2", "1.2", "","test_name_2", "foo", "", "{brooklyn.config: {broker.config: {hidden: true}}}", "1.2", "", null, false, null)
     );
 
-    private static final CatalogItemSummary TEST_SUMMARY_WITH_METADATA = new CatalogItemSummary("test_name", "1.2", "test_name", "foo", "", "{brooklyn.config: {broker.config: {metadata: {test: \"test value\", brooklynCatalogId: \"test\"}}}}", "1.2", "", null, false, null);
+    private static final CatalogItemSummary TEST_SUMMARY_WITH_METADATA = new CatalogItemSummary("test_name", "1.2", "","test_name", "foo",  "","{brooklyn.config: {broker.config: {metadata: {test: \"test value\", brooklynCatalogId: \"test\"}}}}", "1.2", "", null, false, null);
 
 
     @InjectMocks
