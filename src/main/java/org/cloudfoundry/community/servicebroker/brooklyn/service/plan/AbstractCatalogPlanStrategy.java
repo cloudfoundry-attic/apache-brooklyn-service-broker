@@ -29,6 +29,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -96,11 +97,15 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
                 }
 
                 Map<String, Object> metadata = Maps.newLinkedHashMap();
+                List<String> tags = Lists.newArrayList();
                 Maybe<Map<String, Object>> brokerConfig = getBrokerConfig(rootElement);
                 if(brokerConfig.isPresent()){
                     Map<String, Object> brokerConfingMap = brokerConfig.get();
                     if(brokerConfingMap.containsKey("metadata")) {
                         metadata.putAll((Map<String, Object>)brokerConfingMap.get("metadata"));
+                    }
+                    if(brokerConfingMap.containsKey("tags")) {
+                        tags.addAll((List<String>)brokerConfingMap.get("tags"));
                     }
                 }
                 metadata.putAll(getServiceDefinitionMetadata(app.getId(), app.getIconUrl(), app.getPlanYaml()));
@@ -108,7 +113,7 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
                         id, name, app.getDescription(),
                         true, // bindable
                         false, // planUpdatable
-                        plans, getTags(), metadata, getRequires(),
+                        plans, tags, metadata, getRequires(),
                         null //dashboardClient
                 ));
             } catch (Exception e) {
@@ -128,17 +133,17 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
     }
 
     private String makeId(String namespace, String symbolicName, Set<String> ids) {
-        String id = namespace + "_" + symbolicName;
+        String id = namespace + "-" + symbolicName;
         if (config.includesAllCatalogVersions()) {
             id = ServiceUtil.getUniqueName(id, ids);
         }
-        return id;
+        return id.replaceAll("\\.", "-");
     }
 
     private String makeName(String namespace, String name, String version, Set<String> names) {
         return config.includesAllCatalogVersions()
-                ? ServiceUtil.getSafeName(namespace + "_" + name + "_" + version)
-                : ServiceUtil.getUniqueName(namespace + "_" + name, names);
+                ? ServiceUtil.getSafeName(namespace + "-" + name + "-" + version)
+                : ServiceUtil.getUniqueName(namespace + "-" + name, names);
     }
 
     private boolean isHidden(Object rootElement) {
@@ -166,10 +171,6 @@ public abstract class AbstractCatalogPlanStrategy implements CatalogPlanStrategy
             }
         }
         return Maybe.absent();
-    }
-
-    private List<String> getTags() {
-        return Arrays.asList();
     }
 
     private List<String> getRequires() {

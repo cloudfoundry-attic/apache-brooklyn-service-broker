@@ -71,6 +71,24 @@ a `small` plan, the following JSON will be created to deploy the instance:
 }
 ```
 
+### Metadata and Tags
+
+In addition to setting the plans of a service, additional metadata and tags can be set as follows:
+
+```
+brooklyn.config:
+  broker.config:
+    metadata:
+      key1: value1
+      key2: value2
+    tags:
+    - tag1
+    - tag2
+    plans:
+      ...
+```
+
+
 ## LocationPlanStrategy
 
 The location plan strategy is activated by using the SPRING_PROFILES_ACTIVE value of `location-plan` as follows:

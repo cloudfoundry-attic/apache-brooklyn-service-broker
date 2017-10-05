@@ -81,6 +81,6 @@ public class LocationPlanStrategyTest {
 
     private void checkLocationSummariesEqualsPlan (LocationSummary locationSummary, Plan plan) {
         assertEquals( TEST_ID + "." + locationSummary.getName(), plan.getId());
-        assertEquals(locationSummary.getName(), plan.getName());
+        assertEquals(locationSummary.getName().replaceAll("_", "-"), plan.getName());
     }
 }

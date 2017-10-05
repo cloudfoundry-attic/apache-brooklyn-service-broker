@@ -78,7 +78,7 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
             	properties.putAll(planDefinition);
             }
             properties.put("location", brooklynConfig.getLocation());
-            String id = serviceId + "." + planName;
+            String id = serviceId + "-" + planName;
             String name = ServiceUtil.getUniqueName(planName, names);
             String description = planName;
             Plan plan = new DefaultBlueprintPlan(id, name, description, displayName, properties);
@@ -106,7 +106,7 @@ public class SizePlanStrategy extends AbstractCatalogPlanStrategy {
                 location = brooklynConfig.getLocation();
             }
             properties.put("location", location);
-			String id = serviceId + "." + planName;
+			String id = serviceId + "-" + planName;
     		String name = ServiceUtil.getUniqueName(planName, names);
     		String description = String.valueOf(planMap.get("description"));
     		Plan plan = new DefaultBlueprintPlan(id, name, description, displayName, properties);

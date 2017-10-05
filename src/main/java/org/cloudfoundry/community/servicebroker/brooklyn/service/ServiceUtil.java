@@ -23,11 +23,11 @@ public class ServiceUtil {
             return name;
         }
         int i = 1;
-        while (names.contains(name + "_" + i)) {
+        while (names.contains(name + "-" + i)) {
             i++;
         }
-        names.add(name + "_" + i);
-        return name + "_" + i;
+        names.add(name + "-" + i);
+        return name + "-" + i;
     }
 
     public static <V> V getFutureValueLoggingError(Future<V> future) {
@@ -42,6 +42,6 @@ public class ServiceUtil {
     }
 
     public static String getSafeName(String name) {
-        return Strings.makeValidJavaName(name).toLowerCase();
+        return Strings.makeValidJavaName(name).replaceAll("_", "-").toLowerCase();
     }
 }

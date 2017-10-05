@@ -15,9 +15,9 @@ public class ServiceUtilTest {
         String name1 = ServiceUtil.getUniqueName("foo", names);
         Assert.assertEquals(name1, "foo");
         String name2 = ServiceUtil.getUniqueName("foo", names);
-        Assert.assertEquals(name2, "foo_1");
+        Assert.assertEquals(name2, "foo-1");
         String name3 = ServiceUtil.getUniqueName("foo", names);
-        Assert.assertEquals(name3, "foo_2");
+        Assert.assertEquals(name3, "foo-2");
     }
 
 }
