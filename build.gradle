@@ -1,7 +1,7 @@
 buildscript {
 	ext {
 		springBootVersion = '1.2.2.RELEASE'
-		brooklynVersion = '0.11.0-SNAPSHOT'
+		brooklynVersion = '0.13.0-SNAPSHOT'
 	}
 	
 	repositories {
@@ -17,6 +17,9 @@ buildscript {
 	}
 }
 
+version = '0.1.10'
+group = 'org.cloudfoundry.incubator.servicebroker.brooklyn'
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
@@ -25,8 +28,8 @@ apply plugin: 'war'
 
 ext {
 	springCloudServiceBrokerVersion = '1.0.0.BUILD-SNAPSHOT'
-	baseName = 'spring-boot-sample-simple'
-	version =  '0.0.0'
+	baseName = 'apache-brookyn-service-broker'
+	version =  '0.1.10'
 }
 
 war {
@@ -54,8 +57,7 @@ dependencies {
 	compile("org.springframework.cloud:spring-cloud-cloudfoundry-service-broker:${springCloudServiceBrokerVersion}")
 	testCompile(group: "org.springframework.cloud", name: "spring-cloud-cloudfoundry-service-broker", version: "${springCloudServiceBrokerVersion}", classifier: "tests")
 
-	compile("org.springframework.boot:spring-boot-starter")
-	testCompile("org.springframework.boot:spring-boot-starter-test")
+	compile("org.springframework.boot:spring-boot-starter:${springBootVersion}")
 	testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
   
 	compile("org.apache.brooklyn:brooklyn-rest-client:${brooklynVersion}"){
@@ -67,8 +69,8 @@ dependencies {
         exclude module: "jetty-server"
     }
     compile("org.apache.httpcomponents:httpclient:4.5")
-    compile("org.springframework.boot:spring-boot-starter-web:1.2.5.RELEASE")
-    compile("org.springframework.boot:spring-boot-starter-jetty:1.2.5.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-jetty:${springBootVersion}")
 }
 
 task wrapper(type: Wrapper) {
